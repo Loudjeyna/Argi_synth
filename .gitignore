@@ -1,0 +1,46 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Ll]ogs/
+[Oo]bj/
+[Bb]in/
+
+# .NET
+*.user
+*.suo
+*.cache
+*.log
+
+# IDE
+.vs/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Videos
+wwwroot/videos/*.mp4
+wwwroot/courses/html/*.mp4
+
+# Python
+venv/
+.venv/
+.env/
+__pycache__/
+*.pyc
+
+# ML / AI
+*.pt
+*.pth
+*.onnx
+*.dll
+*.lib
+
+# Env files
+.env
+.env.local
+
+# Jupyter
+.ipynb_checkpoints/
