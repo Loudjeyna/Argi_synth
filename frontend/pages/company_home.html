@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Company Dashboard</title>
+    <link rel="stylesheet" href="../styles/global.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header"><h2>Company Dashboard</h2><p>Generate and manage synthetic agricultural datasets</p></div>
+            <div class="kpi-grid" id="kpi-grid"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                <div class="card">
+                    <h3 class="card-title">Generate Data</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Create synthetic datasets with CTGAN.</p>
+                    <a href="generate_data.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Generate</a>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">View Datasets</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Browse all generated datasets.</p>
+                    <a href="datasets.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">View</a>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Subscription</h3>
+                    <p style="color: #666; margin-bottom: 1rem;">Upgrade for larger datasets.</p>
+                    <a href="subscription.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">Upgrade</a>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user || user.role !== 'company') { window.location.href = 'login.html'; return; }
+            AuthService.syncSessionFromStorage();
+            const currentUser = AuthService.getCurrentUser();
+            const stats = DataService.getGenerationStats();
+            document.getElementById('kpi-grid').innerHTML = `
+                <div class="kpi-card"><div class="kpi-value">${currentUser.plan.toUpperCase()}</div><div class="kpi-label">Plan</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.total}</div><div class="kpi-label">Datasets</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.total_rows.toLocaleString()}</div><div class="kpi-label">Total Rows</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.lastGenerated !== 'N/A' ? new Date(stats.lastGenerated).toLocaleDateString() : 'N/A'}</div><div class="kpi-label">Last Generated</div></div>
+            `;
+        });
+    </script>
+</body>
+</html>

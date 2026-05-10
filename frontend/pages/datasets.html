@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Datasets</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .dataset-actions { display: flex; gap: 0.5rem; }
+        .dataset-actions a, .dataset-actions button { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>Datasets</h2><p>All generated synthetic datasets</p></div>
+
+            <div id="status-msg"></div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Rows</th>
+                                <th>Level</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="datasets-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/payment.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const datasets = DataService.getGenerations();
+            const tbody = document.getElementById('datasets-tbody');
+
+            if (datasets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No datasets yet. Go to <a href="generate_data.html">Generate Data</a> to create one.</td></tr>';
+            } else {
+                tbody.innerHTML = datasets.map((d, i) => {
+                    const typeLabel = d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : 'Crop';
+                    const levelBadge = d.level === 'Big Data' ? 'badge-premium' : d.level === 'Large' ? 'badge-warning' : 'badge-free';
+                    const actions = '<div class="dataset-actions">' +
+                        '<a href="dataset_viewer.html?id=' + d.id + '" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View</a>' +
+                        '<button onclick="deleteDataset(' + d.id + ')" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; color: #E53935; border-color: #E53935;">Delete</button>' +
+                        '</div>';
+                    return '<tr><td>' + (i+1) + '</td><td>' + new Date(d.date).toLocaleDateString() + '</td><td>' + typeLabel + '</td><td>' + d.rows.toLocaleString() + '</td><td><span class="badge ' + levelBadge + '">' + (d.level || 'Medium') + '</span></td><td><span class="badge badge-success">Completed</span></td><td>' + actions + '</td></tr>';
+                }).join('');
+            }
+        });
+
+        function deleteDataset(id) {
+            if (!confirm('Delete this dataset?')) return;
+            const gens = DataService.getGenerations().filter(g => g.id !== id);
+            localStorage.setItem('synthai_generations', JSON.stringify(gens));
+            location.reload();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Login</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%); padding: 1rem; }
+        .auth-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 2rem; width: 100%; max-width: 420px; }
+        .auth-card h2 { color: #1B5E20; margin-bottom: 0.5rem; text-align: center; }
+        .auth-card .subtitle { color: #666; text-align: center; margin-bottom: 1.5rem; }
+        .auth-card .logo { text-align: center; margin-bottom: 1rem; }
+        .auth-card .logo svg { width: 48px; height: 48px; fill: #2E7D32; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 0.9rem; }
+        .form-control:focus { outline: none; border-color: #2E7D32; }
+        .btn { display: block; width: 100%; padding: 0.75rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-primary { background: #2E7D32; color: white; }
+        .btn-outline { background: transparent; border: 1px solid #E0E0E0; color: #333; margin-top: 0.5rem; }
+        .status-message { padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        .status-error { background: #FFEBEE; color: #F44336; display: block; }
+        .status-success { background: #E8F5E9; color: #4CAF50; display: block; }
+        .divider { text-align: center; margin: 1.5rem 0; color: #999; position: relative; }
+        .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 45%; height: 1px; background: #E0E0E0; }
+        .divider::before { left: 0; } .divider::after { right: 0; }
+        .tabs { display: flex; margin-bottom: 1rem; border-bottom: 2px solid #E0E0E0; }
+        .tab { flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab.active { border-bottom-color: #2E7D32; color: #2E7D32; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="logo">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <h2>SynthAI</h2>
+                <p class="subtitle">Smart Agricultural Intelligence Platform</p>
+            </div>
+
+            <div id="status-msg" class="status-message"></div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Sign In</div>
+                <div class="tab" data-tab="register">Register</div>
+            </div>
+
+            <div class="tab-content active" id="tab-login">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="tab-register">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="reg-username">Username</label>
+                        <input type="text" id="reg-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Email</label>
+                        <input type="email" id="reg-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-role">Role</label>
+                        <select id="reg-role" class="form-control">
+                            <option value="farmer">Farmer</option>
+                            <option value="company">Company</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
+
+            <div style="margin-top: 1rem; padding: 0.75rem; background: #f0f5f0; border-radius: 8px; font-size: 0.8rem; color: #555;">
+                <strong>Default Admin:</strong> admin / admin123
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const result = AuthService.login(username, password);
+            const msg = document.getElementById('status-msg');
+            if (result.success) {
+                msg.className = 'status-message status-success';
+                msg.textContent = 'Login successful!';
+                setTimeout(() => {
+                    const routes = { admin: 'admin_home.html', company: 'company_home.html', farmer: 'farmer_home.html' };
+                    window.location.href = routes[result.user.role] || 'farmer_home.html';
+                }, 500);
+            } else {
+                msg.className = 'status-message status-error';
+                msg.textContent = result.message;
+            }
+        });
+
+        // Register
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const role = document.getElementById('reg-role').value;
+            const result = AuthService.register(username, email, password, role);
+            const msg = document.getElementById('status-msg');
+            if (result.success) {
+                msg.className = 'status-message status-success';
+                msg.textContent = 'Registration successful! You can now sign in.';
+                document.getElementById('register-form').reset();
+            } else {
+                msg.className = 'status-message status-error';
+                msg.textContent = result.message;
+            }
+        });
+
+        // Check if already logged in
+        const currentUser = AuthService.getCurrentUser();
+        if (currentUser) {
+            const routes = { admin: 'admin_home.html', company: 'company_home.html', farmer: 'farmer_home.html' };
+            window.location.href = routes[currentUser.role];
+        }
+    </script>
+</body>
+</html>

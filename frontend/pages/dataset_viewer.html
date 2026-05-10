@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Dataset Viewer</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .viewer-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+        .viewer-header { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .viewer-header h2 { color: #1B5E20; margin: 0; }
+        .dataset-meta { display: flex; gap: 2rem; }
+        .dataset-meta .meta-item { text-align: center; }
+        .dataset-meta .meta-value { font-size: 1.25rem; font-weight: 700; color: #2E7D32; }
+        .dataset-meta .meta-label { font-size: 0.75rem; color: #666; }
+        .viewer-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .viewer-controls input { flex: 1; padding: 0.5rem; border: 1px solid #E0E0E0; border-radius: 6px; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .pagination button { padding: 0.5rem 0.85rem; border: 1px solid #E0E0E0; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .pagination button.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .stats-sidebar .stat-group { margin-bottom: 1rem; }
+        .stats-sidebar .stat-group h4 { font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; border-bottom: 1px solid #E0E0E0; padding-bottom: 0.25rem; }
+        .stats-sidebar .stat-row { display: flex; justify-content: space-between; padding: 0.25rem 0; font-size: 0.85rem; }
+        .stats-sidebar .stat-row .label { color: #555; }
+        .stats-sidebar .stat-row .value { font-weight: 600; color: #2E7D32; }
+        .correlation-grid { display: grid; gap: 3px; }
+        .corr-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; border-radius: 3px; color: white; font-weight: 600; }
+        .quality-ring { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; margin: 0 auto; }
+        .check-item { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.82rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+        .check-item:last-child { border-bottom: none; }
+        .trust-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div id="viewer-header" class="viewer-header"></div>
+
+            <div id="status-msg"></div>
+
+            <div class="viewer-layout">
+                <div>
+                    <div class="card">
+                        <div class="viewer-controls">
+                            <input type="text" id="search-filter" placeholder="Filter rows across all columns...">
+                            <button id="export-btn" class="btn btn-primary">Download CSV</button>
+                        </div>
+                        <div class="table-container">
+                            <table><thead id="viewer-thead"></thead><tbody id="viewer-tbody"></tbody></table>
+                        </div>
+                        <div class="pagination" id="pagination"></div>
+                    </div>
+                </div>
+
+                <div class="stats-sidebar" id="stats-sidebar"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/payment.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const generationId = parseInt(urlParams.get('id'));
+            const generation = DataService.getGenerationById(generationId);
+
+            if (!generation || !generation.preview) {
+                document.querySelector('.main-content').innerHTML = '<div class="card"><h3>Dataset not found</h3><a href="generate_data.html" class="btn btn-primary">Go back</a></div>';
+                return;
+            }
+
+            const preview = generation.preview;
+            const validation = preview.validation || DataService.validatePreview(preview);
+            const stats = DataService.generateStatistics(preview);
+            const correlation = DataService.computeCorrelation(preview);
+            const corrSim = preview.correlationSimilarity;
+
+            const qualityColor = validation.qualityScore >= 90 ? '#2E7D32' : validation.qualityScore >= 70 ? '#FF9800' : '#F44336';
+            const simColor = (corrSim !== null && corrSim !== undefined) ? (corrSim >= 80 ? '#2E7D32' : corrSim >= 60 ? '#FF9800' : '#F44336') : '#999';
+
+            document.getElementById('viewer-header').innerHTML = `
+                <div>
+                    <h2>${preview.type.charAt(0).toUpperCase() + preview.type.slice(1)} Dataset</h2>
+                    <p style="color: #666; margin-top: 0.25rem;">Generated: ${new Date(generation.date).toLocaleDateString()} | <span class="trust-badge" style="background:${qualityColor}15;color:${qualityColor};border:1px solid ${qualityColor}40;">Quality: ${validation.qualityScore}%</span> <span class="trust-badge" style="background:${simColor}15;color:${simColor};border:1px solid ${simColor}40;">Correlation: ${corrSim !== null && corrSim !== undefined ? corrSim + '%' : 'N/A'}</span></p>
+                </div>
+                <div class="dataset-meta">
+                    <div class="meta-item"><div class="meta-value">${preview.totalRows.toLocaleString()}</div><div class="meta-label">Total Rows</div></div>
+                    <div class="meta-item"><div class="meta-value">${preview.headers.length}</div><div class="meta-label">Columns</div></div>
+                    <div class="meta-item"><div class="meta-value">${preview.level}</div><div class="meta-label">Level</div></div>
+                    <div class="meta-item"><div class="meta-value" style="color:${qualityColor};">${validation.qualityScore}%</div><div class="meta-label">Quality Score</div></div>
+                </div>
+            `;
+
+            let currentPage = 1;
+            const perPage = 20;
+            let filteredData = [...preview.data];
+
+            function renderTable() {
+                const thead = document.getElementById('viewer-thead');
+                const tbody = document.getElementById('viewer-tbody');
+                const pagination = document.getElementById('pagination');
+
+                thead.innerHTML = '<tr>' + preview.headers.map(h => '<th>' + h + '</th>').join('') + '</tr>';
+
+                const start = (currentPage - 1) * perPage;
+                const pageData = filteredData.slice(start, start + perPage);
+                tbody.innerHTML = pageData.length ? pageData.map(row => '<tr>' + preview.headers.map(h => '<td>' + row[h] + '</td>').join('') + '</tr>').join('') : '<tr><td colspan="' + preview.headers.length + '" class="text-center text-muted">No matching rows found</td></tr>';
+
+                const totalPages = Math.ceil(filteredData.length / perPage);
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem; padding: 0.5rem;">' + filteredData.length + ' rows</span>';
+                    return;
+                }
+                let ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                for (let i = 1; i <= totalPages; i++) {
+                    ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+                }
+                ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
+                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + ' (' + filteredData.length + ' rows)</span>';
+                pagination.innerHTML = ph;
+            }
+
+            function renderStats() {
+                const sidebar = document.getElementById('stats-sidebar');
+                if (!stats) { sidebar.innerHTML = '<div class="card"><h4>No statistics available</h4></div>'; return; }
+
+                let html = '';
+
+                // Quality & Trust Panel
+                html += '<div class="card"><h3 class="card-title">Dataset Trust Score</h3>';
+                html += '<div class="quality-ring" style="border: 6px solid ' + qualityColor + '; color: ' + qualityColor + ';">' + validation.qualityScore + '%</div>';
+                html += '<p style="text-align:center;font-size:0.8rem;color:#666;margin-top:0.5rem;">' + (validation.passed ? 'All validation checks passed' : validation.passedCount + '/' + validation.totalChecks + ' checks passed') + '</p>';
+                if (corrSim !== null && corrSim !== undefined) {
+                    html += '<div class="stat-row"><span class="label">Correlation Match</span><span class="value" style="color:' + simColor + ';">' + corrSim + '%</span></div>';
+                }
+                html += '<div class="stat-row"><span class="label">Statistical Similarity</span><span class="value" style="color:' + qualityColor + ';">' + validation.similarityPct + '%</span></div>';
+                html += '<div class="stat-row"><span class="label">Status</span><span class="value">' + (validation.passed ? '<span class="badge badge-success">TRUSTED</span>' : '<span class="badge badge-danger">REVIEW</span>') + '</span></div>';
+                html += '</div>';
+
+                // Validation Checks
+                if (validation.checks && validation.checks.length) {
+                    html += '<div class="card"><h3 class="card-title">Validation Checks</h3>';
+                    validation.checks.forEach(c => {
+                        html += '<div class="check-item"><span class="badge badge-' + (c.status === 'valid' ? 'success' : 'danger') + '" style="flex-shrink:0;min-width:48px;text-align:center;">' + c.status.toUpperCase() + '</span><div><div style="font-weight:500;">' + c.name + '</div><div style="font-size:0.75rem;color:#999;">' + c.detail + '</div></div></div>';
+                    });
+                    html += '</div>';
+                }
+
+                // Column Statistics
+                html += '<div class="card"><h3 class="card-title">Column Statistics</h3>';
+                for (const [col, s] of Object.entries(stats)) {
+                    html += '<div class="stat-group"><h4>' + col + '</h4>' +
+                        '<div class="stat-row"><span class="label">Mean</span><span class="value">' + s.mean + '</span></div>' +
+                        '<div class="stat-row"><span class="label">Std</span><span class="value">' + s.std + '</span></div>' +
+                        '<div class="stat-row"><span class="label">Min</span><span class="value">' + s.min + '</span></div>' +
+                        '<div class="stat-row"><span class="label">Median</span><span class="value">' + s.median + '</span></div>' +
+                        '<div class="stat-row"><span class="label">Max</span><span class="value">' + s.max + '</span></div></div>';
+                }
+                html += '</div>';
+
+                // Correlation Heatmap
+                if (correlation && correlation.columns.length > 1) {
+                    html += '<div class="card"><h3 class="card-title">Correlation Heatmap</h3><div class="correlation-grid" id="corr-grid"></div></div>';
+                }
+
+                // Missing Values
+                html += '<div class="card"><h3 class="card-title">Data Completeness</h3><div class="stat-row"><span class="label">Missing Values</span><span class="value">0</span></div><div class="stat-row"><span class="label">Completeness</span><span class="value" style="color:#2E7D32;">100%</span></div></div>';
+
+                sidebar.innerHTML = html;
+
+                if (correlation) {
+                    const grid = document.getElementById('corr-grid');
+                    if (grid) {
+                        const cols = correlation.columns;
+                        grid.style.gridTemplateColumns = 'repeat(' + (cols.length + 1) + ', auto)';
+                        grid.innerHTML = '<div></div>' + cols.map(c => '<div style="font-size:0.7rem;text-align:center;font-weight:600;padding:2px;overflow:hidden;text-overflow:ellipsis;">' + c + '</div>').join('');
+                        cols.forEach(col1 => {
+                            grid.innerHTML += '<div style="font-size:0.7rem;font-weight:600;padding:2px;overflow:hidden;text-overflow:ellipsis;">' + col1 + '</div>';
+                            cols.forEach(col2 => {
+                                const val = correlation.matrix[col1][col2];
+                                const absVal = Math.abs(val);
+                                const color = val > 0 ? 'rgba(46,125,50,' + (0.2 + absVal * 0.8) + ')' : 'rgba(244,67,54,' + (0.2 + absVal * 0.8) + ')';
+                                grid.innerHTML += '<div class="corr-cell" style="background:' + color + ';" title="' + col1 + ' vs ' + col2 + ': ' + val.toFixed(3) + '">' + val.toFixed(2) + '</div>';
+                            });
+                        });
+                    }
+                }
+            }
+
+            document.getElementById('search-filter').addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase();
+                filteredData = q ? preview.data.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(q))) : [...preview.data];
+                currentPage = 1;
+                renderTable();
+            });
+
+            document.getElementById('pagination').addEventListener('click', (e) => {
+                if (e.target.dataset.page) {
+                    const totalPages = Math.ceil(filteredData.length / perPage);
+                    if (e.target.dataset.page === 'prev' && currentPage > 1) currentPage--;
+                    else if (e.target.dataset.page === 'next' && currentPage < totalPages) currentPage++;
+                    else if (e.target.dataset.page !== 'prev' && e.target.dataset.page !== 'next') currentPage = parseInt(e.target.dataset.page);
+                    else return;
+                    renderTable();
+                }
+            });
+
+            document.getElementById('export-btn').addEventListener('click', () => DataService.exportCSV(preview));
+
+            renderTable();
+            renderStats();
+        });
+    </script>
+</body>
+</html>

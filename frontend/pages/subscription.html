@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Subscription</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .plan-card { background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; border: 2px solid #E0E0E0; transition: all 0.3s; }
+        .plan-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .plan-card.popular { border-color: #2E7D32; box-shadow: 0 4px 20px rgba(46,125,50,0.2); }
+        .plan-popular-badge { position: absolute; top: -12px; right: 20px; background: #2E7D32; color: white; padding: 0.25rem 1rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 600; }
+        .plan-name { font-size: 1.25rem; font-weight: 700; color: #1B5E20; margin-bottom: 0.5rem; }
+        .plan-price { font-size: 2.5rem; font-weight: 700; color: #1B5E20; margin: 1rem 0; }
+        .plan-price .currency { font-size: 1.5rem; vertical-align: super; }
+        .plan-price .period { font-size: 1rem; color: #666; font-weight: 400; }
+        .plan-features { list-style: none; margin: 1.5rem 0; padding: 0; }
+        .plan-features li { padding: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem; color: #333; }
+        .plan-features li svg { width: 16px; height: 16px; fill: #2E7D32; flex-shrink: 0; }
+        .btn-subscribe { width: 100%; padding: 0.75rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-subscribe-primary { background: #2E7D32; color: white; }
+        .btn-subscribe-primary:hover { background: #1B5E20; }
+        .btn-subscribe-outline { background: transparent; border: 2px solid #2E7D32; color: #2E7D32; }
+        .btn-subscribe-outline:hover { background: #2E7D32; color: white; }
+        .btn-subscribe:disabled { opacity: 0.5; cursor: not-allowed; }
+        .payment-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .payment-modal-content { background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 100%; }
+        .current-plan { background: #E8F5E9; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header"><h2>Subscription Plans</h2><p>Choose the plan that fits your agricultural data needs</p></div>
+
+            <div id="current-plan-bar"></div>
+
+            <div class="plans-grid" id="plans-grid"></div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3 class="card-title">Plan Comparison</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Feature</th><th>Free</th><th>Pro</th><th>Premium</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Predictions/day</strong></td><td>5</td><td>50</td><td>Unlimited</td></tr>
+                            <tr><td><strong>Dataset Size</strong></td><td>1,000 rows</td><td>10,000 rows</td><td>100,000 rows</td></tr>
+                            <tr><td><strong>History Entries</strong></td><td>10</td><td>100</td><td>Unlimited</td></tr>
+                            <tr><td><strong>Dataset Types</strong></td><td>Crop only</td><td>All types</td><td>All types + Custom</td></tr>
+                            <tr><td><strong>Analytics</strong></td><td>Basic</td><td>Standard</td><td>Advanced</td></tr>
+                            <tr><td><strong>Support</strong></td><td>Standard</td><td>Priority</td><td>24/7 Priority</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="payment-modal" class="payment-modal" style="display: none;">
+        <div class="payment-modal-content">
+            <h3 style="color: #1B5E20; margin-bottom: 0.5rem;">Complete Payment</h3>
+            <p id="payment-details" style="color: #666; margin-bottom: 1rem;"></p>
+            <div class="form-group"><label>Card Number (Simulated)</label><input type="text" id="card-num" class="form-control" value="4111 1111 1111 1111"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Expiry</label><input type="text" class="form-control" value="12/28"></div>
+                <div class="form-group"><label>CVC</label><input type="text" class="form-control" value="123"></div>
+            </div>
+            <div id="payment-status"></div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button id="confirm-pay" class="btn btn-primary" style="flex: 1;">Confirm Payment</button>
+                <button id="cancel-pay" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/payment.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const currentPlan = PaymentService.getUserPlan(user.id);
+            const currentBar = document.getElementById('current-plan-bar');
+            if (currentPlan && currentPlan !== 'free') {
+                const plan = PaymentService.getPlanDetails(currentPlan);
+                currentBar.innerHTML = '<div class="current-plan"><div><strong>Current Plan: ' + plan.name + '</strong></div><span class="badge badge-premium">Active</span></div>';
+            }
+
+            const plans = PaymentService.getAvailablePlans();
+            const grid = document.getElementById('plans-grid');
+
+            grid.innerHTML = Object.values(plans).map(p => {
+                const isCurrent = p.id === currentPlan;
+                const isPopular = p.id === 'premium';
+                const btnClass = isCurrent ? 'btn-subscribe-outline' : (isPopular ? 'btn-subscribe-primary' : 'btn-subscribe-primary');
+                const btnText = isCurrent ? 'Current Plan' : (p.price === 0 ? 'Get Started' : 'Subscribe');
+                const disabled = isCurrent ? 'disabled' : '';
+
+                return '<div class="plan-card' + (isPopular ? ' popular' : '') + '">' +
+                    (isPopular ? '<div class="plan-popular-badge">Most Popular</div>' : '') +
+                    '<div class="plan-name">' + p.name + '</div>' +
+                    '<div class="plan-price"><span class="currency">$</span>' + p.price + '<span class="period">' + p.period + '</span></div>' +
+                    '<ul class="plan-features">' + p.features.map(f => '<li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>' + f + '</li>').join('') + '</ul>' +
+                    '<button class="btn-subscribe ' + btnClass + '" ' + disabled + ' data-plan="' + p.id + '">' + btnText + '</button>' +
+                    '</div>';
+            }).join('');
+
+            let selectedPlan = null;
+
+            document.querySelectorAll('.btn-subscribe:not(:disabled)').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedPlan = btn.dataset.plan;
+                    const plan = PaymentService.getPlanDetails(selectedPlan);
+                    document.getElementById('payment-details').textContent = plan.name + ' Plan - $' + plan.price + plan.period;
+                    document.getElementById('payment-modal').style.display = 'flex';
+                    document.getElementById('payment-status').innerHTML = '';
+                });
+            });
+
+            document.getElementById('cancel-pay').addEventListener('click', () => {
+                document.getElementById('payment-modal').style.display = 'none';
+            });
+
+            document.getElementById('confirm-pay').addEventListener('click', () => {
+                const btn = document.getElementById('confirm-pay');
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+
+                setTimeout(() => {
+                    const result = PaymentService.simulatePayment(user.id, selectedPlan);
+                    if (result.success) {
+                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-success">Payment successful! Welcome to ' + result.plan.name + '.</div>';
+                        setTimeout(() => { location.reload(); }, 1000);
+                    } else {
+                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-error">Payment failed. Please try again.</div>';
+                    }
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Payment';
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

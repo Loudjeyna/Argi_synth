@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - History</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .filter-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .filter-bar input, .filter-bar select { padding: 0.5rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.9rem; }
+        .delete-btn { cursor: pointer; color: #E53935; font-size: 0.85rem; border: none; background: none; }
+        .delete-btn:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>Prediction History</h2><p>View, search, filter, and export your prediction records</p></div>
+
+            <div id="status-msg"></div>
+
+            <div class="kpi-grid" id="stats-grid"></div>
+
+            <div class="card">
+                <div class="d-flex justify-between align-center" style="margin-bottom: 1rem;">
+                    <h3 class="card-title" style="margin: 0;">All Predictions</h3>
+                    <div class="filter-bar">
+                        <input type="text" id="search-input" placeholder="Search crop..." style="width: 180px;">
+                        <input type="date" id="date-input" style="width: 140px;">
+                        <select id="type-filter" style="width: 160px;">
+                            <option value="all">All Types</option>
+                            <option value="crop_conditions">Crop to Conditions</option>
+                            <option value="conditions_crop">Conditions to Crop</option>
+                        </select>
+                        <button id="export-btn" class="btn btn-outline" style="padding: 0.5rem 1rem;">Export CSV</button>
+                        <button id="clear-all-btn" class="btn btn-outline" style="padding: 0.5rem 1rem; color: #E53935; border-color: #E53935;">Clear All</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th style="width: 40px;">#</th><th>Type</th><th>Input</th><th>Result</th><th>Date</th><th style="width: 50px;"></th></tr></thead>
+                        <tbody id="history-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const isPremium = user.plan === 'premium';
+            const limit = isPremium ? Infinity : (user.plan === 'pro' ? 100 : 10);
+            let history = HistoryService.getUserHistory(user.id);
+
+            const stats = HistoryService.getStats(user.id);
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="kpi-card"><div class="kpi-value">${stats.totalPredictions}</div><div class="kpi-label">Total Predictions</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.cropRecommendations}</div><div class="kpi-label">Crop to Conditions</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.conditionPredictions}</div><div class="kpi-label">Conditions to Crop</div></div>
+                <div class="kpi-card"><div class="kpi-value">${isPremium ? 'Unlimited' : limit}</div><div class="kpi-label">${isPremium ? '' : 'Max'} History Limit</div></div>
+            `;
+
+            if (!isPremium && stats.totalPredictions > limit) {
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-warning">Showing ' + limit + ' of ' + stats.totalPredictions + ' total entries. <a href="subscription.html">Upgrade</a> for unlimited history.</div>';
+            }
+
+            function renderHistory(data) {
+                const tbody = document.getElementById('history-tbody');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No predictions found. Start by using the prediction tools.</td></tr>';
+                    return;
+                }
+                const displayData = isPremium ? data : data.slice(0, limit);
+                tbody.innerHTML = displayData.map((h, i) => {
+                    let input = h.input || '';
+                    try { const obj = JSON.parse(input); input = obj.crop || obj.n ? 'N:' + obj.n + ', P:' + obj.p + ', K:' + obj.k + '...' : input; } catch(e) {}
+                    let result = h.result || '';
+                    try { const obj = JSON.parse(result); result = obj.crop || obj.optimal_temperature ? obj.crop || JSON.stringify(obj).substring(0, 60) : result; } catch(e) {}
+                    return '<tr>' +
+                        '<td>' + (i+1) + '</td>' +
+                        '<td><span class="badge badge-' + (h.type === 'crop_conditions' ? 'success' : 'warning') + '">' + (h.type === 'crop_conditions' ? 'Crop to Conditions' : 'Conditions to Crop') + '</span></td>' +
+                        '<td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + (input || '').substring(0, 60) + '</td>' +
+                        '<td><strong>' + (result || '').substring(0, 60) + '</strong></td>' +
+                        '<td style="white-space: nowrap;">' + new Date(h.date).toLocaleDateString() + ' ' + new Date(h.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</td>' +
+                        '<td><button class="delete-btn" onclick="deleteEntry(' + h.id + ')" title="Delete entry">&times;</button></td></tr>';
+                }).join('');
+            }
+
+            renderHistory(history);
+
+            function applyFilters() {
+                const searchQ = document.getElementById('search-input').value.toLowerCase();
+                const dateVal = document.getElementById('date-input').value;
+                const typeVal = document.getElementById('type-filter').value;
+                let filtered = [...history];
+                if (searchQ) filtered = filtered.filter(h => {
+                    try { const r = JSON.parse(h.result); return r.crop && r.crop.toLowerCase().includes(searchQ); } catch(e) { return h.result && h.result.toLowerCase().includes(searchQ); }
+                });
+                if (dateVal) filtered = filtered.filter(h => h.date && h.date.startsWith(dateVal));
+                if (typeVal !== 'all') filtered = filtered.filter(h => h.type === typeVal);
+                renderHistory(filtered);
+            }
+
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('date-input').addEventListener('change', applyFilters);
+            document.getElementById('type-filter').addEventListener('change', applyFilters);
+
+            document.getElementById('export-btn').addEventListener('click', () => HistoryService.exportHistory(user.id));
+
+            window.deleteEntry = function(id) {
+                if (!confirm('Delete this prediction entry?')) return;
+                HistoryService.deleteEntry(id);
+                history = HistoryService.getUserHistory(user.id);
+                applyFilters();
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Entry deleted successfully.</div>';
+            };
+
+            document.getElementById('clear-all-btn').addEventListener('click', () => {
+                if (!confirm('Clear ALL prediction history? This cannot be undone.')) return;
+                history.forEach(h => HistoryService.deleteEntry(h.id));
+                history = [];
+                applyFilters();
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">All history cleared.</div>';
+            });
+        });
+    </script>
+</body>
+</html>

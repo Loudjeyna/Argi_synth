@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Crop to Conditions</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .condition-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .cond-card { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-radius: 12px; padding: 1.25rem; border-left: 4px solid #2E7D32; }
+        .cond-card .label { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cond-card .value { font-size: 1.35rem; font-weight: 700; color: #1B5E20; margin-top: 0.25rem; }
+        .cond-card .icon { width: 32px; height: 32px; fill: #2E7D32; margin-bottom: 0.5rem; }
+        .level-indicator { display: inline-flex; align-items: center; gap: 0.5rem; }
+        .level-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .level-dot.low { background: #66BB6A; }
+        .level-dot.medium { background: #FF9800; }
+        .level-dot.high { background: #F44336; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>Crop to Conditions</h2><p>Select a crop to discover its optimal growing conditions</p></div>
+            <div id="status-msg"></div>
+            <div class="card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crop-select">Select a Crop</label>
+                        <select id="crop-select" class="form-control"></select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button id="get-btn" class="btn btn-primary">Get Optimal Conditions</button>
+                    </div>
+                </div>
+            </div>
+            <div id="result-area" style="display: none;">
+                <div class="card">
+                    <h3 class="card-title">Optimal Growing Conditions</h3>
+                    <div class="condition-cards" id="main-conditions"></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Nutrient & Resource Requirements</h3>
+                    <div class="condition-cards" id="nutrient-conditions"></div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="export-btn" class="btn btn-outline">Download as CSV</button>
+                    <button id="try-another-btn" class="btn btn-outline">Try Another Crop</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/recommendation.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            if (user.role !== 'farmer') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const crops = RecommendationService.getCrops();
+            const select = document.getElementById('crop-select');
+            select.innerHTML = '<option value="">-- Choose a crop --</option>' + crops.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('');
+
+            function getLevelColor(level) {
+                const map = { Low: '#66BB6A', Medium: '#FF9800', High: '#F44336' };
+                return map[level] || '#666';
+            }
+            function getLevelDot(level) {
+                const cls = { Low: 'low', Medium: 'medium', High: 'high' };
+                return '<span class="level-indicator"><span class="level-dot ' + (cls[level] || 'low') + '"></span>' + level + '</span>';
+            }
+
+            document.getElementById('get-btn').addEventListener('click', () => {
+                const crop = select.value;
+                if (!crop) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please select a crop.</div>'; return; }
+                if (!AuthService.canAttempt()) {
+                    document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Daily prediction limit reached. <a href="subscription.html">Upgrade to Premium</a> for unlimited access.</div>';
+                    return;
+                }
+                AuthService.recordAttempt();
+                const rec = RecommendationService.getCropRecommendation(crop);
+                if (!rec) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">No data available for this crop.</div>'; return; }
+                HistoryService.addEntry({ userId: user.id, type: 'crop_conditions', crop, input: crop, result: JSON.stringify(rec) });
+                document.getElementById('main-conditions').innerHTML = `
+                    <div class="cond-card"><div class="label">Temperature</div><div class="value">${rec.optimal_temperature}</div></div>
+                    <div class="cond-card"><div class="label">Humidity</div><div class="value">${rec.optimal_humidity}</div></div>
+                    <div class="cond-card"><div class="label">Soil pH</div><div class="value">${rec.optimal_ph}</div></div>
+                    <div class="cond-card"><div class="label">Rainfall</div><div class="value">${rec.optimal_rainfall}</div></div>
+                `;
+                document.getElementById('nutrient-conditions').innerHTML = `
+                    <div class="cond-card"><div class="label">Nitrogen (N)</div><div class="value">${rec.optimal_n}</div></div>
+                    <div class="cond-card"><div class="label">Phosphorus (P)</div><div class="value">${rec.optimal_p}</div></div>
+                    <div class="cond-card"><div class="label">Potassium (K)</div><div class="value">${rec.optimal_k}</div></div>
+                    <div class="cond-card"><div class="label">Water Requirement</div><div class="value">${getLevelDot(rec.water_level)}</div></div>
+                    <div class="cond-card"><div class="label">Fertilizer Level</div><div class="value">${getLevelDot(rec.fertilizer_level)}</div></div>
+                `;
+                document.getElementById('result-area').style.display = 'block';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Optimal conditions for <strong>' + crop + '</strong> loaded successfully!</div>';
+            });
+
+            document.getElementById('export-btn').addEventListener('click', () => {
+                const rec = RecommendationService.getCropRecommendation(select.value);
+                RecommendationService.exportResults(rec, 'conditions');
+            });
+
+            document.getElementById('try-another-btn').addEventListener('click', () => {
+                document.getElementById('result-area').style.display = 'none';
+                select.value = '';
+                select.focus();
+                document.getElementById('status-msg').innerHTML = '';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Conditions to Crop</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .match-bar { height: 8px; border-radius: 4px; background: #E0E0E0; overflow: hidden; margin-top: 0.25rem; }
+        .match-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #66BB6A, #2E7D32); }
+        .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 0.85rem; }
+        .rank-1 { background: #FFD700; color: #000; }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>Conditions to Crop</h2><p>Enter your soil and climate conditions to find the best matching crops</p></div>
+            <div id="status-msg"></div>
+            <div class="card">
+                <h3 class="card-title">Enter Your Conditions</h3>
+                <div class="form-row">
+                    <div class="form-group"><label for="n-val">Nitrogen (N)</label><input type="number" id="n-val" class="form-control" value="50" min="0" max="140"></div>
+                    <div class="form-group"><label for="p-val">Phosphorus (P)</label><input type="number" id="p-val" class="form-control" value="50" min="0" max="145"></div>
+                    <div class="form-group"><label for="k-val">Potassium (K)</label><input type="number" id="k-val" class="form-control" value="50" min="0" max="205"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="temp-val">Temperature (&deg;C)</label><input type="number" id="temp-val" class="form-control" value="25" min="0" max="50"></div>
+                    <div class="form-group"><label for="humidity-val">Humidity (%)</label><input type="number" id="humidity-val" class="form-control" value="70" min="0" max="100"></div>
+                    <div class="form-group"><label for="ph-val">Soil pH</label><input type="number" id="ph-val" class="form-control" value="6.5" step="0.1" min="0" max="14"></div>
+                    <div class="form-group"><label for="rain-val">Rainfall (mm)</label><input type="number" id="rain-val" class="form-control" value="100" min="0" max="500"></div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="predict-btn" class="btn btn-primary">Predict Best Crops</button>
+                    <button id="reset-btn" class="btn btn-outline">Reset Values</button>
+                </div>
+            </div>
+            <div id="result-area" style="display: none;">
+                <div class="card">
+                    <h3 class="card-title">Top Crop Matches</h3>
+                    <div class="table-container">
+                        <table><thead><tr><th>Rank</th><th>Crop</th><th>Compatibility</th><th>Water</th><th>Fertilizer</th></tr></thead>
+                        <tbody id="results-tbody"></tbody></table>
+                    </div>
+                </div>
+                <div class="card" id="top-pick-card" style="display: none;">
+                    <h3 class="card-title">Best Recommendation</h3>
+                    <div id="top-pick" style="text-align: center; padding: 1rem;"></div>
+                </div>
+                <button id="export-btn" class="btn btn-outline">Download Results as CSV</button>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/recommendation.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+            if (user.role !== 'farmer') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
+            AuthService.syncSessionFromStorage();
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            document.getElementById('predict-btn').addEventListener('click', () => {
+                if (!AuthService.canAttempt()) {
+                    document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Daily prediction limit reached. <a href="subscription.html">Upgrade to Premium</a> for unlimited access.</div>';
+                    return;
+                }
+                const conditions = {
+                    n: parseFloat(document.getElementById('n-val').value),
+                    p: parseFloat(document.getElementById('p-val').value),
+                    k: parseFloat(document.getElementById('k-val').value),
+                    temperature: parseFloat(document.getElementById('temp-val').value),
+                    humidity: parseFloat(document.getElementById('humidity-val').value),
+                    ph: parseFloat(document.getElementById('ph-val').value),
+                    rainfall: parseFloat(document.getElementById('rain-val').value)
+                };
+                if (Object.values(conditions).some(v => isNaN(v) || v < 0)) {
+                    document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please enter valid positive values for all fields.</div>';
+                    return;
+                }
+                AuthService.recordAttempt();
+                const results = RecommendationService.predictCrop(conditions);
+                HistoryService.addEntry({ userId: user.id, type: 'conditions_crop', input: JSON.stringify(conditions), result: results[0].crop });
+
+                document.getElementById('results-tbody').innerHTML = results.map((r, i) => {
+                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                    const matchPct = parseInt(r.match_score);
+                    return '<tr>' +
+                        '<td><span class="rank-badge ' + rankClass + '">' + r.rank + '</span></td>' +
+                        '<td><strong>' + r.crop + '</strong></td>' +
+                        '<td><div style="min-width: 120px;"><strong>' + r.match_score + '</strong><div class="match-bar"><div class="match-fill" style="width: ' + matchPct + '%;"></div></div></div></td>' +
+                        '<td>' + r.water_level + '</td>' +
+                        '<td>' + r.fertilizer_level + '</td></tr>';
+                }).join('');
+
+                document.getElementById('top-pick').innerHTML = '<div style="font-size: 2.5rem; font-weight: 700; color: #1B5E20;">' + results[0].crop + '</div><p style="color: #666; margin-top: 0.5rem;">Best match with ' + results[0].match_score + ' compatibility</p><p style="color: #888; font-size: 0.85rem;">Water: ' + results[0].water_level + ' | Fertilizer: ' + results[0].fertilizer_level + '</p>';
+                document.getElementById('top-pick-card').style.display = 'block';
+                document.getElementById('result-area').style.display = 'block';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Top recommendation: <strong>' + results[0].crop + '</strong> (' + results[0].match_score + ' match)</div>';
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                document.getElementById('n-val').value = 50;
+                document.getElementById('p-val').value = 50;
+                document.getElementById('k-val').value = 50;
+                document.getElementById('temp-val').value = 25;
+                document.getElementById('humidity-val').value = 70;
+                document.getElementById('ph-val').value = 6.5;
+                document.getElementById('rain-val').value = 100;
+                document.getElementById('result-area').style.display = 'none';
+                document.getElementById('status-msg').innerHTML = '';
+            });
+
+            document.getElementById('export-btn').addEventListener('click', () => {
+                const conditions = {
+                    n: parseFloat(document.getElementById('n-val').value),
+                    p: parseFloat(document.getElementById('p-val').value),
+                    k: parseFloat(document.getElementById('k-val').value),
+                    temperature: parseFloat(document.getElementById('temp-val').value),
+                    humidity: parseFloat(document.getElementById('humidity-val').value),
+                    ph: parseFloat(document.getElementById('ph-val').value),
+                    rainfall: parseFloat(document.getElementById('rain-val').value)
+                };
+                const results = RecommendationService.predictCrop(conditions);
+                RecommendationService.exportResults(results, 'predictions');
+            });
+        });
+    </script>
+</body>
+</html>

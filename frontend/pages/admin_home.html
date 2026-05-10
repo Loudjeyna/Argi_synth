@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Admin Dashboard</title>
+    <link rel="stylesheet" href="../styles/global.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header"><h2>Dashboard</h2><p>System overview and quick actions</p></div>
+            <div class="kpi-grid" id="kpi-grid"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                <div class="card"><h3 class="card-title">Train Model</h3><p style="color: #666; margin-bottom: 1rem;">Retrain the CTGAN model with new data.</p><a href="admin_model.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Data Validation</h3><p style="color: #666; margin-bottom: 1rem;">Compare real vs synthetic data quality.</p><a href="admin_validation.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Manage Users</h3><p style="color: #666; margin-bottom: 1rem;">View and manage all platform users.</p><a href="admin_users.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user || user.role !== 'admin') { window.location.href = 'login.html'; return; }
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+            const users = AuthService.getUsers();
+            const stats = DataService.getGenerationStats();
+            const totalPreds = users.reduce((s, u) => s + HistoryService.getStats(u.id).totalPredictions, 0);
+            document.getElementById('kpi-grid').innerHTML = `
+                <div class="kpi-card"><div class="kpi-value">${users.length}</div><div class="kpi-label">Users</div></div>
+                <div class="kpi-card"><div class="kpi-value">${totalPreds}</div><div class="kpi-label">Predictions</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.total}</div><div class="kpi-label">Datasets</div></div>
+                <div class="kpi-card"><div class="kpi-value">${stats.total_rows.toLocaleString()}</div><div class="kpi-label">Total Rows</div></div>
+            `;
+        });
+    </script>
+</body>
+</html>

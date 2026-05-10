@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Train Model</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .gan-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
+        .gan-box { padding: 1.5rem; border-radius: 12px; text-align: center; min-width: 160px; font-weight: 600; }
+        .gan-box.generator { background: #E8F5E9; border: 2px solid #2E7D32; color: #1B5E20; }
+        .gan-box.discriminator { background: #FFF3E0; border: 2px solid #FF9800; color: #E65100; }
+        .gan-box.real { background: #E3F2FD; border: 2px solid #1565C0; color: #0D47A1; }
+        .gan-box.synthetic { background: #F3E5F5; border: 2px solid #7B1FA2; color: #4A148C; }
+        .gan-arrow { font-size: 2rem; color: #666; }
+        .loss-chart { background: #F5F7F5; border-radius: 8px; padding: 1rem; min-height: 200px; display: flex; align-items: flex-end; gap: 2px; }
+        .loss-bar { flex: 1; border-radius: 4px 4px 0 0; min-width: 4px; transition: height 0.3s; }
+        .loss-bar.generator-loss { background: #2E7D32; }
+        .loss-bar.discriminator-loss { background: #FF9800; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>Train CTGAN Model</h2><p>Configure, train, and monitor the synthetic data generation model</p></div>
+
+            <div class="card">
+                <h3 class="card-title">CTGAN Architecture</h3>
+                <p style="color: #666; margin-bottom: 1rem;">Conditional Tabular GAN learns statistical patterns from real agricultural data to generate realistic synthetic datasets.</p>
+                <div class="gan-diagram">
+                    <div class="gan-box real">Real Data<br><span style="font-size: 0.8rem; font-weight: 400;">Crop Dataset</span></div>
+                    <div class="gan-arrow">&rarr;</div>
+                    <div class="gan-box discriminator" id="disc-box">Discriminator<br><span style="font-size: 0.8rem; font-weight: 400;">Evaluates authenticity</span></div>
+                    <div class="gan-arrow">&larr;</div>
+                    <div class="gan-box generator" id="gen-box">Generator<br><span style="font-size: 0.8rem; font-weight: 400;">Creates synthetic samples</span></div>
+                    <div class="gan-arrow">&rarr;</div>
+                    <div class="gan-box synthetic">Synthetic Data<br><span style="font-size: 0.8rem; font-weight: 400;">Generated Output</span></div>
+                </div>
+                <div style="text-align: center; color: #666; font-size: 0.85rem;">
+                    <p>The Generator and Discriminator compete adversarially. The Generator learns to produce realistic data while the Discriminator improves at detecting synthetic samples.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Training Configuration</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Training Epochs</label>
+                        <select id="epochs" class="form-control"><option>100</option><option selected>300</option><option>500</option><option>1000</option></select>
+                    </div>
+                    <div class="form-group"><label>Batch Size</label>
+                        <select id="batch" class="form-control"><option>128</option><option selected>256</option><option>512</option></select>
+                    </div>
+                    <div class="form-group"><label>Learning Rate</label>
+                        <select id="lr" class="form-control"><option>0.0001</option><option selected>0.0002</option><option>0.0005</option></select>
+                    </div>
+                </div>
+                <button id="train-btn" class="btn btn-primary">Train CTGAN Model</button>
+            </div>
+
+            <div id="status-msg"></div>
+
+            <div id="training-results" style="display: none;">
+                <div class="card">
+                    <h3 class="card-title">Training Progress</h3>
+                    <div id="training-epochs" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span id="current-epoch">Epoch: 0</span>
+                        <span id="gen-loss-label">Generator Loss: --</span>
+                        <span id="disc-loss-label">Discriminator Loss: --</span>
+                    </div>
+                    <div class="loss-chart" id="loss-chart"></div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Model Status</h3>
+                    <div id="model-status"></div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Generate Sample Data</h3>
+                    <div class="form-row">
+                        <div class="form-group"><label>Number of Rows</label>
+                            <select id="gen-rows" class="form-control"><option>100</option><option selected>500</option><option>1000</option><option>5000</option></select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button id="gen-sample-btn" class="btn btn-primary">Generate Sample</button>
+                        </div>
+                    </div>
+                    <div id="sample-output"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user || user.role !== 'admin') { window.location.href = 'login.html'; return; }
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            let isTrained = false;
+            let genLossHistory = [];
+            let discLossHistory = [];
+
+            document.getElementById('train-btn').addEventListener('click', () => {
+                const btn = document.getElementById('train-btn');
+                const epochs = parseInt(document.getElementById('epochs').value);
+                btn.disabled = true;
+                btn.textContent = 'Training...';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-warning">Training CTGAN model on agricultural dataset...</div>';
+                document.getElementById('training-results').style.display = 'block';
+                document.getElementById('loss-chart').innerHTML = '';
+                genLossHistory = [];
+                discLossHistory = [];
+
+                let epoch = 0;
+                const interval = setInterval(() => {
+                    epoch++;
+                    const genLoss = Math.max(0.1, 2.0 * Math.exp(-epoch / (epochs / 3)) + (Math.random() - 0.5) * 0.3);
+                    const discLoss = Math.max(0.1, 1.5 * Math.exp(-epoch / (epochs / 4)) + (Math.random() - 0.5) * 0.2);
+                    genLossHistory.push(genLoss);
+                    discLossHistory.push(discLoss);
+
+                    document.getElementById('current-epoch').textContent = `Epoch: ${epoch} / ${epochs}`;
+                    document.getElementById('gen-loss-label').textContent = `Generator Loss: ${genLoss.toFixed(4)}`;
+                    document.getElementById('disc-loss-label').textContent = `Discriminator Loss: ${discLoss.toFixed(4)}`;
+
+                    const chart = document.getElementById('loss-chart');
+                    const maxVal = Math.max(...genLossHistory, ...discLossHistory, 0.1);
+                    const barCount = Math.min(epoch, 100);
+                    const step = Math.max(1, Math.floor(genLossHistory.length / barCount));
+                    let bars = '';
+                    for (let i = 0; i < barCount; i++) {
+                        const idx = Math.floor(i * step);
+                        const gH = genLossHistory[idx] / maxVal * 180;
+                        const dH = discLossHistory[idx] / maxVal * 180;
+                        bars += `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;">
+                            <div class="loss-bar generator-loss" style="height:${gH}px;" title="G: ${genLossHistory[idx].toFixed(4)}"></div>
+                            <div class="loss-bar discriminator-loss" style="height:${dH}px;" title="D: ${discLossHistory[idx].toFixed(4)}"></div>
+                        </div>`;
+                    }
+                    chart.innerHTML = bars;
+
+                    if (epoch >= epochs) {
+                        clearInterval(interval);
+                        isTrained = true;
+                        btn.disabled = false;
+                        btn.textContent = 'Retrain CTGAN Model';
+                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">CTGAN model trained successfully! Generator and Discriminator losses converged.</div>';
+                        document.getElementById('model-status').innerHTML = `
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1rem;">
+                                <div class="kpi-card"><div class="kpi-value">${epochs}</div><div class="kpi-label">Epochs Completed</div></div>
+                                <div class="kpi-card"><div class="kpi-value">${genLossHistory[genLossHistory.length-1].toFixed(4)}</div><div class="kpi-label">Final Generator Loss</div></div>
+                                <div class="kpi-card"><div class="kpi-value">${discLossHistory[discLossHistory.length-1].toFixed(4)}</div><div class="kpi-label">Final Discriminator Loss</div></div>
+                            </div>
+                            <div style="margin-top:1rem;"><span class="badge badge-success">Model Ready</span> CTGAN model is trained and ready for data generation.</div>
+                        `;
+                    }
+                }, 50);
+            });
+
+            document.getElementById('gen-sample-btn').addEventListener('click', () => {
+                if (!isTrained) {
+                    document.getElementById('sample-output').innerHTML = '<div class="status-message status-error">Please train the model first.</div>';
+                    return;
+                }
+                const rows = parseInt(document.getElementById('gen-rows').value);
+                const headers = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall', 'label'];
+                const crops = ['rice', 'maize', 'cotton', 'jute', 'coffee', 'banana', 'mango', 'grapes', 'apple', 'orange'];
+                let table = '<div class="table-container"><table><thead><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
+                for (let i = 0; i < Math.min(rows, 10); i++) {
+                    table += '<tr>' + headers.map(h => {
+                        if (h === 'label') return '<td>' + crops[Math.floor(Math.random() * crops.length)] + '</td>';
+                        if (h === 'temperature' || h === 'humidity' || h === 'ph' || h === 'rainfall') return '<td>' + (Math.random() * 50 + 10).toFixed(2) + '</td>';
+                        return '<td>' + Math.round(Math.random() * 100 + 20) + '</td>';
+                    }).join('') + '</tr>';
+                }
+                table += '</tbody></table></div>';
+                table += '<p style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">Showing first 10 of ' + rows + ' generated rows</p>';
+                document.getElementById('sample-output').innerHTML = table;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Admin Users</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .plan-select { padding: 0.3rem; border-radius: 4px; border: 1px solid #E0E0E0; font-size: 0.85rem; }
+        .action-btn { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; border: 1px solid #E0E0E0; background: white; margin: 0 0.15rem; }
+        .action-btn:hover { border-color: #2E7D32; color: #2E7D32; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+        <main class="main-content">
+            <div class="page-header"><h2>User Management</h2><p>Manage users, subscriptions, payments, and platform access</p></div>
+
+            <div class="kpi-grid" id="kpi-grid"></div>
+
+            <div class="card">
+                <ul class="tabs" style="display: flex; border-bottom: 2px solid #E0E0E0; margin-bottom: 1rem; list-style: none; padding: 0;">
+                    <li class="tab active" data-tab="users" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; border-bottom: 2px solid #2E7D32; color: #2E7D32; font-weight: 600; margin-bottom: -2px;">Users</li>
+                    <li class="tab" data-tab="payments" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #666;">Payment History</li>
+                    <li class="tab" data-tab="subscriptions" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #666;">Subscriptions</li>
+                </ul>
+
+                <div id="tab-users" class="tab-panel active">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Plan</th><th>Predictions</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="users-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-payments" class="tab-panel" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>ID</th><th>User</th><th>Plan</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+                            <tbody id="payments-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-subscriptions" class="tab-panel" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>User</th><th>Plan</th><th>Start Date</th><th>Expires</th><th>Status</th></tr></thead>
+                            <tbody id="subscriptions-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/payment.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user || user.role !== 'admin') { window.location.href = 'login.html'; return; }
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            const users = AuthService.getUsers();
+            const totalPredictions = users.reduce((sum, u) => sum + HistoryService.getStats(u.id).totalPredictions, 0);
+            const dataStats = DataService.getGenerationStats();
+
+            document.getElementById('kpi-grid').innerHTML = `
+                <div class="kpi-card"><div class="kpi-value">${users.length}</div><div class="kpi-label">Total Users</div></div>
+                <div class="kpi-card"><div class="kpi-value">${totalPredictions}</div><div class="kpi-label">Predictions Made</div></div>
+                <div class="kpi-card"><div class="kpi-value">${dataStats.total}</div><div class="kpi-label">Datasets Generated</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'premium').length}</div><div class="kpi-label">Premium Users</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'pro').length}</div><div class="kpi-label">Pro Users</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'free').length}</div><div class="kpi-label">Free Users</div></div>
+            `;
+
+            const plans = { free: 'Free', pro: 'Pro', premium: 'Premium' };
+            const planBadges = { free: '<span class="badge badge-free">FREE</span>', pro: '<span class="badge badge-warning">PRO</span>', premium: '<span class="badge badge-premium">PREMIUM</span>' };
+
+            const tbody = document.getElementById('users-tbody');
+            tbody.innerHTML = users.filter(u => u.username !== 'admin').map(u => {
+                const preds = HistoryService.getStats(u.id).totalPredictions;
+                const statusBadge = u.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Disabled</span>';
+                const planOptions = ['free', 'pro', 'premium'].map(p => '<option value="' + p + '" ' + (u.plan === p ? 'selected' : '') + '>' + plans[p] + '</option>').join('');
+                return '<tr>' +
+                    '<td>' + u.id + '</td>' +
+                    '<td>' + u.username + '</td>' +
+                    '<td>' + u.email + '</td>' +
+                    '<td><span class="badge badge-' + (u.role === 'admin' ? 'premium' : u.role === 'company' ? 'warning' : 'success') + '">' + u.role.toUpperCase() + '</span></td>' +
+                    '<td>' + planBadges[u.plan] + '</td>' +
+                    '<td>' + preds + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<select class="plan-select" onchange="updatePlan(' + u.id + ', this.value)">' + planOptions + '</select> ' +
+                        '<button class="action-btn" onclick="toggleStatus(' + u.id + ')">' + (u.isActive ? 'Disable' : 'Enable') + '</button>' +
+                    '</td></tr>';
+            }).join('');
+
+            window.updatePlan = function(id, plan) {
+                AuthService.upgradeUser(id, plan);
+                try {
+                    const result = PaymentService.subscribe(id, plan);
+                    // If admin is changing their own plan, sync session
+                    const current = AuthService.getCurrentUser();
+                    if (current && current.id === id) {
+                        current.plan = plan;
+                        AuthService.updateCurrentUser(current);
+                    }
+                } catch(e) {}
+                location.reload();
+            };
+
+            window.toggleStatus = function(id) {
+                AuthService.toggleUserStatus(id);
+                location.reload();
+            };
+
+            // Payments tab
+            const payments = JSON.parse(localStorage.getItem('synthai_payments') || '[]');
+            const payTbody = document.getElementById('payments-tbody');
+            if (payments.length === 0) {
+                payTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No payments recorded</td></tr>';
+            } else {
+                payTbody.innerHTML = payments.sort((a,b) => b.subscribedAt - a.subscribedAt).map(p => {
+                    const user = users.find(u => u.id === p.userId);
+                    return '<tr><td>' + p.id + '</td><td>' + (user ? user.username : 'Unknown') + '</td><td>' + p.planName + '</td><td>$' + p.price.toFixed(2) + '</td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td><span class="badge badge-success">Completed</span></td></tr>';
+                }).join('');
+            }
+
+            // Subscriptions tab
+            const subTbody = document.getElementById('subscriptions-tbody');
+            const activeSubs = payments.filter(p => !p.expired);
+            if (activeSubs.length === 0) {
+                subTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No active subscriptions</td></tr>';
+            } else {
+                subTbody.innerHTML = activeSubs.sort((a,b) => b.subscribedAt - a.subscribedAt).map(p => {
+                    const user = users.find(u => u.id === p.userId);
+                    return '<tr><td>' + (user ? user.username : 'Unknown') + '</td><td><span class="badge badge-' + (p.planId === 'premium' ? 'premium' : p.planId === 'pro' ? 'warning' : 'free') + '">' + p.planName.toUpperCase() + '</span></td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td>' + new Date(p.expiresAt).toLocaleDateString() + '</td><td><span class="badge badge-success">Active</span></td></tr>';
+                }).join('');
+            }
+
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => { t.style.borderBottomColor = 'transparent'; t.style.color = '#666'; t.style.fontWeight = '400'; });
+                    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+                    tab.style.borderBottomColor = '#2E7D32'; tab.style.color = '#2E7D32'; tab.style.fontWeight = '600';
+                    document.getElementById('tab-' + tab.dataset.tab).style.display = 'block';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
