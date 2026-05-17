@@ -1,0 +1,228 @@
+================================================================================
+  SynthAI - دور المزارع (Farmer) - شرح كامل
+================================================================================
+
+📌 الصفحات المتاحة للمزارع فقط:
+--------------------------------
+  1. farmer_home.html       - لوحة التحكم الرئيسية للمزارع
+  2. crop_conditions.html   - من محصول إلى ظروف (Crop -> Conditions)
+  3. conditions_crop.html   - من ظروف إلى محصول (Conditions -> Crop)
+
+📌 الصفحات المشتركة (متاحة للجميع):
+--------------------------------
+  4. history.html           - سجل التنبؤات
+  5. generate_data.html     - توليد بيانات اصطناعية
+  6. subscription.html      - إدارة الاشتراك
+  7. dataset_viewer.html    - عرض مجموعة بيانات
+  8. datasets.html          - أرشيف مجموعات البيانات
+
+
+================================================================================
+1. farmer_home.html - لوحة تحكم المزارع
+================================================================================
+
+📋 الوظيفة:
+  - عرض ملخص الحساب: الخطة الحالية، المحاولات المتبقية، إجمالي التنبؤات
+  - روابط سريعة: Crop to Conditions و Conditions to Crop
+  - عرض آخر التنبؤات في جدول
+
+🔘 الأزرار:
+  - Crop -> Conditions -> يفتح crop_conditions.html
+  - Conditions -> Crop -> يفتح conditions_crop.html
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل تقنياً:
+  - تجلب إحصائيات من:
+    • AuthService.getCurrentUser() -> الخطة
+    • AuthService.getRemainingAttempts() -> المحاولات المتبقية
+    • HistoryService.getStats(user.id) -> عدد التنبؤات
+  - تجلب HistoryService.getRecent(user.id, 5) -> آخر 5 تنبؤات
+  - التحديد (sidebar): Dashboard, Crop->Conditions, Conditions->Crop, History, Subscription
+
+
+================================================================================
+2. crop_conditions.html - من محصول إلى ظروف (Crop -> Conditions)
+================================================================================
+
+📋 الوظيفة:
+  - اختيار محصول زراعي من قائمة
+  - عرض الظروف المثلى لنمو ذلك المحصول:
+    • درجة الحرارة، الرطوبة، pH التربة، كمية الأمطار
+    • احتياجات العناصر الغذائية (N, P, K)
+    • مستوى الماء والسماد
+
+🔘 الأزرار:
+  - Get Optimal Conditions -> يعرض الظروف المثلى للمحصول المختار
+    • يتحقق من AuthService.canAttempt() أولاً
+    • يستدعي RecommendationService.getCropRecommendation(crop)
+    • يسجل في التاريخ: HistoryService.addEntry()
+    • يسجل محاولة: AuthService.recordAttempt()
+  - Download as CSV -> يصدر النتائج كملف CSV
+    • يستدعي RecommendationService.exportResults()
+  - Try Another Crop -> يعيد تعيين النموذج لإدخال محصول جديد
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل تقنياً:
+  1. تحميل الصفحة:
+     - RecommendationService.getCrops() تملأ القائمة المنسدلة
+     - أسماء المحاصيل بالفرنسية: (Blé dur, Orge, Dattes, Olives, Oranges, ...)
+  2. الضغط على "Get Optimal Conditions":
+     - canAttempt(): تحقق من حد المحاولات اليومي
+       • Free: 5 محاولات/يوم
+       • Pro: 50 محاولة/يوم
+       • Premium: غير محدود
+     - getCropRecommendation(cropKey):
+       • ترجع الظروف من recommendation.js
+       • تتضمن: optimal_n, optimal_p, optimal_k, temperature, humidity, ph, rainfall
+     - تعرض البطاقات بشكل مرئي (مع level dot للماء والسماد)
+     - recordAttempt(): تزيد عداد المحاولات
+     - HistoryService.addEntry(): تحفظ في localStorage
+       • type: 'crop_conditions'
+       • input: JSON.stringify({crop: cropKey})
+       • result: JSON.stringify({crop: displayName, conditions: ...})
+  3. Export CSV:
+     - تولد ملف CSV ببيانات المحصول والظروف
+     - تفتح رابط تحميل تلقائي
+
+
+================================================================================
+3. conditions_crop.html - من ظروف إلى محصول (Conditions -> Crop)
+================================================================================
+
+📋 الوظيفة:
+  - إدخال قياسات التربة والمناخ (N, P, K, Temperature, Humidity, pH, Rainfall)
+  - التنبؤ بأفضل المحاصيل المتوافقة مع هذه الظروف
+  - عرض نسبة التوافق لكل محصول (0-100%)
+
+🔘 الأزرار:
+  - Predict Best Crops -> يتنبأ بأفضل 5 محاصيل متوافقة
+    • يتحقق من AuthService.canAttempt()
+    • يستدعي RecommendationService.predictCrop(conditions)
+    • يعرض جدول ترتيب + نسبة التوافق + بطاقة أفضل توصية
+    • يسجل في التاريخ: HistoryService.addEntry()
+    • يسجل محاولة: AuthService.recordAttempt()
+  - Reset Values -> يعيد تعيين جميع الحقول إلى القيم الافتراضية
+  - Download Results as CSV -> يصدر النتائج كملف CSV
+    • يستدعي RecommendationService.exportResults()
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل تقنياً:
+  1. النموذج به 7 حقول إدخال رقمية:
+     - N (نيتروجين): 0-200
+     - P (فوسفور): 0-200
+     - K (بوتاسيوم): 0-200
+     - Temperature: 0-50°C
+     - Humidity: 0-100%
+     - pH: 0-14
+     - Rainfall: 0-400mm
+
+  2. predictCrop(conditions):
+     - لكل محصول من 23 محصول جزائري:
+       a. تحسب درجة التوافق لكل متغير:
+          tempScore = 100 - (|userTemp - optimalTemp| / optimalRange) * 100
+          humScore = 100 - (|userHum - optimalHum| / optimalRange) * 100
+          pHScore = 100 - (|userPH - optimalPH| / optimalRange) * 100
+          rainScore = 100 - (|userRain - optimalRain| / optimalRange) * 100
+          NPKScore = متوسط درجات N, P, K
+       b. averageScore = متوسط كل الدرجات
+     - ترجع أفضل 5 محاصيل مرتبة تنازلياً
+
+  3. العرض:
+     - الجدول: الرتبة (🥇🥈🥉), اسم المحصول, شريط التوافق, مستوى الماء والسماد
+     - بطاقة "Best Recommendation": أفضل محصول مع النسبة
+
+  4. التخزين:
+     - HistoryService.addEntry():
+       • type: 'conditions_crop'
+       • input: JSON.stringify({n, p, k, temperature, humidity, ph, rainfall})
+       • result: JSON.stringify({crop: bestCropName, score: bestScore, top5: [...]})
+
+
+================================================================================
+4. history.html - سجل التنبؤات (مشترك)
+================================================================================
+
+📋 الوظيفة:
+  - عرض جميع تنبؤات المستخدم (Crop->Conditions, Conditions->Crop, Data Generation)
+  - بحث وتصفية: حسب المحصول، التاريخ، النوع
+  - تصدير كـ CSV
+  - حذف فردي أو مسح الكل
+
+🔘 الأزرار:
+  - Export CSV -> يصدر كل التاريخ كملف CSV
+  - Clear All -> يحذف جميع الإدخالات
+  - Delete (×) -> يحذف إدخال واحد
+  - Pagination -> 10 لكل صفحة
+
+⚙️ كيف تعمل تقنياً:
+  - HistoryService.getUserHistory(user.id) تجلب من localStorage ('synthai_history')
+  - التصفية: search (crop name), date, type (crop_conditions/conditions_crop/data_generation)
+  - الباجينيشن: 10 entries/page مع Prev/Next/Page numbers
+  - CSV export: headers (Type, Input, Result, Date)
+
+
+================================================================================
+5. generate_data.html - توليد بيانات (مشترك)
+================================================================================
+
+📋 الوظيفة:
+  - اختيار مستوى مجموعة البيانات (Medium/Large/Big Data حسب الخطة)
+  - توليد بيانات زراعية اصطناعية
+
+🔘 الأزرار:
+  - Generate Dataset -> يولد البيانات
+    • يحاول ApiService.generateData() أولاً (إذا Backend شغال)
+    • يقع على DataService.generatePreview() (JS simulation)
+    • يحفظ في DataService.addGeneration() و HistoryService.addEntry()
+
+⚙️ كيف تعمل تقنياً:
+  - مستوى الوصول حسب الخطة:
+    • Free: Medium فقط (1000 صف)
+    • Pro: Medium + Large (10000 صف)
+    • Premium: Medium + Large + Big Data (100000 صف)
+  - التوليد: Crop type فقط (افتراضي، تمت إزالة اختيار النوع)
+
+
+================================================================================
+6. subscription.html - الاشتراكات (مشترك)
+================================================================================
+
+📋 الوظيفة:
+  - عرض خطط الاشتراك (Free/Pro/Premium)
+  - الترقية إلى خطة مدفوعة
+
+🔘 الأزرار:
+  - Subscribe / Get Started -> يفتح نافذة الدفع
+  - Confirm Payment -> يحاكي الدفع ويرقي الخطة
+  - Cancel -> يغلق نافذة الدفع
+
+⚙️ كيف تعمل تقنياً:
+  - PaymentService.simulatePayment() تحدث user.plan في localStorage
+  - الخطط: Free ($0), Pro ($9.99/شهر), Premium ($29.99/شهر)
+  - بعد الدفع يحصل المستخدم على صلاحية 30 يوماً
+
+
+================================================================================
+نظام المحاولات (Attempt Limit)
+================================================================================
+
+  - كل زر Predicting/Recommendation يتحقق من canAttempt():
+    • Free: 5 محاولات/يوم (تتبدل كل يوم)
+    • Pro: 50 محاولة/يوم
+    • Premium: غير محدود
+  - canAttempt() = remaining > 0
+  - recordAttempt() = تزيد العداد
+  - getRemainingAttempts() = المتبقي
+
+
+================================================================================
+قائمة المحاصيل الجزائرية (Algerian Crops)
+================================================================================
+
+  23 محصولاً بأسماء فرنسية في recommendation.js:
+  Blé dur, Orge, Dattes, Olives, Oranges, Raisin, Figues,
+  Grenade, Pois chiches, Lentilles, Pomme de terre, Tomates,
+  Oignons, Pastèque, Melon, Poivrons, Carottes, Petits pois,
+  Abricots, Amandes, Maïs, Tournesol
+
+================================================================================

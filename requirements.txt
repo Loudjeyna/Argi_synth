@@ -19,5 +19,9 @@ seaborn>=0.11.0
 # Web Interface
 streamlit>=1.28.0
 
+# REST API Backend
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
 # Utilities
 plotly>=5.18.0

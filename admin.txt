@@ -1,0 +1,196 @@
+================================================================================
+  SynthAI - دور المسؤول (Admin) - شرح كامل
+================================================================================
+
+📌 الصفحات المتاحة للمسؤول فقط:
+--------------------------------
+  1. admin_home.html       - لوحة التحكم الرئيسية
+  2. admin_model.html      - تدريب نموذج CTGAN
+  3. admin_validation.html - التحقق من جودة البيانات
+  4. admin_users.html      - إدارة المستخدمين
+
+
+================================================================================
+1. admin_home.html - لوحة التحكم (Dashboard)
+================================================================================
+
+📋 الوظيفة:
+  - عرض ملخص المنصة: عدد المستخدمين، التنبؤات، مجموعات البيانات، إجمالي الصفوف
+  - روابط سريعة لصفحات الإدارة: تدريب النموذج، التحقق، المستخدمين
+
+🔘 الأزرار:
+  - Train Model -> يفتح admin_model.html
+  - Data Validation -> يفتح admin_validation.html
+  - Manage Users -> يفتح admin_users.html
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل:
+  - عند تحميل الصفحة، تجلب الإحصائيات من:
+    • AuthService.getUsers() -> عدد المستخدمين
+    • DataService.getGenerationStats() -> عدد مجموعات البيانات والصفوف
+    • HistoryService.getStats() -> عدد التنبؤات
+  - sidebar يظهر روابط: Dashboard, Train Model, Validation, Users
+
+
+================================================================================
+2. admin_model.html - تدريب نموذج CTGAN
+================================================================================
+
+📋 الوظيفة:
+  - محاكاة تدريب نموذج GAN (توليد بيانات اصطناعية)
+  - توليد عينة بيانات وحفظها في الأرشيف والتاريخ
+
+🔘 الأزرار:
+  - Train CTGAN Model -> يبدأ محاكاة التدريب (100/300/500/1000 دورة)
+    • يعرض رسم بياني للخسارة (Generator Loss / Discriminator Loss)
+    • بعد انتهاء التدريب، يصبح النموذج "جاهزاً"
+  - Generate Sample -> يولد بيانات اصطناعية (100/500/1000/5000 صف)
+    • يستدعي DataService.generatePreview() -> يولد البيانات
+    • يستدعي DataService.addGeneration() -> يحفظ في localStorage
+    • يستدعي HistoryService.addEntry() -> يسجل في التاريخ
+  - View in Archive -> يفتح dataset_viewer.html لعرض البيانات
+
+⚙️ كيف تعمل تقنياً:
+  1. الضغط على "Train" يشغل setInterval كل 50ms
+  2. كل tick يحسب loss وهمي (دالة أسية + random noise)
+  3. يرسم أشرطة خضراء (Generator) وبرتقالية (Discriminator)
+  4. بعد epochs كاملة، يظهر ملخص النتائج (KPI cards)
+  5. الضغط على "Generate Sample":
+     a. generatePreview() تولد data array بالكامل (كل الصفوف)
+     b. validatePreview() تجري 10 فحوصات جودة
+     c. addGeneration() تخزن الـ data الكامل في _fullDatasetCache
+     d. addGeneration() تخزن أول 50 صف فقط في localStorage
+     e. HistoryService.addEntry() تحفظ في تاريخ المستخدم
+
+
+================================================================================
+3. admin_validation.html - التحقق من جودة البيانات
+================================================================================
+
+📋 الوظيفة:
+  - مقارنة البيانات المُصنّعة (synthetic) بالبيانات الحقيقية (real)
+  - عرض إحصائيات كل عمود (Mean, Std, Min, Max)
+  - رسم توزيع الأعمدة (Distribution bars)
+  - قائمة فحوصات الجودة (Validation checks)
+  - نسبة التشابه الإجمالية (Similarity Score)
+
+🔘 الأزرار:
+  - Update -> يعيد رسم التوزيع للعمود المحدد في القائمة المنسدلة
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل تقنياً:
+  1. تجلب أحدث dataset من DataService.getGenerations()
+  2. تعرض KPI: عدد المجموعات، الصالحة، التحذيرات، الغير صالحة
+  3. realStats: إحصائيات ثابتة مأخوذة من ملف Crop_recommendation.csv
+     (N: mean=52.5, std=28.3, P: mean=42.8, ...)
+  4. synthStats: تحسب من الـ preview data الفعلي
+     - تجمع القيم الرقمية لكل عمود
+     - تحسب mean, std, min, max
+  5. renderDistribution(col):
+     - تولد 1000 قيمة real بتوزيع طبيعي حول realStats[col]
+     - تأخذ القيم الفعلية من preview data
+     - تقسم إلى 10 bins
+     - ترسم أشرطة خضراء (real) وبرتقالية (synthetic)
+  6. similarityPct:
+     - computeSimilarityScore() تقارن mean و range كل عمود
+     - mean closeness (وزن 60%) + range match (وزن 40%)
+     - النتيجة: 0-99%
+  7. Validation checks:
+     - 10 فحوصات: pH, Temperature, N/P/K, Humidity, Rainfall, Labels...
+     - qualityScore = (passedChecks / totalChecks) × 100
+
+
+================================================================================
+4. admin_users.html - إدارة المستخدمين
+================================================================================
+
+📋 الوظيفة:
+  - عرض جميع المستخدمين المسجلين
+  - تغيير خطة الاشتراك لكل مستخدم
+  - تعطيل/تفعيل المستخدمين
+  - عرض سجل المدفوعات والاشتراكات
+
+🔘 الأزرار:
+  - Plan select (Free/Pro/Premium) -> يغير خطة المستخدم
+    • يستدعي AuthService.upgradeUser() + PaymentService.subscribe()
+  - Disable/Enable -> يعطل أو يفعل المستخدم
+    • يستدعي AuthService.toggleUserStatus()
+  - Logout -> تسجيل الخروج
+
+⚙️ كيف تعمل تقنياً:
+  - تجلب جميع المستخدمين من AuthService.getUsers()
+  - تجلب سجل المدفوعات من PaymentService.getPaymentHistory()
+  - لكل مستخدم: show في جدول مع ID, Username, Email, Role, Plan, Actions
+  - تغيير الخطة يعدل localStorage مباشرة
+  - التعطيل يغير isActive = false ويمنع تسجيل الدخول
+
+
+================================================================================
+  الصفحات المشتركة (متاحة للجميع مع التحقق من الصلاحية)
+================================================================================
+
+  - history.html     -> يعرض تاريخ التنبؤات وتوليد البيانات (حسب user.id)
+  - generate_data.html -> توليد بيانات اصطناعية (حسب الخطة)
+  - subscription.html -> إدارة الاشتراكات
+  - dataset_viewer.html -> عرض مجموعة بيانات محددة
+  - datasets.html    -> أرشيف جميع مجموعات البيانات
+
+راجع farmer.txt و company.txt للتفاصيل.
+
+
+================================================================================
+  كيف يعمل الموقع ككل؟ (التدفق التقني)
+================================================================================
+
+1. تسجيل الدخول:
+   login.html -> AuthService.login() -> sessionStorage -> redirect حسب role
+
+2. التنقل:
+   Sidebar (app.js) -> setupSidebar() -> ترتبط الروابط حسب role
+   كل رابط يستخدم window.location.href = '/pages/xxx.html'
+
+3. تخزين البيانات:
+   localStorage: المستخدمين، مجموعات البيانات، التاريخ، المدفوعات
+   sessionStorage: الجلسة الحالية (user object)
+   _fullDatasetCache: بيانات كاملة في الذاكرة (لتفادي limit localStorage)
+
+4. توليد البيانات:
+   generatePreview(type, level) ->
+     generateFullData(type, totalRows) ->
+       generateCropRow() / generateSoilRow() / generateWeatherRow()
+   validatePreview(preview) ->
+     computeSimilarityScore() + 10 validation checks
+   addGeneration() ->
+     _fullDatasetCache[id] = fullData
+     localStorage = preview فقط (أول 50 صف)
+
+5. Validation:
+   validatePreview() data.js:261-373
+     = 10 checks: rainfall>=0, pH(0-14), temp(-10~55C), N/P/K(0-300),
+                  humidity(0-100%), valid labels, valid textures,
+                  pressure(800-1100), wind>=0, cloud(0-100%)
+     = qualityScore = (passed / total) × 100
+     = similarityPct = computeSimilarityScore(preview)
+         - لكل عمود عددي: meanDiff + rangeMatch
+         - النتيجة وزنها 60% mean, 40% range
+
+6. التوصيات الزراعية:
+   RecommendationService.getCropRecommendation(crop):
+     ترجع الظروف المثلى للمحصول
+   RecommendationService.predictCrop(conditions):
+     تحسب درجة التوافق (0-100%) لكل محصول
+     ترجع أفضل 5 محاصيل متوافقة
+
+7. الاشتراكات:
+   PaymentService:
+     Free: 5 تنبؤات/يوم, Medium فقط
+     Pro ($9.99/شهر): 50 تنبؤ/يوم, Large
+     Premium ($29.99/شهر): غير محدود, Big Data
+
+8. API Backend (اختياري):
+   ApiService.isAvailable() -> healthCheck() -> GET /api/health
+   إذا Backend شغال: يستخدم API حقيقي
+   إذا لا: JS simulation
+   القرار يُخبأ في sessionStorage
+
+================================================================================

@@ -64,6 +64,7 @@ const HistoryService = (function() {
             totalPredictions: history.length,
             cropRecommendations: history.filter(h => h.type === 'crop_conditions').length,
             conditionPredictions: history.filter(h => h.type === 'conditions_crop').length,
+            dataGenerations: history.filter(h => h.type === 'data_generation').length,
             lastPrediction: history.length > 0 ? history[0].date : 'N/A'
         };
     }

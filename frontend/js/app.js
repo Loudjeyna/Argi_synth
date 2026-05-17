@@ -1,32 +1,36 @@
 /* SynthAI - Main Application Controller */
 const App = (function() {
-    const PAGES = {
-        login: 'login.html',
+    var PREFIX = '/pages/';
+
+    function p(path) { return PREFIX + path; }
+
+    var PAGES = {
+        login: p('login.html'),
         farmer: {
-            home: 'farmer_home.html',
-            crop_conditions: 'crop_conditions.html',
-            conditions_crop: 'conditions_crop.html',
-            history: 'history.html'
+            home: p('farmer_home.html'),
+            crop_conditions: p('crop_conditions.html'),
+            conditions_crop: p('conditions_crop.html'),
+            history: p('history.html')
         },
         company: {
-            home: 'company_home.html',
-            generate: 'generate_data.html',
-            datasets: 'datasets.html'
+            home: p('company_home.html'),
+            generate: p('generate_data.html'),
+            datasets: p('datasets.html')
         },
         admin: {
-            home: 'admin_home.html',
-            users: 'admin_users.html',
-            validation: 'admin_validation.html',
-            model: 'admin_model.html'
+            home: p('admin_home.html'),
+            users: p('admin_users.html'),
+            validation: p('admin_validation.html'),
+            model: p('admin_model.html')
         }
     };
 
     function init() {
-        const user = AuthService.getCurrentUser();
+        var user = AuthService.getCurrentUser();
         if (window.location.pathname.includes('login.html') && user) {
             redirectByRole(user.role);
         } else if (!window.location.pathname.includes('login.html') && !user) {
-            window.location.href = 'login.html';
+            window.location.href = p('login.html');
         }
     }
 
@@ -51,13 +55,13 @@ const App = (function() {
             links.push({ href: PAGES.company.home, icon: 'home', label: 'Dashboard' });
             links.push({ href: PAGES.company.generate, icon: 'database', label: 'Generate Data' });
             links.push({ href: PAGES.company.datasets, icon: 'file', label: 'Datasets' });
-            links.push({ href: 'subscription.html', icon: 'star', label: 'Subscription' });
+            links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscription' });
         } else {
             links.push({ href: PAGES.farmer.home, icon: 'home', label: 'Dashboard' });
             links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'Crop → Conditions' });
             links.push({ href: PAGES.farmer.conditions_crop, icon: 'search', label: 'Conditions → Crop' });
             links.push({ href: PAGES.farmer.history, icon: 'history', label: 'History' });
-            links.push({ href: 'subscription.html', icon: 'star', label: 'Subscription' });
+            links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscription' });
         }
 
         const currentPage = window.location.pathname.split('/').pop();
@@ -96,9 +100,23 @@ const App = (function() {
     }
 
     function setupLogout() {
-        const btn = document.getElementById('logout-btn');
-        if (btn) btn.addEventListener('click', () => { AuthService.logout(); window.location.href = 'login.html'; });
+        var btn = document.getElementById('logout-btn');
+        if (btn) btn.addEventListener('click', function() { AuthService.logout(); window.location.href = p('login.html'); });
     }
+
+    // Global logout safety: event delegation catches clicks even if setupLogout() was never called
+    document.addEventListener('click', function(e) {
+        var target = e.target;
+        while (target) {
+            if (target.id === 'logout-btn' || (target.tagName === 'BUTTON' && target.textContent.trim() === 'Logout')) {
+                try { AuthService.logout(); } catch (ex) { sessionStorage.clear(); }
+                window.location.href = p('login.html');
+                e.preventDefault();
+                return;
+            }
+            target = target.parentElement;
+        }
+    });
 
     return { init, setupSidebar, setupUserPanel, setupLogout, PAGES };
 })();

@@ -41,6 +41,12 @@ class CTGANModel:
         metadata.detect_from_dataframe(df)
         return metadata
 
+    @staticmethod
+    def _adjust_batch_size(batch_size: int, pac: int = 10) -> int:
+        """Ensure batch_size is divisible by pac (default 10 for CTGAN)."""
+        adjusted = (batch_size // pac) * pac
+        return max(adjusted, pac)
+
     def train(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Train CTGAN model on provided DataFrame (CTGAN ONLY)."""
         import warnings
@@ -53,12 +59,13 @@ class CTGANModel:
         os.environ['JOBLIB_SINGLE_THREADED'] = '1'
         
         try:
+            adjusted_batch = self._adjust_batch_size(self.batch_size)
             self._model = CTGANSynthesizer(
                 metadata=self._metadata,
                 enforce_min_max_values=True,
                 enforce_rounding=True,
                 epochs=self.epochs,
-                batch_size=self.batch_size,
+                batch_size=adjusted_batch,
                 embedding_dim=self.embedding_dim,
                 generator_dim=self.generator_dim,
                 discriminator_dim=self.discriminator_dim,

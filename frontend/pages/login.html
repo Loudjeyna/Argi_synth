@@ -115,9 +115,9 @@
             if (result.success) {
                 msg.className = 'status-message status-success';
                 msg.textContent = 'Login successful!';
-                setTimeout(() => {
-                    const routes = { admin: 'admin_home.html', company: 'company_home.html', farmer: 'farmer_home.html' };
-                    window.location.href = routes[result.user.role] || 'farmer_home.html';
+                setTimeout(function() {
+                    var routes = { admin: '/pages/admin_home.html', company: '/pages/company_home.html', farmer: '/pages/farmer_home.html' };
+                    window.location.href = routes[result.user.role] || '/pages/farmer_home.html';
                 }, 500);
             } else {
                 msg.className = 'status-message status-error';
@@ -145,10 +145,10 @@
         });
 
         // Check if already logged in
-        const currentUser = AuthService.getCurrentUser();
-        if (currentUser) {
-            const routes = { admin: 'admin_home.html', company: 'company_home.html', farmer: 'farmer_home.html' };
-            window.location.href = routes[currentUser.role];
+        var _user = AuthService.getCurrentUser();
+        if (_user) {
+            var _routes = { admin: '/pages/admin_home.html', company: '/pages/company_home.html', farmer: '/pages/farmer_home.html' };
+            window.location.href = _routes[_user.role] || '/pages/farmer_home.html';
         }
     </script>
 </body>

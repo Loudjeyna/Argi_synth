@@ -1,33 +1,62 @@
-/* SynthAI - Recommendation Engine */
+/* SynthAI - Recommendation Engine (Algerian Agriculture) */
 const RecommendationService = (function() {
-    // Crop statistics based on Crop_recommendation.csv
-    const cropData = {
-        rice: { n:[45,105], p:[35,65], k:[35,55], temp:[20,35], humidity:[70,95], ph:[5,7], rainfall:[100,350], water:"High", fertilizer:"Medium" },
-        maize: { n:[55,110], p:[40,85], k:[25,65], temp:[18,35], humidity:[55,85], ph:[5,7], rainfall:[50,200], water:"Medium", fertilizer:"High" },
-        cotton: { n:[50,125], p:[40,90], k:[25,55], temp:[20,40], humidity:[50,80], ph:[5,8], rainfall:[50,180], water:"Medium", fertilizer:"High" },
-        jute: { n:[75,120], p:[30,85], k:[30,80], temp:[20,38], humidity:[70,90], ph:[6,7], rainfall:[150,300], water:"High", fertilizer:"Medium" },
-        coffee: { n:[50,110], p:[40,80], k:[25,55], temp:[18,30], humidity:[65,85], ph:[5,7], rainfall:[100,300], water:"Medium", fertilizer:"Medium" },
-        banana: { n:[70,120], p:[45,90], k:[30,70], temp:[25,38], humidity:[70,90], ph:[5,7], rainfall:[100,250], water:"High", fertilizer:"High" },
-        mango: { n:[35,90], p:[25,70], k:[20,55], temp:[20,38], humidity:[50,85], ph:[5,7], rainfall:[50,200], water:"Low", fertilizer:"Medium" },
-        grapes: { n:[40,100], p:[35,80], k:[25,55], temp:[15,35], humidity:[45,75], ph:[5,7], rainfall:[50,150], water:"Low", fertilizer:"Medium" },
-        apple: { n:[30,80], p:[25,60], k:[20,45], temp:[5,20], humidity:[50,80], ph:[5,7], rainfall:[100,200], water:"Medium", fertilizer:"Low" },
-        coconut: { n:[40,90], p:[30,70], k:[25,55], temp:[25,35], humidity:[70,95], ph:[5,8], rainfall:[150,350], water:"High", fertilizer:"Medium" },
-        chickpea: { n:[30,80], p:[35,75], k:[20,50], temp:[15,30], humidity:[40,70], ph:[6,8], rainfall:[50,150], water:"Low", fertilizer:"Low" },
-        lentil: { n:[25,70], p:[30,65], k:[20,45], temp:[10,30], humidity:[40,70], ph:[5,7], rainfall:[50,150], water:"Low", fertilizer:"Low" },
-        blackgram: { n:[20,60], p:[25,60], k:[15,40], temp:[20,35], humidity:[50,75], ph:[6,8], rainfall:[50,150], water:"Low", fertilizer:"Low" },
-        kidneybeans: { n:[35,80], p:[30,70], k:[20,50], temp:[15,30], humidity:[45,70], ph:[5,7], rainfall:[50,150], water:"Low", fertilizer:"Medium" },
-        pigeonpeas: { n:[30,70], p:[25,60], k:[20,45], temp:[20,35], humidity:[50,75], ph:[5,8], rainfall:[50,150], water:"Low", fertilizer:"Low" },
-        muskmelon: { n:[40,90], p:[30,70], k:[25,55], temp:[20,35], humidity:[60,85], ph:[5,7], rainfall:[100,250], water:"Medium", fertilizer:"Medium" },
-        watermelon: { n:[45,100], p:[35,75], k:[30,65], temp:[20,35], humidity:[60,85], ph:[5,7], rainfall:[100,250], water:"Medium", fertilizer:"Medium" },
-        orange: { n:[35,80], p:[25,65], k:[20,50], temp:[15,35], humidity:[50,80], ph:[5,7], rainfall:[100,200], water:"Medium", fertilizer:"Medium" },
-        papaya: { n:[40,90], p:[30,70], k:[25,55], temp:[20,35], humidity:[60,85], ph:[5,7], rainfall:[100,250], water:"Medium", fertilizer:"Medium" },
-        pomegranate: { n:[35,80], p:[25,60], k:[20,50], temp:[15,35], humidity:[40,70], ph:[5,7], rainfall:[50,200], water:"Low", fertilizer:"Low" },
-        mungbean: { n:[25,65], p:[25,60], k:[15,40], temp:[20,35], humidity:[50,75], ph:[6,8], rainfall:[50,150], water:"Low", fertilizer:"Low" },
-        mothbeans: { n:[20,55], p:[20,55], k:[15,35], temp:[20,35], humidity:[45,70], ph:[6,8], rainfall:[50,150], water:"Low", fertilizer:"Low" }
+    // Crop statistics adapted for Algerian climate and agricultural environment
+    var cropData = {
+        ble_dur:       { n:[40,100], p:[30,70],  k:[25,55],  temp:[10,30], humidity:[40,65], ph:[6,8],   rainfall:[80,200], water:"Medium", fertilizer:"High" },
+        orge:          { n:[35,90],  p:[25,60],  k:[20,50],  temp:[8,28],  humidity:[35,60], ph:[6,8],   rainfall:[60,180], water:"Low",    fertilizer:"Medium" },
+        dattes:        { n:[25,70],  p:[20,55],  k:[25,50],  temp:[25,45], humidity:[15,35], ph:[7,9],   rainfall:[5,80],   water:"Low",    fertilizer:"Low" },
+        zitoun:        { n:[25,75],  p:[20,60],  k:[20,50],  temp:[12,32], humidity:[40,70], ph:[6,8],   rainfall:[80,200], water:"Low",    fertilizer:"Medium" },
+        oranges:       { n:[35,80],  p:[25,65],  k:[20,50],  temp:[15,35], humidity:[50,80], ph:[5,7],   rainfall:[100,200],water:"Medium", fertilizer:"Medium" },
+        aneb:          { n:[40,100], p:[35,80],  k:[25,55],  temp:[15,35], humidity:[45,75], ph:[5,7],   rainfall:[50,150], water:"Low",    fertilizer:"Medium" },
+        karmous:       { n:[30,80],  p:[25,60],  k:[20,50],  temp:[18,35], humidity:[45,70], ph:[6,8],   rainfall:[60,180], water:"Medium", fertilizer:"Medium" },
+        rouman:        { n:[35,80],  p:[25,60],  k:[20,50],  temp:[15,35], humidity:[40,70], ph:[5,7],   rainfall:[50,200], water:"Low",    fertilizer:"Low" },
+        homos:         { n:[30,80],  p:[35,75],  k:[20,50],  temp:[15,30], humidity:[40,70], ph:[6,8],   rainfall:[50,150], water:"Low",    fertilizer:"Low" },
+        adas:          { n:[25,70],  p:[30,65],  k:[20,45],  temp:[10,30], humidity:[40,70], ph:[5,7],   rainfall:[50,150], water:"Low",    fertilizer:"Low" },
+        batata:        { n:[50,110], p:[35,75],  k:[40,80],  temp:[15,28], humidity:[50,75], ph:[5,6],   rainfall:[80,200], water:"Medium", fertilizer:"High" },
+        tomatish:      { n:[45,105], p:[35,70],  k:[30,65],  temp:[18,32], humidity:[55,80], ph:[5,7],   rainfall:[80,200], water:"Medium", fertilizer:"High" },
+        bsla:          { n:[30,80],  p:[25,60],  k:[20,50],  temp:[12,28], humidity:[50,75], ph:[6,7],   rainfall:[80,180], water:"Medium", fertilizer:"Medium" },
+        dellaa:        { n:[45,100], p:[35,75],  k:[30,65],  temp:[20,35], humidity:[60,85], ph:[5,7],   rainfall:[100,250],water:"Medium", fertilizer:"Medium" },
+        bettikh:       { n:[40,90],  p:[30,70],  k:[25,55],  temp:[20,35], humidity:[60,85], ph:[5,7],   rainfall:[100,250],water:"Medium", fertilizer:"Medium" },
+        felfel:        { n:[40,95],  p:[30,70],  k:[25,55],  temp:[18,32], humidity:[55,80], ph:[5,7],   rainfall:[80,200], water:"Medium", fertilizer:"High" },
+        zroudiya:      { n:[30,80],  p:[25,60],  k:[30,70],  temp:[10,25], humidity:[45,70], ph:[5,7],   rainfall:[80,180], water:"Medium", fertilizer:"Medium" },
+        jelbana:       { n:[20,60],  p:[25,60],  k:[15,40],  temp:[10,25], humidity:[45,70], ph:[6,8],   rainfall:[50,150], water:"Low",    fertilizer:"Low" },
+        michmich:      { n:[30,80],  p:[25,60],  k:[20,50],  temp:[15,32], humidity:[45,70], ph:[6,8],   rainfall:[60,180], water:"Medium", fertilizer:"Medium" },
+        louz:          { n:[25,70],  p:[20,55],  k:[20,50],  temp:[8,28],  humidity:[40,65], ph:[6,8],   rainfall:[60,180], water:"Low",    fertilizer:"Low" },
+        maize:         { n:[55,110], p:[40,85],  k:[25,65],  temp:[18,35], humidity:[55,85], ph:[5,7],   rainfall:[50,200], water:"Medium", fertilizer:"High" },
+        tournesol:     { n:[40,100], p:[35,80],  k:[25,60],  temp:[15,32], humidity:[45,70], ph:[6,8],   rainfall:[60,180], water:"Medium", fertilizer:"Medium" }
+    };
+
+    var cropNames = {
+        ble_dur: "Bl\u00e9 dur",
+        orge: "Orge",
+        dattes: "Dattes",
+        zitoun: "Olives",
+        oranges: "Oranges",
+        aneb: "Raisin",
+        karmous: "Figues",
+        rouman: "Grenade",
+        homos: "Pois chiches",
+        adas: "Lentilles",
+        batata: "Pomme de terre",
+        tomatish: "Tomates",
+        bsla: "Oignons",
+        dellaa: "Past\u00e8que",
+        bettikh: "Melon",
+        felfel: "Poivrons",
+        zroudiya: "Carottes",
+        jelbana: "Petits pois",
+        michmich: "Abricots",
+        louz: "Amandes",
+        maize: "Ma\u00efs",
+        tournesol: "Tournesol"
     };
 
     function getCrops() {
         return Object.keys(cropData);
+    }
+
+    function getCropDisplayName(key) {
+        return cropNames[key] || key.charAt(0).toUpperCase() + key.slice(1);
     }
 
     function getCropConditions(crop) {
@@ -35,14 +64,14 @@ const RecommendationService = (function() {
     }
 
     function getCropRecommendation(crop) {
-        const conditions = getCropConditions(crop);
+        var conditions = getCropConditions(crop);
         if (!conditions) return null;
         return {
-            crop: crop.charAt(0).toUpperCase() + crop.slice(1),
+            crop: getCropDisplayName(crop),
             optimal_n: conditions.n[0] + " - " + conditions.n[1],
             optimal_p: conditions.p[0] + " - " + conditions.p[1],
             optimal_k: conditions.k[0] + " - " + conditions.k[1],
-            optimal_temperature: conditions.temp[0] + "C - " + conditions.temp[1] + "C",
+            optimal_temperature: conditions.temp[0] + "\u00b0C - " + conditions.temp[1] + "\u00b0C",
             optimal_humidity: conditions.humidity[0] + "% - " + conditions.humidity[1] + "%",
             optimal_ph: conditions.ph[0] + " - " + conditions.ph[1],
             optimal_rainfall: conditions.rainfall[0] + "mm - " + conditions.rainfall[1] + "mm",
@@ -52,10 +81,10 @@ const RecommendationService = (function() {
     }
 
     function predictCrop(conditions) {
-        const crops = getCrops();
-        const scores = crops.map(crop => {
-            const data = cropData[crop];
-            let score = 0;
+        var crops = getCrops();
+        var scores = crops.map(function(crop) {
+            var data = cropData[crop];
+            var score = 0;
             score += Math.abs(conditions.n - (data.n[0] + data.n[1]) / 2) / 100;
             score += Math.abs(conditions.p - (data.p[0] + data.p[1]) / 2) / 100;
             score += Math.abs(conditions.k - (data.k[0] + data.k[1]) / 2) / 200;
@@ -63,31 +92,35 @@ const RecommendationService = (function() {
             score += Math.abs(conditions.humidity - (data.humidity[0] + data.humidity[1]) / 2) / 100;
             score += Math.abs(conditions.ph - (data.ph[0] + data.ph[1]) / 2) / 10;
             score += Math.abs(conditions.rainfall - (data.rainfall[0] + data.rainfall[1]) / 2) / 350;
-            return { crop: crop.charAt(0).toUpperCase() + crop.slice(1), match: Math.max(0, Math.round(100 - score * 50)) };
+            return { crop: crop, displayName: getCropDisplayName(crop), match: Math.max(0, Math.round(100 - score * 50)) };
         });
-        scores.sort((a, b) => b.match - a.match);
-        return scores.slice(0, 5).map((item, idx) => ({
-            rank: idx + 1, crop: item.crop, match_score: item.match + "%",
-            water_level: cropData[item.crop.toLowerCase()].water,
-            fertilizer_level: cropData[item.crop.toLowerCase()].fertilizer
-        }));
+        scores.sort(function(a, b) { return b.match - a.match; });
+        return scores.slice(0, 5).map(function(item, idx) {
+            return {
+                rank: idx + 1,
+                crop: item.displayName,
+                match_score: item.match + "%",
+                water_level: cropData[item.crop].water,
+                fertilizer_level: cropData[item.crop].fertilizer
+            };
+        });
     }
 
     function exportResults(results, type) {
-        let csv;
+        var csv;
         if (type === 'conditions') {
-            csv = "Parameter,Value\n" + Object.entries(results).map(([k,v]) => `${k},"${v}"`).join('\n');
+            csv = "Parameter,Value\n" + Object.entries(results).map(function(e) { return e[0] + ',\"' + e[1] + '\"'; }).join('\n');
         } else {
-            csv = "Rank,Crop,Match Score,Water Level,Fertilizer Level\n" + results.map(r => `${r.rank},"${r.crop}","${r.match_score}","${r.water_level}","${r.fertilizer_level}"`).join('\n');
+            csv = "Rank,Crop,Match Score,Water Level,Fertilizer Level\n" + results.map(function(r) { return r.rank + ',\"' + r.crop + '\",\"' + r.match_score + '\",\"' + r.water_level + '\",\"' + r.fertilizer_level + '\"'; }).join('\n');
         }
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
         a.href = url;
         a.download = "recommendations.csv";
         a.click();
         URL.revokeObjectURL(url);
     }
 
-    return { getCrops, getCropConditions, getCropRecommendation, predictCrop, exportResults };
+    return { getCrops, getCropConditions, getCropRecommendation, predictCrop, exportResults, getCropDisplayName, cropNames: cropNames };
 })();

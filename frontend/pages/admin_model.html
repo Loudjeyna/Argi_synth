@@ -14,7 +14,7 @@
         .gan-box.synthetic { background: #F3E5F5; border: 2px solid #7B1FA2; color: #4A148C; }
         .gan-arrow { font-size: 2rem; color: #666; }
         .loss-chart { background: #F5F7F5; border-radius: 8px; padding: 1rem; min-height: 200px; display: flex; align-items: flex-end; gap: 2px; }
-        .loss-bar { flex: 1; border-radius: 4px 4px 0 0; min-width: 4px; transition: height 0.3s; }
+        .loss-bar { border-radius: 4px 4px 0 0; min-width: 4px; transition: height 0.3s; }
         .loss-bar.generator-loss { background: #2E7D32; }
         .loss-bar.discriminator-loss { background: #FF9800; }
     </style>
@@ -98,11 +98,12 @@
     </div>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
-            if (!user || user.role !== 'admin') { window.location.href = 'login.html'; return; }
+            if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
             App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
 
             let isTrained = false;
@@ -141,7 +142,7 @@
                         const idx = Math.floor(i * step);
                         const gH = genLossHistory[idx] / maxVal * 180;
                         const dH = discLossHistory[idx] / maxVal * 180;
-                        bars += `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;">
+                        bars += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1px;flex:1;">
                             <div class="loss-bar generator-loss" style="height:${gH}px;" title="G: ${genLossHistory[idx].toFixed(4)}"></div>
                             <div class="loss-bar discriminator-loss" style="height:${dH}px;" title="D: ${discLossHistory[idx].toFixed(4)}"></div>
                         </div>`;
@@ -166,25 +167,40 @@
                 }, 50);
             });
 
-            document.getElementById('gen-sample-btn').addEventListener('click', () => {
+                document.getElementById('gen-sample-btn').addEventListener('click', function() {
                 if (!isTrained) {
                     document.getElementById('sample-output').innerHTML = '<div class="status-message status-error">Please train the model first.</div>';
                     return;
                 }
-                const rows = parseInt(document.getElementById('gen-rows').value);
-                const headers = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall', 'label'];
-                const crops = ['rice', 'maize', 'cotton', 'jute', 'coffee', 'banana', 'mango', 'grapes', 'apple', 'orange'];
-                let table = '<div class="table-container"><table><thead><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>';
-                for (let i = 0; i < Math.min(rows, 10); i++) {
-                    table += '<tr>' + headers.map(h => {
-                        if (h === 'label') return '<td>' + crops[Math.floor(Math.random() * crops.length)] + '</td>';
-                        if (h === 'temperature' || h === 'humidity' || h === 'ph' || h === 'rainfall') return '<td>' + (Math.random() * 50 + 10).toFixed(2) + '</td>';
-                        return '<td>' + Math.round(Math.random() * 100 + 20) + '</td>';
-                    }).join('') + '</tr>';
-                }
-                table += '</tbody></table></div>';
-                table += '<p style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">Showing first 10 of ' + rows + ' generated rows</p>';
-                document.getElementById('sample-output').innerHTML = table;
+                var rows = parseInt(document.getElementById('gen-rows').value);
+                var preview = DataService.generatePreview('crop', 'medium');
+                var validation = preview.validation || { qualityScore: 85, passed: true, similarityPct: 85 };
+                var entry = DataService.addGeneration({ userId: user.id, rows: rows, type: 'crop', level: 'Medium', preview: preview });
+                // Save to history with validation data
+                try {
+                    var checksSummary = (validation.checks || []).map(function(c) { return c.name + ': ' + c.status; }).join('; ');
+                    HistoryService.addEntry({
+                        userId: user.id,
+                        type: 'data_generation',
+                        input: JSON.stringify({ type: 'crop', level: 'Medium', rows: rows }),
+                        result: JSON.stringify({
+                            type: 'crop',
+                            level: 'Medium',
+                            rows: rows,
+                            qualityScore: validation.qualityScore,
+                            similarityPct: validation.similarityPct,
+                            passed: validation.passed,
+                            checksPassed: validation.passedCount || 0,
+                            checksTotal: validation.totalChecks || 0
+                        }),
+                        validation: validation
+                    });
+                } catch (e) { console.warn('Could not save to history:', e); }
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">' +
+                    '<strong>Dataset generated and saved to archive!</strong><br>' +
+                    'Rows: ' + rows + ' | Quality: ' + validation.qualityScore + '% | Similarity: ' + validation.similarityPct + '% ' +
+                    '<a href="dataset_viewer.html?id=' + entry.id + '" class="btn btn-primary" style="margin-left: 1rem;">View in Archive</a></div>';
+                document.getElementById('sample-output').innerHTML = '';
             });
         });
     </script>

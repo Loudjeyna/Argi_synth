@@ -29,9 +29,7 @@
                 <p>Get crop recommendations and optimal growing conditions</p>
             </div>
 
-            <div class="kpi-grid" id="kpi-grid">
-                <!-- KPI cards populated by JS -->
-            </div>
+            <div class="kpi-grid" id="kpi-grid"></div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div class="card">
@@ -73,34 +71,52 @@
     <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = AuthService.getCurrentUser();
-            if (!user || user.role !== 'farmer') {
-                window.location.href = 'login.html';
-                return;
+        (function() {
+            var btn = document.getElementById('logout-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
             }
-            AuthService.syncSessionFromStorage();
-            const currentUser = AuthService.getCurrentUser();
-            const remaining = AuthService.getRemainingAttempts();
-            const stats = HistoryService.getStats(currentUser.id);
+        })();
 
-            document.getElementById('kpi-grid').innerHTML = `
-                <div class="kpi-card"><div class="kpi-value">${currentUser.plan.toUpperCase()}</div><div class="kpi-label">Current Plan</div></div>
-                <div class="kpi-card"><div class="kpi-value">${remaining === Infinity ? 'Unlimited' : remaining}</div><div class="kpi-label">Remaining Attempts</div></div>
-                <div class="kpi-card"><div class="kpi-value">${stats.totalPredictions}</div><div class="kpi-label">Total Predictions</div></div>
-            `;
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user || user.role !== 'farmer') { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            const recent = HistoryService.getRecent(currentUser.id, 5);
-            const tbody = document.getElementById('recent-predictions');
-            if (recent.length > 0) {
-                tbody.innerHTML = recent.map(h => `
-                    <tr>
-                        <td>${h.type === 'crop_conditions' ? 'Crop → Conditions' : 'Conditions → Crop'}</td>
-                        <td>${h.result ? h.result.substring(0, 50) + '...' : 'N/A'}</td>
-                        <td>${new Date(h.date).toLocaleDateString()}</td>
-                    </tr>
-                `).join('');
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            var currentUser = null, remaining = 0, stats = { totalPredictions: 0 };
+
+            try {
+                AuthService.syncSessionFromStorage();
+                currentUser = AuthService.getCurrentUser();
+                remaining = AuthService.getRemainingAttempts();
+                stats = HistoryService.getStats(currentUser.id);
+            } catch (e) {
+                currentUser = AuthService.getCurrentUser();
+                if (!currentUser) { window.location.href = '/pages/login.html'; return; }
             }
+
+            document.getElementById('kpi-grid').innerHTML =
+                '<div class="kpi-card"><div class="kpi-value">' + (currentUser.plan || 'free').toUpperCase() + '</div><div class="kpi-label">Current Plan</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (remaining === Infinity ? 'Unlimited' : remaining || 0) + '</div><div class="kpi-label">Remaining Attempts</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (stats.totalPredictions || 0) + '</div><div class="kpi-label">Total Predictions</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (currentUser.plan === 'premium' ? 'Unlimited' : remaining + '/5') + '</div><div class="kpi-label">Daily Usage</div></div>';
+
+            try {
+                var recent = HistoryService.getRecent(currentUser.id, 5);
+                var tbody = document.getElementById('recent-predictions');
+                if (recent && recent.length > 0) {
+                    tbody.innerHTML = recent.map(function(h) {
+                        return '<tr><td>' + (h.type === 'crop_conditions' ? 'Crop \u2192 Conditions' : 'Conditions \u2192 Crop') + '</td><td>' + ((h.result || '').substring(0, 50) + '...') + '</td><td>' + new Date(h.date).toLocaleDateString() + '</td></tr>';
+                    }).join('');
+                }
+            } catch (e) {}
         });
     </script>
 </body>

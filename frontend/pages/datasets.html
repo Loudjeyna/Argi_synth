@@ -8,6 +8,10 @@
     <style>
         .dataset-actions { display: flex; gap: 0.5rem; }
         .dataset-actions a, .dataset-actions button { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; text-decoration: none; }
+        .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .pagination-bar button { padding: 0.4rem 0.8rem; border: 1px solid #E0E0E0; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .pagination-bar button.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+        .pagination-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -19,10 +23,8 @@
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
         </aside>
         <main class="main-content">
-            <div class="page-header"><h2>Datasets</h2><p>All generated synthetic datasets</p></div>
-
+            <div class="page-header"><h2>Datasets Archive</h2><p>All generated synthetic datasets with validation results</p></div>
             <div id="status-msg"></div>
-
             <div class="card">
                 <div class="table-container">
                     <table>
@@ -30,9 +32,10 @@
                             <tr>
                                 <th>#</th>
                                 <th>Date</th>
-                                <th>Type</th>
                                 <th>Rows</th>
                                 <th>Level</th>
+                                <th>Quality</th>
+                                <th>Similarity</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -40,41 +43,122 @@
                         <tbody id="datasets-tbody"></tbody>
                     </table>
                 </div>
+                <div class="pagination-bar" id="pagination-bar"></div>
             </div>
         </main>
     </div>
     <script src="../js/services/auth.js"></script>
-    <script src="../js/services/payment.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = AuthService.getCurrentUser();
-            if (!user) { window.location.href = 'login.html'; return; }
-            AuthService.syncSessionFromStorage();
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+        (function() {
+            var btn = document.getElementById('logout-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
 
-            const datasets = DataService.getGenerations();
-            const tbody = document.getElementById('datasets-tbody');
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user) { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            var datasets = [];
+            try { datasets = DataService.getGenerations() || []; } catch (e) {}
 
             if (datasets.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No datasets yet. Go to <a href="generate_data.html">Generate Data</a> to create one.</td></tr>';
-            } else {
-                tbody.innerHTML = datasets.map((d, i) => {
-                    const typeLabel = d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : 'Crop';
-                    const levelBadge = d.level === 'Big Data' ? 'badge-premium' : d.level === 'Large' ? 'badge-warning' : 'badge-free';
-                    const actions = '<div class="dataset-actions">' +
+                document.getElementById('datasets-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-muted">No datasets yet. <a href="generate_data.html">Generate your first dataset</a></td></tr>';
+                return;
+            }
+
+            var currentPage = 1;
+            var perPage = 10;
+
+            function renderTable() {
+                var tbody = document.getElementById('datasets-tbody');
+                var pagination = document.getElementById('pagination-bar');
+                var start = (currentPage - 1) * perPage;
+                var pageData = datasets.slice(start, start + perPage);
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No datasets</td></tr>';
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                tbody.innerHTML = pageData.map(function(d, i) {
+                    var idx = start + i + 1;
+                    var preview = d.preview;
+                    var quality = 0, similarity = 0, passed = false;
+                    if (preview && preview.validation) {
+                        quality = preview.validation.qualityScore || 0;
+                        similarity = preview.validation.similarityPct || 0;
+                        passed = preview.validation.passed || false;
+                    } else {
+                        // Compute validation if not stored
+                        try {
+                            var v = DataService.validatePreview(preview);
+                            quality = v.qualityScore;
+                            similarity = v.similarityPct;
+                            passed = v.passed;
+                        } catch (e) {}
+                    }
+                    var qualityColor = quality >= 85 ? '#2E7D32' : quality >= 70 ? '#FF9800' : '#F44336';
+                    var levelBadge = d.level === 'Big Data' ? 'badge-premium' : d.level === 'Large' ? 'badge-warning' : 'badge-free';
+                    var statusHtml = passed ? '<span class="badge badge-success">Valid</span>' : '<span class="badge badge-warning">Review</span>';
+                    var actions = '<div class="dataset-actions">' +
                         '<a href="dataset_viewer.html?id=' + d.id + '" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View</a>' +
                         '<button onclick="deleteDataset(' + d.id + ')" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; color: #E53935; border-color: #E53935;">Delete</button>' +
                         '</div>';
-                    return '<tr><td>' + (i+1) + '</td><td>' + new Date(d.date).toLocaleDateString() + '</td><td>' + typeLabel + '</td><td>' + d.rows.toLocaleString() + '</td><td><span class="badge ' + levelBadge + '">' + (d.level || 'Medium') + '</span></td><td><span class="badge badge-success">Completed</span></td><td>' + actions + '</td></tr>';
+                    return '<tr>' +
+                        '<td>' + idx + '</td>' +
+                        '<td>' + new Date(d.date).toLocaleDateString() + '</td>' +
+                        '<td>' + (d.rows || 0).toLocaleString() + '</td>' +
+                        '<td><span class="badge ' + levelBadge + '">' + (d.level || 'Medium') + '</span></td>' +
+                        '<td><strong style="color:' + qualityColor + ';">' + quality + '%</strong></td>' +
+                        '<td>' + similarity + '%</td>' +
+                        '<td>' + statusHtml + '</td>' +
+                        '<td>' + actions + '</td></tr>';
                 }).join('');
+
+                var totalPages = Math.ceil(datasets.length / perPage);
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem;">' + datasets.length + ' dataset(s)</span>';
+                    return;
+                }
+                var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                for (var i = 1; i <= totalPages; i++) {
+                    ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+                }
+                ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
+                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + '</span>';
+                pagination.innerHTML = ph;
             }
+
+            document.getElementById('pagination-bar').addEventListener('click', function(e) {
+                if (e.target.dataset.page) {
+                    var totalPages = Math.ceil(datasets.length / perPage);
+                    if (e.target.dataset.page === 'prev' && currentPage > 1) currentPage--;
+                    else if (e.target.dataset.page === 'next' && currentPage < totalPages) currentPage++;
+                    else if (e.target.dataset.page !== 'prev' && e.target.dataset.page !== 'next') currentPage = parseInt(e.target.dataset.page);
+                    else return;
+                    renderTable();
+                }
+            });
+
+            renderTable();
         });
 
         function deleteDataset(id) {
-            if (!confirm('Delete this dataset?')) return;
-            const gens = DataService.getGenerations().filter(g => g.id !== id);
+            if (!confirm('Delete this dataset and its validation data?')) return;
+            var gens = DataService.getGenerations().filter(function(g) { return g.id !== id; });
             localStorage.setItem('synthai_generations', JSON.stringify(gens));
             location.reload();
         }

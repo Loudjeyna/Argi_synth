@@ -10,6 +10,10 @@
         .filter-bar input, .filter-bar select { padding: 0.5rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.9rem; }
         .delete-btn { cursor: pointer; color: #E53935; font-size: 0.85rem; border: none; background: none; }
         .delete-btn:hover { text-decoration: underline; }
+        .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .pagination-bar button { padding: 0.4rem 0.8rem; border: 1px solid #E0E0E0; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .pagination-bar button.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+        .pagination-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -37,6 +41,7 @@
                             <option value="all">All Types</option>
                             <option value="crop_conditions">Crop to Conditions</option>
                             <option value="conditions_crop">Conditions to Crop</option>
+                            <option value="data_generation">Data Generation</option>
                         </select>
                         <button id="export-btn" class="btn btn-outline" style="padding: 0.5rem 1rem;">Export CSV</button>
                         <button id="clear-all-btn" class="btn btn-outline" style="padding: 0.5rem 1rem; color: #E53935; border-color: #E53935;">Clear All</button>
@@ -48,6 +53,7 @@
                         <tbody id="history-tbody"></tbody>
                     </table>
                 </div>
+                <div class="pagination-bar" id="pagination-bar"></div>
             </div>
         </main>
     </div>
@@ -55,86 +61,170 @@
     <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = AuthService.getCurrentUser();
-            if (!user) { window.location.href = 'login.html'; return; }
-            AuthService.syncSessionFromStorage();
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+        (function() {
+            var btn = document.getElementById('logout-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
 
-            const isPremium = user.plan === 'premium';
-            const limit = isPremium ? Infinity : (user.plan === 'pro' ? 100 : 10);
-            let history = HistoryService.getUserHistory(user.id);
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user) { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            const stats = HistoryService.getStats(user.id);
-            document.getElementById('stats-grid').innerHTML = `
-                <div class="kpi-card"><div class="kpi-value">${stats.totalPredictions}</div><div class="kpi-label">Total Predictions</div></div>
-                <div class="kpi-card"><div class="kpi-value">${stats.cropRecommendations}</div><div class="kpi-label">Crop to Conditions</div></div>
-                <div class="kpi-card"><div class="kpi-value">${stats.conditionPredictions}</div><div class="kpi-label">Conditions to Crop</div></div>
-                <div class="kpi-card"><div class="kpi-value">${isPremium ? 'Unlimited' : limit}</div><div class="kpi-label">${isPremium ? '' : 'Max'} History Limit</div></div>
-            `;
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+            try { AuthService.syncSessionFromStorage(); } catch (e) {}
+
+            var user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = '/pages/login.html'; return; }
+
+            var isPremium = user.plan === 'premium';
+            var limit = isPremium ? Infinity : (user.plan === 'pro' ? 100 : 10);
+            var history = [];
+            try { history = HistoryService.getUserHistory(user.id) || []; } catch (e) {}
+
+            var stats = { totalPredictions: 0, cropRecommendations: 0, conditionPredictions: 0, dataGenerations: 0 };
+            try { stats = HistoryService.getStats(user.id); } catch (e) {}
+            document.getElementById('stats-grid').innerHTML =
+                '<div class="kpi-card"><div class="kpi-value">' + stats.totalPredictions + '</div><div class="kpi-label">Total Entries</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + stats.cropRecommendations + '</div><div class="kpi-label">Crop to Conditions</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + stats.conditionPredictions + '</div><div class="kpi-label">Conditions to Crop</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (stats.dataGenerations || 0) + '</div><div class="kpi-label">Data Generations</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (isPremium ? 'Unlimited' : limit) + '</div><div class="kpi-label">History Limit</div></div>';
 
             if (!isPremium && stats.totalPredictions > limit) {
                 document.getElementById('status-msg').innerHTML = '<div class="status-message status-warning">Showing ' + limit + ' of ' + stats.totalPredictions + ' total entries. <a href="subscription.html">Upgrade</a> for unlimited history.</div>';
             }
 
-            function renderHistory(data) {
-                const tbody = document.getElementById('history-tbody');
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No predictions found. Start by using the prediction tools.</td></tr>';
+            var currentPage = 1;
+            var perPage = 10;
+            var filteredData = [];
+
+            function applyFiltering() {
+                var searchQ = '';
+                try { searchQ = document.getElementById('search-input').value.toLowerCase(); } catch (e) {}
+                var dateVal = '';
+                try { dateVal = document.getElementById('date-input').value; } catch (e) {}
+                var typeVal = 'all';
+                try { typeVal = document.getElementById('type-filter').value; } catch (e) {}
+                filteredData = [].concat(history);
+                if (searchQ) {
+                    filteredData = filteredData.filter(function(h) {
+                        try {
+                            var r = JSON.parse(h.result);
+                            return r.crop && r.crop.toLowerCase().includes(searchQ);
+                        } catch (e) {
+                            return h.result && h.result.toLowerCase().includes(searchQ);
+                        }
+                    });
+                }
+                if (dateVal) filteredData = filteredData.filter(function(h) { return h.date && h.date.indexOf(dateVal) === 0; });
+                if (typeVal !== 'all') filteredData = filteredData.filter(function(h) { return h.type === typeVal; });
+                currentPage = 1;
+                renderHistory();
+            }
+
+            function renderHistory() {
+                var tbody = document.getElementById('history-tbody');
+                var pagination = document.getElementById('pagination-bar');
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No predictions found.</td></tr>';
+                    pagination.innerHTML = '';
                     return;
                 }
-                const displayData = isPremium ? data : data.slice(0, limit);
-                tbody.innerHTML = displayData.map((h, i) => {
-                    let input = h.input || '';
-                    try { const obj = JSON.parse(input); input = obj.crop || obj.n ? 'N:' + obj.n + ', P:' + obj.p + ', K:' + obj.k + '...' : input; } catch(e) {}
-                    let result = h.result || '';
-                    try { const obj = JSON.parse(result); result = obj.crop || obj.optimal_temperature ? obj.crop || JSON.stringify(obj).substring(0, 60) : result; } catch(e) {}
+                var displayData = isPremium ? filteredData : filteredData.slice(0, limit);
+                // Apply pagination on top of limit
+                var start = (currentPage - 1) * perPage;
+                var pageData = displayData.slice(start, start + perPage);
+
+                tbody.innerHTML = pageData.map(function(h, i) {
+                    var idx = start + i + 1;
+                    var input = h.input || '';
+                    try { var obj = JSON.parse(input); input = obj.crop || (obj.n ? 'N:' + obj.n + ', P:' + obj.p + ', K:' + obj.k + '...' : input); } catch (e) {}
+                    var result = h.result || '';
+                    try { var obj = JSON.parse(result); result = obj.crop || obj.optimal_temperature ? (obj.crop || JSON.stringify(obj).substring(0, 60)) : result; } catch (e) {}
+                    var badgeClass = h.type === 'crop_conditions' ? 'success' : h.type === 'conditions_crop' ? 'warning' : 'premium';
+                    var typeLabel = h.type === 'crop_conditions' ? 'Crop to Conditions' : h.type === 'conditions_crop' ? 'Conditions to Crop' : 'Data Generation';
+                    // For data_generation, show validation badges in result column
+                    var resultDisplay = result;
+                    if (h.type === 'data_generation') {
+                        try {
+                            var rObj = JSON.parse(h.result);
+                            var qColor = rObj.qualityScore >= 85 ? '#2E7D32' : rObj.qualityScore >= 70 ? '#FF9800' : '#F44336';
+                            var qBadge = '<span class="badge badge-' + (rObj.qualityScore >= 85 ? 'success' : rObj.qualityScore >= 70 ? 'warning' : 'danger') + '">Quality: ' + rObj.qualityScore + '%</span>';
+                            var sBadge = '<span class="badge badge-info">Sim: ' + rObj.similarityPct + '%</span>';
+                            var cBadge = '<span class="badge badge-' + (rObj.passed ? 'success' : 'warning') + '">' + rObj.checksPassed + '/' + rObj.checksTotal + '</span>';
+                            resultDisplay = qBadge + ' ' + sBadge + ' ' + cBadge;
+                        } catch (e) { resultDisplay = result.substring(0, 60); }
+                    } else {
+                        resultDisplay = '<strong>' + (result || '').substring(0, 60) + '</strong>';
+                    }
                     return '<tr>' +
-                        '<td>' + (i+1) + '</td>' +
-                        '<td><span class="badge badge-' + (h.type === 'crop_conditions' ? 'success' : 'warning') + '">' + (h.type === 'crop_conditions' ? 'Crop to Conditions' : 'Conditions to Crop') + '</span></td>' +
+                        '<td>' + idx + '</td>' +
+                        '<td><span class="badge badge-' + badgeClass + '">' + typeLabel + '</span></td>' +
                         '<td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + (input || '').substring(0, 60) + '</td>' +
-                        '<td><strong>' + (result || '').substring(0, 60) + '</strong></td>' +
+                        '<td>' + resultDisplay + '</td>' +
                         '<td style="white-space: nowrap;">' + new Date(h.date).toLocaleDateString() + ' ' + new Date(h.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</td>' +
                         '<td><button class="delete-btn" onclick="deleteEntry(' + h.id + ')" title="Delete entry">&times;</button></td></tr>';
                 }).join('');
+
+                var totalPages = Math.ceil(displayData.length / perPage);
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem;">' + displayData.length + ' entry(s)</span>';
+                    return;
+                }
+                var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                for (var i = 1; i <= totalPages; i++) {
+                    ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+                }
+                ph += '<button data-page="next" ' + (currentPage >= totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
+                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + ' (' + displayData.length + ' entries)</span>';
+                pagination.innerHTML = ph;
             }
 
-            renderHistory(history);
+            try {
+                document.getElementById('search-input').addEventListener('input', applyFiltering);
+                document.getElementById('date-input').addEventListener('change', applyFiltering);
+                document.getElementById('type-filter').addEventListener('change', applyFiltering);
+            } catch (e) {}
 
-            function applyFilters() {
-                const searchQ = document.getElementById('search-input').value.toLowerCase();
-                const dateVal = document.getElementById('date-input').value;
-                const typeVal = document.getElementById('type-filter').value;
-                let filtered = [...history];
-                if (searchQ) filtered = filtered.filter(h => {
-                    try { const r = JSON.parse(h.result); return r.crop && r.crop.toLowerCase().includes(searchQ); } catch(e) { return h.result && h.result.toLowerCase().includes(searchQ); }
-                });
-                if (dateVal) filtered = filtered.filter(h => h.date && h.date.startsWith(dateVal));
-                if (typeVal !== 'all') filtered = filtered.filter(h => h.type === typeVal);
-                renderHistory(filtered);
-            }
+            document.getElementById('pagination-bar').addEventListener('click', function(e) {
+                if (e.target.dataset.page) {
+                    var displayData = isPremium ? filteredData : filteredData.slice(0, limit);
+                    var totalPages = Math.ceil(displayData.length / perPage);
+                    if (e.target.dataset.page === 'prev' && currentPage > 1) currentPage--;
+                    else if (e.target.dataset.page === 'next' && currentPage < totalPages) currentPage++;
+                    else if (e.target.dataset.page !== 'prev' && e.target.dataset.page !== 'next') currentPage = parseInt(e.target.dataset.page);
+                    else return;
+                    renderHistory();
+                }
+            });
 
-            document.getElementById('search-input').addEventListener('input', applyFilters);
-            document.getElementById('date-input').addEventListener('change', applyFilters);
-            document.getElementById('type-filter').addEventListener('change', applyFilters);
-
-            document.getElementById('export-btn').addEventListener('click', () => HistoryService.exportHistory(user.id));
+            document.getElementById('export-btn').addEventListener('click', function() { try { HistoryService.exportHistory(user.id); } catch (e) {} });
 
             window.deleteEntry = function(id) {
                 if (!confirm('Delete this prediction entry?')) return;
                 HistoryService.deleteEntry(id);
-                history = HistoryService.getUserHistory(user.id);
-                applyFilters();
+                try { history = HistoryService.getUserHistory(user.id) || []; } catch (e) { history = []; }
+                applyFiltering();
                 document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Entry deleted successfully.</div>';
             };
 
-            document.getElementById('clear-all-btn').addEventListener('click', () => {
+            document.getElementById('clear-all-btn').addEventListener('click', function() {
                 if (!confirm('Clear ALL prediction history? This cannot be undone.')) return;
-                history.forEach(h => HistoryService.deleteEntry(h.id));
+                history.forEach(function(h) { HistoryService.deleteEntry(h.id); });
                 history = [];
-                applyFilters();
+                applyFiltering();
                 document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">All history cleared.</div>';
             });
+
+            applyFiltering();
         });
     </script>
 </body>

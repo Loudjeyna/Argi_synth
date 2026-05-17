@@ -87,7 +87,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
-            if (!user) { window.location.href = 'login.html'; return; }
+            if (!user) { window.location.href = '/pages/login.html'; return; }
             AuthService.syncSessionFromStorage();
             App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
 

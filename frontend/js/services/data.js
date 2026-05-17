@@ -242,18 +242,15 @@ const DataService = (function() {
     }
 
     /* ===================================================================
-       GENERATE PREVIEW (first 50 rows with metadata)
+       GENERATE FULL DATASET (all rows, no truncation)
        =================================================================== */
 
-    function generateFullData(type, totalRows, previewRowCount) {
-        const rows = previewRowCount || Math.min(totalRows, 50);
-        const data = [];
-        if (type === 'crop') {
-            for (let i = 0; i < rows; i++) data.push(generateCropRow());
-        } else if (type === 'soil') {
-            for (let i = 0; i < rows; i++) data.push(generateSoilRow());
-        } else {
-            for (let i = 0; i < rows; i++) data.push(generateWeatherRow());
+    function generateFullData(type, totalRows) {
+        var rows = totalRows || 1000;
+        var data = new Array(rows);
+        var genFn = type === 'crop' ? generateCropRow : (type === 'soil' ? generateSoilRow : generateWeatherRow);
+        for (var i = 0; i < rows; i++) {
+            data[i] = genFn();
         }
         return data;
     }
@@ -451,15 +448,34 @@ const DataService = (function() {
         localStorage.setItem(GENERATIONS_KEY, JSON.stringify(data));
     }
 
+    var _fullDatasetCache = {};
+
     function addGeneration(entry) {
-        const generations = getGenerations();
+        var generations = getGenerations();
         entry.id = Date.now();
         entry.timestamp = Date.now();
         entry.date = new Date().toISOString();
         entry.status = 'completed';
+        // Store full dataset in memory, only preview (first 50) in localStorage
+        if (entry.preview && entry.preview.data) {
+            _fullDatasetCache[entry.id] = entry.preview.data;
+            entry.preview._fullDataAvailable = true;
+        }
         generations.unshift(entry);
         saveGenerations(generations);
         return entry;
+    }
+
+    function getFullDataset(id) {
+        if (_fullDatasetCache[id]) return _fullDatasetCache[id];
+        var gen = getGenerationById(id);
+        if (!gen) return null;
+        // Regenerate full dataset from stored parameters
+        var type = gen.preview ? gen.preview.type : (gen.type || 'crop');
+        var rows = gen.rows || (gen.preview ? gen.preview.totalRows : 1000);
+        var allData = generateFullData(type, rows);
+        _fullDatasetCache[id] = allData;
+        return allData;
     }
 
     function getGenerationStats() {
@@ -487,9 +503,8 @@ const DataService = (function() {
     }
 
     function generatePreview(type, level) {
-        const config = DATASET_CONFIG[level];
-        const previewRowCount = Math.min(config.rows, 50);
-        let headers;
+        var config = DATASET_CONFIG[level];
+        var headers;
 
         if (type === 'crop') {
             headers = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall', 'label'];
@@ -499,17 +514,17 @@ const DataService = (function() {
             headers = ['temperature', 'humidity', 'precipitation', 'wind_speed', 'pressure', 'cloud_cover'];
         }
 
-        const data = generateFullData(type, config.rows, previewRowCount);
-        const validation = validatePreview({ headers, data, type, totalRows: config.rows, level: config.label });
-        const correlationSim = computeCorrelationSimilarity({ headers, data, type });
+        var data = generateFullData(type, config.rows);
+        var validation = validatePreview({ headers: headers, data: data, type: type, totalRows: config.rows, level: config.label });
+        var correlationSim = computeCorrelationSimilarity({ headers: headers, data: data, type: type });
 
         return {
-            headers,
-            data,
+            headers: headers,
+            data: data,
             totalRows: config.rows,
-            type,
+            type: type,
             level: config.label,
-            validation,
+            validation: validation,
             correlationSimilarity: correlationSim,
             generatedAt: new Date().toISOString()
         };
@@ -559,15 +574,17 @@ const DataService = (function() {
         return { matrix: corr, columns: numericHeaders };
     }
 
-    function exportCSV(preview) {
-        if (!preview || !preview.data.length) return;
-        const headers = preview.headers;
-        const csv = [headers.join(','), ...preview.data.map(row => headers.map(h => '"' + row[h] + '"').join(','))].join('\n');
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+    function exportCSV(preview, fullData) {
+        if (!preview || !preview.headers) return;
+        var data = fullData || preview.data || [];
+        if (data.length === 0) return;
+        var headers = preview.headers;
+        var csv = [headers.join(','), ...data.map(function(row) { return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(','); })].join('\n');
+        var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
         a.href = url;
-        a.download = 'synthetic_' + preview.type + '_' + preview.level + '_' + Date.now() + '.csv';
+        a.download = 'synthetic_' + (preview.type || 'crop') + '_' + (preview.level || 'data') + '_' + Date.now() + '.csv';
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -578,15 +595,21 @@ const DataService = (function() {
     }
 
     function getGenerationById(id) {
-        return getGenerations().find(g => g.id === id);
+        var gen = getGenerations().find(function(g) { return g.id === id; });
+        if (gen && _fullDatasetCache[id] && gen.preview) {
+            // Attach full data to preview for viewer/export use
+            gen.preview._fullData = _fullDatasetCache[id];
+        }
+        return gen;
     }
 
     return {
         getGenerations, addGeneration, getGenerationStats, getDatasetConfig,
         getDatasetTypes, getAvailableLevels, generatePreview, generateStatistics,
         computeCorrelation, exportCSV, canGenerate, getGenerationById,
-        validatePreview, computeCorrelationSimilarity, getCropNames: () => CROP_NAMES,
-        getSoilTextures: () => SOIL_TEXTURES.map(t => t.name),
-        getWeatherPatterns: () => WEATHER_PATTERNS.map(p => p.zone)
+        getFullDataset, validatePreview, computeCorrelationSimilarity,
+        getCropNames: function() { return CROP_NAMES; },
+        getSoilTextures: function() { return SOIL_TEXTURES.map(function(t) { return t.name; }); },
+        getWeatherPatterns: function() { return WEATHER_PATTERNS.map(function(p) { return p.zone; }); }
     };
 })();

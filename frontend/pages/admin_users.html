@@ -68,7 +68,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
-            if (!user || user.role !== 'admin') { window.location.href = 'login.html'; return; }
+            if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
             App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
 
             const users = AuthService.getUsers();

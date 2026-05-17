@@ -316,6 +316,7 @@ table td {
 .badge-danger { background: var(--danger); color: white; }
 .badge-premium { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
 .badge-free { background: var(--primary); color: white; }
+.badge-info { background: var(--info); color: white; }
 
 /* Auth Pages */
 .auth-container {

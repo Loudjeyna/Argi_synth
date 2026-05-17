@@ -63,14 +63,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
-            if (!user) { window.location.href = 'login.html'; return; }
+            if (!user) { window.location.href = '/pages/login.html'; return; }
             if (user.role !== 'farmer') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
             AuthService.syncSessionFromStorage();
             App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
 
-            const crops = RecommendationService.getCrops();
-            const select = document.getElementById('crop-select');
-            select.innerHTML = '<option value="">-- Choose a crop --</option>' + crops.map(c => '<option value="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</option>').join('');
+            var crops = RecommendationService.getCrops();
+            var select = document.getElementById('crop-select');
+            select.innerHTML = '<option value="">-- Choisir une culture --</option>' + crops.map(function(c) { return '<option value="' + c + '">' + RecommendationService.getCropDisplayName(c) + '</option>'; }).join('');
 
             function getLevelColor(level) {
                 const map = { Low: '#66BB6A', Medium: '#FF9800', High: '#F44336' };
@@ -106,11 +106,12 @@
                     <div class="cond-card"><div class="label">Fertilizer Level</div><div class="value">${getLevelDot(rec.fertilizer_level)}</div></div>
                 `;
                 document.getElementById('result-area').style.display = 'block';
-                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Optimal conditions for <strong>' + crop + '</strong> loaded successfully!</div>';
+                var displayName = RecommendationService.getCropDisplayName(crop);
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Optimal conditions for <strong>' + displayName + '</strong> loaded successfully!</div>';
             });
 
-            document.getElementById('export-btn').addEventListener('click', () => {
-                const rec = RecommendationService.getCropRecommendation(select.value);
+            document.getElementById('export-btn').addEventListener('click', function() {
+                var rec = RecommendationService.getCropRecommendation(select.value);
                 RecommendationService.exportResults(rec, 'conditions');
             });
 
