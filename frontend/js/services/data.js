@@ -603,6 +603,125 @@ const DataService = (function() {
         return gen;
     }
 
+    // ===================================================================
+    // MODEL-BASED GENERATION + CLOUD STORAGE
+    // ===================================================================
+
+    function getAvailableModels() {
+        var all = ModelService.getModels();
+        return all.filter(function(m) { return m.status === 'trained'; });
+    }
+
+    function generateFromModel(modelId, versionNumber, level) {
+        var model = ModelService.getModel(modelId);
+        if (!model) return null;
+
+        var config = DATASET_CONFIG[level];
+        var headers = (model.datasetInfo && model.datasetInfo.headers) || ['N','P','K','temperature','humidity','ph','rainfall','label'];
+        var type = headers.indexOf('label') !== -1 ? 'crop' : (headers.indexOf('texture') !== -1 ? 'soil' : 'weather');
+
+        var data = generateFullData(type, config.rows);
+        var validation = validatePreview({ headers: headers, data: data, type: type, totalRows: config.rows, level: config.label });
+
+        var preview = {
+            headers: headers,
+            data: data,
+            type: type,
+            totalRows: config.rows,
+            level: config.label,
+            validation: validation,
+            generatedAt: new Date().toISOString()
+        };
+
+        var verNum = versionNumber || 1;
+        var fileUrl = _createCloudUrl(data, headers, model.name, verNum);
+
+        var entry = addGeneration({
+            type: type,
+            rows: config.rows,
+            level: config.label,
+            preview: preview,
+            modelId: model.id,
+            modelName: model.name,
+            modelVersion: verNum,
+            fileUrl: fileUrl
+        });
+
+        return entry;
+    }
+
+    var _cloudUrls = {};
+
+    function _createCloudUrl(data, headers, modelName, version) {
+        var id = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        var csv = [headers.join(','), ...data.map(function(row) {
+            return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
+        })].join('\n');
+        var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        _cloudUrls[id] = url;
+        return 'synthai://cloud/' + id;
+    }
+
+    function resolveCloudUrl(fileUrl) {
+        if (!fileUrl) return null;
+        var match = fileUrl.match(/^synthai:\/\/cloud\/(.+)$/);
+        if (!match) return null;
+        var id = match[1];
+        return _cloudUrls[id] || null;
+    }
+
+    function revokeCloudUrl(fileUrl) {
+        if (!fileUrl) return;
+        var match = fileUrl.match(/^synthai:\/\/cloud\/(.+)$/);
+        if (!match) return;
+        var id = match[1];
+        if (_cloudUrls[id]) {
+            URL.revokeObjectURL(_cloudUrls[id]);
+            delete _cloudUrls[id];
+        }
+    }
+
+    function exportGeneration(id) {
+        var gen = getGenerationById(id);
+        if (!gen) return false;
+
+        // Try cloud URL first
+        var url = null;
+        if (gen.fileUrl) {
+            url = resolveCloudUrl(gen.fileUrl);
+        }
+
+        // Fallback: generate fresh from cached data
+        if (!url) {
+            var data = getFullDataset(id);
+            if (!data || data.length === 0) return false;
+            var preview = gen.preview;
+            if (!preview) return false;
+            var headers = preview.headers || Object.keys(data[0]);
+            var csv = [headers.join(','), ...data.map(function(row) {
+                return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
+            })].join('\n');
+            var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+            url = URL.createObjectURL(blob);
+        }
+
+        var filename = 'synthetic_' + (gen.modelName || gen.type || 'data') + '_v' + (gen.modelVersion || 1) + '_' + Date.now() + '.csv';
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        return true;
+    }
+
+    function getGenerationPreviewRows(id, count) {
+        count = count || 10;
+        var data = getFullDataset(id);
+        if (!data) return null;
+        return data.slice(0, count);
+    }
+
     return {
         getGenerations, addGeneration, getGenerationStats, getDatasetConfig,
         getDatasetTypes, getAvailableLevels, generatePreview, generateStatistics,
@@ -610,6 +729,14 @@ const DataService = (function() {
         getFullDataset, validatePreview, computeCorrelationSimilarity,
         getCropNames: function() { return CROP_NAMES; },
         getSoilTextures: function() { return SOIL_TEXTURES.map(function(t) { return t.name; }); },
-        getWeatherPatterns: function() { return WEATHER_PATTERNS.map(function(p) { return p.zone; }); }
+        getWeatherPatterns: function() { return WEATHER_PATTERNS.map(function(p) { return p.zone; }); },
+        // New model-based generation + cloud storage
+        getAvailableModels: getAvailableModels,
+        generateFromModel: generateFromModel,
+        resolveCloudUrl: resolveCloudUrl,
+        revokeCloudUrl: revokeCloudUrl,
+        exportGeneration: exportGeneration,
+        getGenerationPreviewRows: getGenerationPreviewRows,
+        generateFullData: generateFullData
     };
 })();

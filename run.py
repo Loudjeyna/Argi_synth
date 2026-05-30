@@ -1,9 +1,22 @@
-import http.server, socketserver, os, sys
+import http.server, socketserver, os, sys, socket
 
 os.chdir(r'D:\Lodj_Memoire\SynthAI\frontend')
-port = 8080
 
-# Use ThreadingHTTPServer to handle multiple requests in parallel
+def find_free_port(start=8080, end=8090):
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('127.0.0.1', port))
+                return port
+            except OSError:
+                continue
+    return None
+
+port = find_free_port()
+if port is None:
+    print('ERROR: No free port available in range 8080-8089.')
+    sys.exit(1)
+
 server = http.server.ThreadingHTTPServer(
     ('127.0.0.1', port),
     http.server.SimpleHTTPRequestHandler

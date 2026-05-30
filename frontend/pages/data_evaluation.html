@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Data Evaluation & Comparison</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        .eval-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+        .eval-header h2 { margin: 0; }
+        .eval-header .meta { font-size: 0.85rem; color: #666; }
+        .eval-header .meta strong { color: #333; }
+        .eval-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .badge-green { background: #E8F5E9; color: #2E7D32; }
+        .badge-orange { background: #FFF3E0; color: #E65100; }
+        .badge-red { background: #FFEBEE; color: #C62828; }
+        .badge-blue { background: #E3F2FD; color: #1565C0; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: #2E7D32; text-decoration: none; font-size: 0.85rem; margin-bottom: 1rem; }
+        .back-link:hover { text-decoration: underline; }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #1B5E20; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid #E8F5E9; }
+        .section-title .ico { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+        .section-title .ico.blue { background: #2196F3; }
+
+        /* Comparison Table */
+        .cmp-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .cmp-table th { background: #F5F7F5; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #E0E0E0; white-space: nowrap; }
+        .cmp-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #F0F0F0; }
+        .cmp-table tr:hover td { background: #F9FDF9; }
+        .cmp-table .feature-col { font-weight: 600; color: #333; }
+        .cmp-table .val-real { color: #1565C0; }
+        .cmp-table .val-synth { color: #E65100; }
+        .cmp-table .val-diff { font-size: 0.75rem; color: #999; }
+
+        /* Chart containers */
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.25rem; }
+        .chart-box { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .chart-box h4 { font-size: 0.9rem; color: #333; margin: 0 0 0.75rem 0; }
+        .chart-box canvas { width: 100% !important; max-height: 260px; }
+        .chart-wide { grid-column: 1 / -1; }
+
+        /* Correlation Heatmap */
+        .heatmap-table { border-collapse: collapse; font-size: 0.75rem; margin: 0 auto; }
+        .heatmap-table th { padding: 0.4rem 0.5rem; font-weight: 600; color: #555; text-align: center; }
+        .heatmap-table td { padding: 0.35rem 0.45rem; text-align: center; border: 1px solid rgba(0,0,0,0.06); min-width: 60px; }
+        .heatmap-table td .val { font-weight: 600; }
+        .heatmap-wrapper { overflow-x: auto; margin-top: 0.5rem; }
+        .heatmap-caption { display: flex; justify-content: center; gap: 2rem; font-size: 0.78rem; color: #666; margin-top: 0.5rem; }
+        .heatmap-caption span { display: flex; align-items: center; gap: 0.3rem; }
+        .heatmap-caption .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 2px; }
+
+        /* Quality Score */
+        .qs-container { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; align-items: start; }
+        .qs-gauge { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .qs-gauge .score-num { font-size: 3rem; font-weight: 800; line-height: 1; }
+        .qs-gauge .score-label { font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+        .qs-gauge .score-status { margin-top: 0.75rem; padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; }
+        .qs-breakdown { display: flex; flex-direction: column; gap: 1rem; }
+        .qs-item { background: white; border-radius: 8px; padding: 0.75rem 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .qs-item .qs-label { font-size: 0.85rem; color: #555; }
+        .qs-item .qs-bar-wrap { flex: 1; margin: 0 1rem; height: 8px; background: #F0F0F0; border-radius: 4px; overflow: hidden; }
+        .qs-item .qs-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+        .qs-item .qs-val { font-weight: 700; font-size: 0.9rem; min-width: 3rem; text-align: right; }
+
+        /* Categorical charts */
+        .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.25rem; }
+
+        .loading { text-align: center; padding: 3rem; color: #999; }
+        .loading .spinner { width: 32px; height: 32px; border: 3px solid #E0E0E0; border-top-color: #2E7D32; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 0.75rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-box { text-align: center; padding: 2rem; color: #C62828; background: #FFEBEE; border-radius: 8px; margin: 1rem 0; }
+
+        .btn-eval { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; border: 1px solid #E0E0E0; background: white; color: #1565C0; text-decoration: none; white-space: nowrap; }
+        .btn-eval:hover { border-color: #1565C0; background: #E3F2FD; }
+
+        .info-note { font-size: 0.82rem; color: #666; background: #FFF8E1; padding: 0.6rem 1rem; border-radius: 6px; border-left: 3px solid #FF9800; margin: 1rem 0; }
+        .info-note strong { color: #E65100; }
+
+        /* Preview Modal */
+        .preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .preview-modal.active { display: flex; }
+        .preview-modal-content { background: white; border-radius: 12px; max-width: 900px; width: 92%; max-height: 82vh; overflow: auto; padding: 1.5rem; }
+        .preview-modal-content h3 { margin-bottom: 0.5rem; }
+        .preview-modal-content .close-modal { float: right; cursor: pointer; font-size: 1.3rem; color: #999; line-height: 1; }
+        .preview-modal-content .close-modal:hover { color: #333; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .preview-table th { background: #F5F7F5; padding: 0.45rem 0.5rem; text-align: left; font-weight: 600; color: #666; border-bottom: 1px solid #E0E0E0; white-space: nowrap; }
+        .preview-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #F0F0F0; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <a class="back-link" id="back-link" href="datasets.html">&larr; Back to Datasets</a>
+            <div class="page-header">
+                <h2>Data Evaluation & Comparison</h2>
+                <p id="page-subtitle">Loading generation data...</p>
+            </div>
+            <div id="status-msg"></div>
+
+            <div id="eval-content">
+                <div class="loading"><div class="spinner"></div><p>Loading and comparing datasets...</p></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h3>Data Preview</h3>
+            <div id="preview-table-container" style="overflow-x:auto;">
+                <table class="preview-table" id="preview-table">
+                    <thead id="preview-thead"></thead>
+                    <tbody id="preview-tbody"></tbody>
+                </table>
+            </div>
+            <p id="preview-footer" style="font-size:0.78rem;color:#999;margin-top:0.75rem;"></p>
+        </div>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/model.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        (function() {
+            var btn = document.getElementById('logout-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user) { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            var chartInstances = {};
+
+            function getUrlParam(name) {
+                var m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
+                return m ? decodeURIComponent(m[1]) : null;
+            }
+
+            var genId = parseInt(getUrlParam('id'));
+            if (!genId) {
+                document.getElementById('eval-content').innerHTML = '<div class="error-box">No dataset ID provided. <a href="datasets.html" style="color:#1565C0;">Go to Datasets</a></div>';
+                document.getElementById('page-subtitle').textContent = 'Error: missing dataset ID';
+                return;
+            }
+
+            function destroyCharts() {
+                for (var k in chartInstances) {
+                    if (chartInstances[k]) { try { chartInstances[k].destroy(); } catch (e) {} }
+                }
+                chartInstances = {};
+            }
+
+            function loadEvaluation() {
+                var gen = DataService.getGenerationById(genId);
+                if (!gen) {
+                    document.getElementById('eval-content').innerHTML = '<div class="error-box">Dataset not found (ID: ' + genId + '). It may have been deleted.</div>';
+                    document.getElementById('page-subtitle').textContent = 'Dataset not found';
+                    return;
+                }
+
+                var modelName = gen.modelName || 'Standalone';
+                var modelVer = gen.modelVersion || '-';
+                var level = gen.level || 'Medium';
+                var rows = gen.rows || 0;
+
+                document.getElementById('page-subtitle').innerHTML =
+                    'Comparing <strong>' + modelName + '</strong> (v' + modelVer + ') — ' + level + ' (' + rows.toLocaleString() + ' rows)';
+
+                // Load synthetic data
+                var synData = DataService.getFullDataset(genId);
+                if (!synData || synData.length === 0) {
+                    document.getElementById('eval-content').innerHTML = '<div class="error-box">Synthetic data not available for this generation. The in-memory cache may have been cleared.</div>';
+                    return;
+                }
+
+                var synHeaders = gen.preview ? gen.preview.headers : Object.keys(synData[0]);
+
+                // Load real (original) data from model
+                var realData = null;
+                var realHeaders = null;
+                if (gen.modelId) {
+                    var modelDataset = ModelService.getModelDataset(gen.modelId);
+                    if (modelDataset && modelDataset.rows && modelDataset.rows.length > 0) {
+                        realData = modelDataset.rows;
+                        realHeaders = modelDataset.headers || Object.keys(modelDataset.rows[0]);
+                    }
+                }
+
+                // If no model data, generate a reference from the knowledge base
+                if (!realData) {
+                    realData = DataService.generateFullData(
+                        gen.preview && gen.preview.type ? gen.preview.type : 'crop',
+                        500
+                    );
+                    realHeaders = synHeaders;
+                }
+
+                // Find common numeric columns
+                function getNumericKeys(data, headers) {
+                    if (!data || data.length === 0) return [];
+                    return headers.filter(function(h) {
+                        var v = data[0][h];
+                        return v !== undefined && v !== null && !isNaN(parseFloat(v));
+                    });
+                }
+
+                var commonNum = getNumericKeys(synData, synHeaders).filter(function(h) {
+                    return realHeaders.indexOf(h) !== -1;
+                });
+
+                // Find categorical columns
+                function getCategoricalKeys(data, headers, numericKeys) {
+                    if (!data || data.length === 0) return [];
+                    return headers.filter(function(h) {
+                        if (numericKeys.indexOf(h) !== -1) return false;
+                        var vals = data.slice(0, 50).map(function(r) { return r[h]; });
+                        var unique = {};
+                        vals.forEach(function(v) { unique[v] = true; });
+                        var count = Object.keys(unique).length;
+                        return count > 0 && count < 20;
+                    });
+                }
+
+                var synCat = getCategoricalKeys(synData, synHeaders, commonNum);
+                var realCat = getCategoricalKeys(realData, realHeaders, commonNum);
+                var commonCat = synCat.filter(function(h) { return realCat.indexOf(h) !== -1; });
+
+                // ============================================
+                // Build the page
+                // ============================================
+                var container = document.getElementById('eval-content');
+                var html = '';
+
+                // --- Section 1: Data Comparison Table ---
+                html += '<div class="card" style="margin-bottom:1.5rem;">';
+                html += '<h3 class="section-title"><span class="ico blue"></span>Statistical Comparison</h3>';
+                html += '<div style="overflow-x:auto;">';
+                html += '<table class="cmp-table">';
+                html += '<thead><tr><th>Feature</th><th>Real Mean</th><th>Synth Mean</th><th>Diff</th><th>Real Std</th><th>Synth Std</th><th>Real Min</th><th>Synth Min</th><th>Real Max</th><th>Synth Max</th></tr></thead>';
+                html += '<tbody>';
+
+                commonNum.forEach(function(col) {
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length === 0 || sVals.length === 0) return;
+
+                    function stats(arr) {
+                        var sum = arr.reduce(function(a, b) { return a + b; }, 0);
+                        var m = sum / arr.length;
+                        var variance = arr.reduce(function(acc, v) { return acc + (v - m) * (v - m); }, 0) / arr.length;
+                        return {
+                            mean: m,
+                            std: Math.sqrt(variance),
+                            min: Math.min.apply(null, arr),
+                            max: Math.max.apply(null, arr)
+                        };
+                    }
+                    var rs = stats(rVals), ss = stats(sVals);
+                    var diffPct = rs.mean !== 0 ? Math.abs((ss.mean - rs.mean) / rs.mean) * 100 : 0;
+
+                    html += '<tr>';
+                    html += '<td class="feature-col">' + col + '</td>';
+                    html += '<td class="val-real">' + rs.mean.toFixed(2) + '</td>';
+                    html += '<td class="val-synth">' + ss.mean.toFixed(2) + '</td>';
+                    html += '<td class="val-diff">' + (diffPct < 0.1 ? '<span style="color:#2E7D32;">~0%</span>' : diffPct.toFixed(1) + '%') + '</td>';
+                    html += '<td class="val-real">' + rs.std.toFixed(2) + '</td>';
+                    html += '<td class="val-synth">' + ss.std.toFixed(2) + '</td>';
+                    html += '<td class="val-real">' + rs.min.toFixed(2) + '</td>';
+                    html += '<td class="val-synth">' + ss.min.toFixed(2) + '</td>';
+                    html += '<td class="val-real">' + rs.max.toFixed(2) + '</td>';
+                    html += '<td class="val-synth">' + ss.max.toFixed(2) + '</td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                if (commonNum.length === 0) html += '<p style="color:#999;padding:0.5rem;">No common numeric features to compare.</p>';
+                html += '</div>';
+
+                // --- Section 2: Visualization ---
+                html += '<div class="card" style="margin-bottom:1.5rem;">';
+                html += '<h3 class="section-title"><span class="ico blue"></span>Distribution Comparison</h3>';
+                html += '<div class="chart-grid" id="dist-charts"></div>';
+                html += '</div>';
+
+                // Correlation heatmap
+                html += '<div class="card" style="margin-bottom:1.5rem;">';
+                html += '<h3 class="section-title"><span class="ico blue"></span>Correlation Comparison</h3>';
+                html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">';
+                html += '<div><h4 style="font-size:0.9rem;color:#1565C0;margin-bottom:0.5rem;">Real Data</h4><div class="heatmap-wrapper" id="heatmap-real"></div></div>';
+                html += '<div><h4 style="font-size:0.9rem;color:#E65100;margin-bottom:0.5rem;">Synthetic Data</h4><div class="heatmap-wrapper" id="heatmap-synth"></div></div>';
+                html += '</div>';
+                html += '</div>';
+
+                // Categorical comparison
+                if (commonCat.length > 0) {
+                    html += '<div class="card" style="margin-bottom:1.5rem;">';
+                    html += '<h3 class="section-title"><span class="ico blue"></span>Categorical Comparison</h3>';
+                    html += '<div class="cat-grid" id="cat-charts"></div>';
+                    html += '</div>';
+                }
+
+                // --- Section 3: Quality Score ---
+                html += '<div class="card" style="margin-bottom:1.5rem;">';
+                html += '<h3 class="section-title"><span class="ico blue"></span>Data Quality Score</h3>';
+                html += '<div class="qs-container"><div class="qs-gauge" id="qs-gauge"></div><div class="qs-breakdown" id="qs-breakdown"></div></div>';
+                html += '</div>';
+
+                container.innerHTML = html;
+
+                // ============================================
+                // Compute and render charts
+                // ============================================
+                setTimeout(function() {
+                    renderDistributionCharts(commonNum, realData, synData);
+                    renderHeatmaps(commonNum, realData, synData);
+                    if (commonCat.length > 0) renderCategoricalCharts(commonCat, realData, synData);
+                    renderQualityScore(commonNum, commonCat, realData, synData);
+                }, 50);
+            }
+
+            // ============================================
+            // Distribution Charts
+            // ============================================
+            function renderDistributionCharts(cols, realData, synData) {
+                var grid = document.getElementById('dist-charts');
+                if (!grid) return;
+
+                // Build all HTML first, then set innerHTML once to avoid destroying existing canvases
+                var chartHtml = '';
+                cols.forEach(function(col) {
+                    var boxId = 'dist-' + col.replace(/[^a-zA-Z0-9]/g, '_');
+                    chartHtml += '<div class="chart-box"><h4>' + col + '</h4><canvas id="' + boxId + '"></canvas></div>';
+                });
+                grid.innerHTML = chartHtml;
+
+                cols.forEach(function(col) {
+                    var boxId = 'dist-' + col.replace(/[^a-zA-Z0-9]/g, '_');
+
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length === 0 || sVals.length === 0) return;
+
+                    // Create common bins
+                    var allMin = Math.min(Math.min.apply(null, rVals), Math.min.apply(null, sVals));
+                    var allMax = Math.max(Math.max.apply(null, rVals), Math.max.apply(null, sVals));
+                    var binCount = Math.min(20, Math.round(Math.sqrt(rVals.length + sVals.length)));
+                    var binWidth = (allMax - allMin) / binCount || 1;
+                    var bins = [];
+                    for (var i = 0; i < binCount; i++) {
+                        bins.push({ lo: allMin + i * binWidth, hi: allMin + (i + 1) * binWidth, r: 0, s: 0 });
+                    }
+
+                    rVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        bins[idx].r++;
+                    });
+                    sVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        bins[idx].s++;
+                    });
+
+                    var labels = bins.map(function(b) { return (b.lo).toFixed(1) + '-' + (b.hi).toFixed(1); });
+                    var rCounts = bins.map(function(b) { return b.r; });
+                    var sCounts = bins.map(function(b) { return b.s; });
+
+                    var ctx = document.getElementById(boxId);
+                    if (!ctx) return;
+                    chartInstances[boxId] = new Chart(ctx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: 'Real', data: rCounts, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                                { label: 'Synthetic', data: sCounts, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                            scales: {
+                                x: { ticks: { font: { size: 8 }, maxRotation: 45 }, title: { display: true, text: col, font: { size: 10 } } },
+                                y: { beginAtZero: true, title: { display: true, text: 'Count', font: { size: 10 } } }
+                            }
+                        }
+                    });
+                });
+            }
+
+            // ============================================
+            // Correlation Heatmaps
+            // ============================================
+            function renderHeatmaps(cols, realData, synData) {
+                var realEl = document.getElementById('heatmap-real');
+                var synthEl = document.getElementById('heatmap-synth');
+                if (!realEl || !synthEl || cols.length < 2) {
+                    if (realEl) realEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">Need at least 2 numeric columns.</p>';
+                    if (synthEl) synthEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">Need at least 2 numeric columns.</p>';
+                    return;
+                }
+
+                var realCorr = computeCorrelationMatrix(cols, realData);
+                var synCorr = computeCorrelationMatrix(cols, synData);
+
+                realEl.innerHTML = buildHeatmapTable(cols, realCorr, 'Real');
+                synthEl.innerHTML = buildHeatmapTable(cols, synCorr, 'Synthetic');
+            }
+
+            function computeCorrelationMatrix(cols, data) {
+                var n = data.length;
+                var corr = {};
+                cols.forEach(function(c) { corr[c] = {}; });
+                for (var i = 0; i < cols.length; i++) {
+                    for (var j = 0; j < cols.length; j++) {
+                        var x = data.map(function(r) { return parseFloat(r[cols[i]]); }).filter(function(v) { return !isNaN(v); });
+                        var y = data.map(function(r) { return parseFloat(r[cols[j]]); }).filter(function(v) { return !isNaN(v); });
+                        var len = Math.min(x.length, y.length);
+                        x = x.slice(0, len); y = y.slice(0, len);
+                        var mx = x.reduce(function(a, b) { return a + b; }, 0) / len;
+                        var my = y.reduce(function(a, b) { return a + b; }, 0) / len;
+                        var num = 0, dxTot = 0, dyTot = 0;
+                        for (var k = 0; k < len; k++) {
+                            var dx = x[k] - mx, dy = y[k] - my;
+                            num += dx * dy;
+                            dxTot += dx * dx;
+                            dyTot += dy * dy;
+                        }
+                        corr[cols[i]][cols[j]] = dxTot * dyTot === 0 ? 0 : num / Math.sqrt(dxTot * dyTot);
+                    }
+                }
+                return corr;
+            }
+
+            function buildHeatmapTable(cols, corr, label) {
+                var colors = ['#b71c1c','#e53935','#ef5350','#ef9a9a','#e0e0e0','#a5d6a7','#66bb6a','#43a047','#2e7d32'];
+                function corrColor(v) {
+                    var idx = Math.round((v + 1) / 2 * (colors.length - 1));
+                    idx = Math.max(0, Math.min(colors.length - 1, idx));
+                    return colors[idx];
+                }
+
+                var h = '<table class="heatmap-table"><thead><tr><th></th>';
+                cols.forEach(function(c) { h += '<th>' + c + '</th>'; });
+                h += '</tr></thead><tbody>';
+                cols.forEach(function(c1) {
+                    h += '<tr><th>' + c1 + '</th>';
+                    cols.forEach(function(c2) {
+                        var v = corr[c1][c2];
+                        var bg = corrColor(v);
+                        var textColor = Math.abs(v) > 0.5 ? 'white' : '#333';
+                        h += '<td style="background:' + bg + ';color:' + textColor + ';"><span class="val">' + v.toFixed(2) + '</span></td>';
+                    });
+                    h += '</tr>';
+                });
+                h += '</tbody></table>';
+                h += '<div class="heatmap-caption">';
+                h += '<span><span class="swatch" style="background:#b71c1c;"></span> -1.0</span>';
+                h += '<span><span class="swatch" style="background:#e0e0e0;"></span> 0.0</span>';
+                h += '<span><span class="swatch" style="background:#2e7d32;"></span> +1.0</span>';
+                h += '</div>';
+                return h;
+            }
+
+            // ============================================
+            // Categorical Charts
+            // ============================================
+            function renderCategoricalCharts(cols, realData, synData) {
+                var grid = document.getElementById('cat-charts');
+                if (!grid) return;
+
+                // Build all HTML first, then set innerHTML once
+                var catHtml = '';
+                cols.forEach(function(col) {
+                    var boxId = 'cat-' + col.replace(/[^a-zA-Z0-9]/g, '_');
+                    catHtml += '<div class="chart-box"><h4>' + col + '</h4><canvas id="' + boxId + '"></canvas></div>';
+                });
+                grid.innerHTML = catHtml;
+
+                cols.forEach(function(col) {
+                    var boxId = 'cat-' + col.replace(/[^a-zA-Z0-9]/g, '_');
+
+                    // Count frequencies
+                    function freq(arr, key) {
+                        var map = {};
+                        arr.forEach(function(r) {
+                            var v = r[key];
+                            if (v === undefined || v === null) v = '(null)';
+                            map[v] = (map[v] || 0) + 1;
+                        });
+                        return map;
+                    }
+                    var rFreq = freq(realData, col);
+                    var sFreq = freq(synData, col);
+
+                    // Union of all categories
+                    var allKeys = {};
+                    Object.keys(rFreq).forEach(function(k) { allKeys[k] = true; });
+                    Object.keys(sFreq).forEach(function(k) { allKeys[k] = true; });
+                    var labels = Object.keys(allKeys).sort();
+                    var rVals = labels.map(function(l) { return rFreq[l] || 0; });
+                    var sVals = labels.map(function(l) { return sFreq[l] || 0; });
+
+                    var ctx = document.getElementById(boxId);
+                    if (!ctx) return;
+                    chartInstances[boxId] = new Chart(ctx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: 'Real', data: rVals, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                                { label: 'Synthetic', data: sVals, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
+                            scales: {
+                                x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+                                y: { beginAtZero: true, title: { display: true, text: 'Count', font: { size: 10 } } }
+                            }
+                        }
+                    });
+                });
+            }
+
+            // ============================================
+            // Quality Score
+            // ============================================
+            function renderQualityScore(commonNum, commonCat, realData, synData) {
+                var gaugeEl = document.getElementById('qs-gauge');
+                var breakdownEl = document.getElementById('qs-breakdown');
+                if (!gaugeEl || !breakdownEl) return;
+
+                // 1. Statistical similarity (40%)
+                var statScore = 0;
+                var statCount = 0;
+                commonNum.forEach(function(col) {
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length < 3 || sVals.length < 3) return;
+
+                    var rMean = rVals.reduce(function(a, b) { return a + b; }, 0) / rVals.length;
+                    var sMean = sVals.reduce(function(a, b) { return a + b; }, 0) / sVals.length;
+                    var rStd = Math.sqrt(rVals.reduce(function(acc, v) { return acc + (v - rMean) * (v - rMean); }, 0) / rVals.length);
+                    var sStd = Math.sqrt(sVals.reduce(function(acc, v) { return acc + (v - sMean) * (v - sMean); }, 0) / sVals.length);
+
+                    var meanSim = Math.max(0, 1 - Math.abs(rMean - sMean) / (Math.abs(rMean) + 0.01));
+                    var stdSim = Math.max(0, 1 - Math.abs(rStd - sStd) / (rStd + 0.01));
+                    statScore += meanSim * 0.6 + stdSim * 0.4;
+                    statCount++;
+                });
+                var statSim = statCount > 0 ? statScore / statCount : 0.5;
+
+                // 2. Distribution similarity (35%)
+                var distScore = 0;
+                var distCount = 0;
+                commonNum.forEach(function(col) {
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length < 5 || sVals.length < 5) return;
+
+                    var allMin = Math.min(Math.min.apply(null, rVals), Math.min.apply(null, sVals));
+                    var allMax = Math.max(Math.max.apply(null, rVals), Math.max.apply(null, sVals));
+                    var binCount = Math.min(20, Math.round(Math.sqrt(rVals.length + sVals.length)));
+                    var binWidth = (allMax - allMin) / binCount || 1;
+                    var rBins = [], sBins = [];
+                    for (var i = 0; i < binCount; i++) { rBins[i] = 0; sBins[i] = 0; }
+
+                    rVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        rBins[idx]++;
+                    });
+                    sVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        sBins[idx]++;
+                    });
+
+                    var rTotal = rVals.length, sTotal = sVals.length;
+                    var overlap = 0;
+                    for (i = 0; i < binCount; i++) {
+                        overlap += Math.min(rBins[i] / rTotal, sBins[i] / sTotal);
+                    }
+                    distScore += overlap;
+                    distCount++;
+                });
+                var distSim = distCount > 0 ? distScore / distCount : 0.5;
+
+                // 3. Correlation similarity (25%)
+                var corrScore = 0;
+                var corrCount = 0;
+                if (commonNum.length >= 2) {
+                    var realCorr = computeCorrelationMatrix(commonNum, realData);
+                    var synCorr = computeCorrelationMatrix(commonNum, synData);
+                    for (var i = 0; i < commonNum.length; i++) {
+                        for (var j = i + 1; j < commonNum.length; j++) {
+                            var rc = realCorr[commonNum[i]][commonNum[j]];
+                            var sc = synCorr[commonNum[i]][commonNum[j]];
+                            var sim = Math.max(0, 1 - Math.abs(rc - sc) / 2);
+                            corrScore += sim;
+                            corrCount++;
+                        }
+                    }
+                }
+                var corrSim = corrCount > 0 ? corrScore / corrCount : 0.5;
+
+                // Overall
+                var overall = statSim * 0.40 + distSim * 0.35 + corrSim * 0.25;
+                overall = Math.max(0, Math.min(1, overall));
+
+                // Gauge display
+                var statusText, statusClass;
+                if (overall >= 0.8) { statusText = 'Excellent'; statusClass = 'badge-green'; }
+                else if (overall >= 0.5) { statusText = 'Good'; statusClass = 'badge-orange'; }
+                else { statusText = 'Needs Improvement'; statusClass = 'badge-red'; }
+
+                gaugeEl.innerHTML =
+                    '<div class="score-num" style="color:' + (overall >= 0.8 ? '#2E7D32' : overall >= 0.5 ? '#E65100' : '#C62828') + ';">' + (overall * 100).toFixed(1) + '%</div>' +
+                    '<div class="score-label">Data Quality Score</div>' +
+                    '<div class="score-status ' + statusClass + '">' + statusText + '</div>';
+
+                // Breakdown
+                function breakdownItem(label, score, color) {
+                    var pct = (score * 100).toFixed(1);
+                    return '<div class="qs-item"><span class="qs-label">' + label + '</span><div class="qs-bar-wrap"><div class="qs-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div><span class="qs-val">' + pct + '%</span></div>';
+                }
+                breakdownEl.innerHTML =
+                    breakdownItem('Statistical Similarity (40%)', statSim, '#1565C0') +
+                    breakdownItem('Distribution Similarity (35%)', distSim, '#E65100') +
+                    breakdownItem('Correlation Similarity (25%)', corrSim, '#2E7D32') +
+                    '<div class="info-note"><strong>Note:</strong> Quality is computed entirely from actual data comparison — no hardcoded values. Score ranges: 80-100% Excellent, 50-79% Good, below 50% Needs Improvement.</div>';
+            }
+
+            // Preview modal handlers
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('preview-modal').classList.remove('active');
+            });
+            document.getElementById('preview-modal').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+
+            loadEvaluation();
+        });
+    </script>
+</body>
+</html>

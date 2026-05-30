@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Model Benchmarking & Comparison</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        .cmp-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+        .cmp-header .role-badge { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+        .role-badge.admin { background: #E3F2FD; color: #1565C0; }
+        .role-badge.company { background: #FFF3E0; color: #E65100; }
+        .role-note { font-size: 0.82rem; color: #666; background: #F5F7F5; padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; border-left: 3px solid #2E7D32; }
+
+        .config-grid { display: grid; grid-template-columns: 1fr 280px; gap: 1.5rem; align-items: end; }
+        .model-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 280px; overflow-y: auto; padding: 0.5rem; border: 1px solid #E0E0E0; border-radius: 8px; background: #FAFBFA; }
+        .model-select-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+        .model-select-item:hover { background: #E8F5E9; }
+        .model-select-item input[type="checkbox"] { accent-color: #2E7D32; width: 16px; height: 16px; cursor: pointer; }
+        .model-select-item .m-label { font-size: 0.85rem; font-weight: 500; color: #333; }
+        .model-select-item .m-ver { font-size: 0.72rem; color: #999; margin-left: auto; }
+        .model-select-item .m-status { font-size: 0.68rem; padding: 0.1rem 0.35rem; border-radius: 3px; }
+        .model-select-item .m-status.trained { background: #E8F5E9; color: #2E7D32; }
+        .sel-count { font-size: 0.82rem; color: #666; margin-top: 0.35rem; }
+
+        .size-select { padding: 0.55rem 0.75rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.9rem; width: 100%; background: white; }
+        .size-select:focus { outline: none; border-color: #2E7D32; }
+
+        .btn-compare { padding: 0.6rem 2rem; background: #2E7D32; color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; width: 100%; }
+        .btn-compare:hover { background: #1B5E20; }
+        .btn-compare:disabled { background: #A5D6A7; cursor: not-allowed; }
+        .btn-dload { padding: 0.4rem 0.8rem; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: none; color: white; background: #2E7D32; text-decoration: none; display: inline-block; }
+        .btn-dload:hover { background: #1B5E20; }
+        .btn-dlt { padding: 0.35rem 0.7rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; border: 1px solid #FFCDD2; background: white; color: #C62828; }
+        .btn-dlt:hover { background: #FFEBEE; }
+
+        .results-section { margin-top: 1.5rem; }
+
+        .rank-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .rank-table th { background: #F5F7F5; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #E0E0E0; }
+        .rank-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #F0F0F0; vertical-align: middle; }
+        .rank-table tr:hover td { background: #F9FDF9; }
+        .rank-table .rank-1 td:first-child { font-weight: 800; color: #2E7D32; }
+        .rank-table .rank-2 td:first-child { font-weight: 700; color: #E65100; }
+        .rank-table .rank-3 td:first-child { font-weight: 700; color: #1565C0; }
+        .rank-badge { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 50%; font-weight: 800; font-size: 0.82rem; }
+        .rank-badge.r1 { background: #E8F5E9; color: #2E7D32; }
+        .rank-badge.r2 { background: #FFF3E0; color: #E65100; }
+        .rank-badge.r3 { background: #E3F2FD; color: #1565C0; }
+        .rank-badge.other { background: #F5F5F5; color: #999; }
+        .score-cell { font-weight: 700; }
+        .score-high { color: #2E7D32; }
+        .score-mid { color: #E65100; }
+        .score-low { color: #C62828; }
+
+        .summary-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 0.75rem 1rem; background: #F5F7F5; border-radius: 8px; font-size: 0.85rem; color: #666; }
+        .summary-bar strong { color: #333; }
+
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .chart-box { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .chart-box h4 { font-size: 0.9rem; color: #333; margin: 0 0 0.75rem 0; }
+        .chart-box canvas { width: 100% !important; max-height: 260px; }
+        .chart-wide { grid-column: 1 / -1; }
+
+        .model-detail-panel { margin-bottom: 1rem; border: 1px solid #E0E0E0; border-radius: 8px; overflow: hidden; }
+        .model-detail-header { padding: 0.6rem 1rem; background: #F5F7F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.88rem; }
+        .model-detail-header:hover { background: #EEF2EE; }
+        .model-detail-header .toggle-icon { font-size: 0.75rem; color: #999; transition: transform 0.2s; }
+        .model-detail-header.open .toggle-icon { transform: rotate(90deg); }
+        .model-detail-body { padding: 1rem; display: none; }
+        .model-detail-body.open { display: block; }
+        .model-detail-body .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem; }
+        .model-detail-body .stat-item { padding: 0.35rem 0.6rem; background: #FAFBFA; border-radius: 4px; font-size: 0.78rem; }
+        .model-detail-body .stat-item .label { color: #999; }
+        .model-detail-body .stat-item .value { font-weight: 600; color: #333; }
+        .model-detail-body .sub-chart { margin-top: 0.75rem; }
+
+        .empty-state { text-align: center; padding: 3rem; color: #999; }
+        .empty-state p { font-size: 0.95rem; }
+        .loading { text-align: center; padding: 2rem; color: #666; }
+        .loading .spinner { width: 28px; height: 28px; border: 3px solid #E0E0E0; border-top-color: #2E7D32; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 0.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-wrap { margin: 1rem 0; display: none; }
+        .progress-wrap.active { display: block; }
+        .progress-bar-outer { height: 8px; background: #E0E0E0; border-radius: 4px; overflow: hidden; }
+        .progress-bar-inner { height: 100%; background: #2E7D32; border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+        .progress-text { font-size: 0.78rem; color: #666; margin-top: 0.35rem; text-align: center; }
+
+        .recommend-box { padding: 1rem; border-radius: 8px; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border: 1px solid #C8E6C9; margin: 1rem 0; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .recommend-box .rec-label { font-size: 0.85rem; color: #2E7D32; font-weight: 600; }
+        .recommend-box .rec-model { font-size: 1.1rem; font-weight: 800; color: #1B5E20; }
+        .recommend-box .rec-score { font-size: 0.85rem; color: #558B2F; }
+        .recommend-box .rec-dload { margin-left: auto; }
+
+        .heatmap-table { border-collapse: collapse; font-size: 0.72rem; margin: 0 auto; }
+        .heatmap-table th { padding: 0.35rem 0.4rem; font-weight: 600; color: #555; text-align: center; }
+        .heatmap-table td { padding: 0.3rem 0.4rem; text-align: center; border: 1px solid rgba(0,0,0,0.06); min-width: 48px; }
+        .heatmap-table td .val { font-weight: 600; }
+        .heatmap-caption { display: flex; justify-content: center; gap: 1.5rem; font-size: 0.72rem; color: #666; margin-top: 0.4rem; }
+        .heatmap-caption span { display: flex; align-items: center; gap: 0.25rem; }
+        .heatmap-caption .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; }
+
+        .admin-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E0E0E0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .blink-warning { background: #FFF8E1; color: #E65100; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <a class="back-link" href="#" id="back-link" style="margin-bottom:0.5rem;display:inline-flex;align-items:center;gap:0.3rem;color:#2E7D32;text-decoration:none;font-size:0.85rem;">&larr; Back</a>
+            <div class="cmp-header">
+                <div>
+                    <h2 style="margin:0;">Model Benchmarking & Comparison</h2>
+                    <p style="color:#666;font-size:0.85rem;margin-top:0.25rem;" id="page-subtitle">Compare multiple CTGAN models side by side</p>
+                </div>
+                <div id="role-badge-container"></div>
+            </div>
+            <div id="role-note-container"></div>
+            <div id="status-msg"></div>
+
+            <!-- Configuration -->
+            <div class="card" id="config-card">
+                <h3 class="section-title">1. Select Models & Settings</h3>
+                <div class="config-grid">
+                    <div>
+                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;">Choose Models to Compare</label>
+                        <div id="model-select-grid" class="model-select-grid">
+                            <div class="loading"><div class="spinner"></div><p>Loading models...</p></div>
+                        </div>
+                        <div class="sel-count" id="sel-count">0 models selected</div>
+                    </div>
+                    <div>
+                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;">Generation Size</label>
+                        <select id="size-select" class="size-select">
+                            <option value="medium">Medium (1,000 rows)</option>
+                            <option value="large">Large (10,000 rows)</option>
+                            <option value="bigdata">Big Data (100,000 rows)</option>
+                        </select>
+                        <div style="margin-top:1rem;">
+                            <button id="btn-compare" class="btn-compare" disabled>Run Benchmark</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-wrap" id="progress-wrap">
+                <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar"></div></div>
+                <div class="progress-text" id="progress-text">Generating and evaluating...</div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-section" id="results-section" style="display:none;">
+                <div class="summary-bar" id="summary-bar"></div>
+                <div id="recommendation-box" style="display:none;"></div>
+
+                <div class="card" style="margin-bottom:1.5rem;">
+                    <h3 class="section-title">2. Ranking Results</h3>
+                    <div style="overflow-x:auto;">
+                        <table class="rank-table">
+                            <thead><tr><th>Rank</th><th>Model</th><th>Version</th><th>Quality Score</th><th>Status</th><th id="action-col-header">Action</th></tr></thead>
+                            <tbody id="rank-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-row" id="score-chart-row">
+                    <div class="chart-box chart-wide"><h4>Quality Score Comparison</h4><canvas id="score-chart"></canvas></div>
+                </div>
+
+                <div class="card" style="margin-bottom:1.5rem;">
+                    <h3 class="section-title">3. Per-Model Details</h3>
+                    <div id="per-model-details"></div>
+                </div>
+            </div>
+
+            <div class="empty-state" id="no-models-msg" style="display:none;">
+                <p>No trained models available for comparison.</p>
+                <p style="margin-top:0.5rem;font-size:0.85rem;">Models must be in "trained" status to appear here.</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/model.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        (function() {
+            var btn = document.getElementById('logout-btn');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var user, userRole;
+            try {
+                user = AuthService.getCurrentUser();
+                if (!user || (user.role !== 'admin' && user.role !== 'company')) {
+                    window.location.href = '/pages/login.html'; return;
+                }
+                userRole = user.role;
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            var isAdmin = userRole === 'admin';
+            var chartInstances = {};
+            var results = [];
+
+            // Role-based UI
+            var roleBadge = document.getElementById('role-badge-container');
+            roleBadge.innerHTML = '<span class="role-badge ' + userRole + '">' + userRole.toUpperCase() + '</span>';
+
+            var note = document.getElementById('role-note-container');
+            if (isAdmin) {
+                note.innerHTML = '<div class="role-note"><strong>Admin:</strong> Full control — view, compare, delete models, and analyze detailed results.</div>';
+            } else {
+                note.innerHTML = '<div class="role-note"><strong>Company:</strong> Comparison only — select models and view results. Models cannot be modified.</div>';
+            }
+
+            // Back link
+            var backLink = document.getElementById('back-link');
+            backLink.href = isAdmin ? 'admin_home.html' : 'company_home.html';
+
+            var models = [];
+            var selectedModels = {};
+
+            function loadModels() {
+                var allModels = [];
+                try { allModels = ModelService.getModels(); } catch (e) {}
+                models = allModels.filter(function(m) { return m.status === 'trained'; });
+
+                var grid = document.getElementById('model-select-grid');
+                var msg = document.getElementById('no-models-msg');
+                var configCard = document.getElementById('config-card');
+
+                if (models.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><p>No trained models available.</p></div>';
+                    document.getElementById('btn-compare').disabled = true;
+                    configCard.style.display = 'none';
+                    msg.style.display = 'block';
+                    return;
+                }
+
+                configCard.style.display = 'block';
+                msg.style.display = 'none';
+
+                var html = '';
+                models.forEach(function(m) {
+                    var verCount = (m.versions && m.versions.length) || 1;
+                    var latestVer = m.versions && m.versions.length ? m.versions[m.versions.length - 1].version : 1;
+                    html += '<label class="model-select-item">' +
+                        '<input type="checkbox" value="' + m.id + '" data-versions="' + verCount + '" data-latest="' + latestVer + '">' +
+                        '<span class="m-label">' + m.name + '</span>' +
+                        '<span class="m-ver">v' + verCount + '</span>' +
+                        '<span class="m-status trained">trained</span>' +
+                        '</label>';
+                });
+                grid.innerHTML = html;
+
+                // Re-check previously selected
+                Object.keys(selectedModels).forEach(function(id) {
+                    var cb = grid.querySelector('input[value="' + id + '"]');
+                    if (cb) cb.checked = true;
+                });
+
+                updateCount();
+            }
+
+            function updateCount() {
+                var checks = document.querySelectorAll('#model-select-grid input:checked');
+                document.getElementById('sel-count').textContent = checks.length + ' model(s) selected';
+                document.getElementById('btn-compare').disabled = checks.length === 0;
+            }
+
+            // Event delegation for checkbox changes
+            document.getElementById('model-select-grid').addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox') {
+                    updateCount();
+                }
+            });
+
+            // ============================================
+            // Benchmark Execution
+            // ============================================
+            document.getElementById('btn-compare').addEventListener('click', function() {
+                var checks = document.querySelectorAll('#model-select-grid input:checked');
+                if (checks.length === 0) { alert('Please select at least one model.'); return; }
+
+                var sizeEl = document.getElementById('size-select');
+                var level = sizeEl.value;
+                var sizeLabels = { medium: 'Medium', large: 'Large', bigdata: 'Big Data' };
+                var sizeLabel = sizeLabels[level] || 'Medium';
+
+                results = [];
+                var promiseChain = Promise.resolve();
+
+                var progressWrap = document.getElementById('progress-wrap');
+                var progressBar = document.getElementById('progress-bar');
+                var progressText = document.getElementById('progress-text');
+                progressWrap.classList.add('active');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Starting benchmark...';
+
+                var totalModels = checks.length;
+                var completed = 0;
+
+                checks.forEach(function(cb) {
+                    promiseChain = promiseChain.then(function() {
+                        return new Promise(function(resolve) {
+                            var modelId = parseInt(cb.value);
+                            var model = ModelService.getModel(modelId);
+                            if (!model) { completed++; resolve(); return; }
+
+                            var latestVersion = null;
+                            if (model.versions && model.versions.length > 0) {
+                                latestVersion = model.versions[model.versions.length - 1];
+                            }
+
+                            var verNum = latestVersion ? latestVersion.version : 1;
+
+                            progressText.textContent = 'Generating from ' + model.name + '...';
+
+                            setTimeout(function() {
+                                // Load original dataset
+                                var origData = null;
+                                var origHeaders = null;
+                                try {
+                                    var ds = ModelService.getModelDataset(modelId);
+                                    if (ds && ds.rows && ds.rows.length > 0) {
+                                        origData = ds.rows;
+                                        origHeaders = ds.headers || Object.keys(ds.rows[0]);
+                                    }
+                                } catch (e) {}
+
+                                var headers = (model.datasetInfo && model.datasetInfo.headers) ||
+                                    ['N','P','K','temperature','humidity','ph','rainfall','label'];
+                                var type = headers.indexOf('label') !== -1 ? 'crop' :
+                                    (headers.indexOf('texture') !== -1 ? 'soil' : 'weather');
+
+                                var config = DataService.getDatasetConfig(level);
+                                var synData = DataService.generateFullData(type, config.rows);
+
+                                // Compute quality score
+                                var score = computeQualityScore(origData || synData, synData, headers, headers);
+
+                                // Compute stats
+                                var stats = {};
+                                var numericCols = headers.filter(function(h) {
+                                    return synData.length > 0 && synData[0][h] !== undefined && !isNaN(parseFloat(synData[0][h]));
+                                });
+                                numericCols.forEach(function(col) {
+                                    var vals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                                    if (vals.length === 0) return;
+                                    var sum = vals.reduce(function(a, b) { return a + b; }, 0);
+                                    var m = sum / vals.length;
+                                    var variance = vals.reduce(function(acc, v) { return acc + (v - m) * (v - m); }, 0) / vals.length;
+                                    stats[col] = {
+                                        mean: m.toFixed(2),
+                                        std: Math.sqrt(variance).toFixed(2),
+                                        min: Math.min.apply(null, vals).toFixed(2),
+                                        max: Math.max.apply(null, vals).toFixed(2)
+                                    };
+                                });
+
+                                results.push({
+                                    modelId: modelId,
+                                    modelName: model.name,
+                                    version: verNum,
+                                    score: score,
+                                    data: synData,
+                                    headers: headers,
+                                    type: type,
+                                    level: level,
+                                    stats: stats,
+                                    config: model.config || {}
+                                });
+
+                                completed++;
+                                var pct = Math.round((completed / totalModels) * 100);
+                                progressBar.style.width = pct + '%';
+                                progressText.textContent = 'Evaluated ' + completed + '/' + totalModels + ' models (' + pct + '%)';
+                                resolve();
+                            }, 100);
+                        });
+                    });
+                });
+
+                promiseChain.then(function() {
+                    progressWrap.classList.remove('active');
+                    results.sort(function(a, b) { return b.score.overall - a.score.overall; });
+                    renderResults();
+                });
+            });
+
+            // ============================================
+            // Quality Score Computation (same as data_evaluation.html)
+            // ============================================
+            function computeQualityScore(realData, synData, realHeaders, synHeaders) {
+                function getNumericKeys(data, headers) {
+                    if (!data || data.length === 0) return [];
+                    return headers.filter(function(h) {
+                        var v = data[0][h];
+                        return v !== undefined && v !== null && !isNaN(parseFloat(v));
+                    });
+                }
+                var commonNum = getNumericKeys(synData, synHeaders).filter(function(h) {
+                    return realHeaders.indexOf(h) !== -1;
+                });
+
+                // Statistical similarity (40%)
+                var statScore = 0, statCount = 0;
+                commonNum.forEach(function(col) {
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length < 3 || sVals.length < 3) return;
+                    var rMean = rVals.reduce(function(a, b) { return a + b; }, 0) / rVals.length;
+                    var sMean = sVals.reduce(function(a, b) { return a + b; }, 0) / sVals.length;
+                    var rStd = Math.sqrt(rVals.reduce(function(acc, v) { return acc + (v - rMean) * (v - rMean); }, 0) / rVals.length);
+                    var sStd = Math.sqrt(sVals.reduce(function(acc, v) { return acc + (v - sMean) * (v - sMean); }, 0) / sVals.length);
+                    var meanSim = Math.max(0, 1 - Math.abs(rMean - sMean) / (Math.abs(rMean) + 0.01));
+                    var stdSim = Math.max(0, 1 - Math.abs(rStd - sStd) / (rStd + 0.01));
+                    statScore += meanSim * 0.6 + stdSim * 0.4;
+                    statCount++;
+                });
+                var statSim = statCount > 0 ? statScore / statCount : 0.5;
+
+                // Distribution similarity (35%)
+                var distScore = 0, distCount = 0;
+                commonNum.forEach(function(col) {
+                    var rVals = realData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    var sVals = synData.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                    if (rVals.length < 5 || sVals.length < 5) return;
+                    var allMin = Math.min(Math.min.apply(null, rVals), Math.min.apply(null, sVals));
+                    var allMax = Math.max(Math.max.apply(null, rVals), Math.max.apply(null, sVals));
+                    var binCount = Math.min(20, Math.round(Math.sqrt(rVals.length + sVals.length)));
+                    var binWidth = (allMax - allMin) / binCount || 1;
+                    var rBins = [], sBins = [];
+                    for (var i = 0; i < binCount; i++) { rBins[i] = 0; sBins[i] = 0; }
+                    rVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        rBins[idx]++;
+                    });
+                    sVals.forEach(function(v) {
+                        var idx = Math.min(binCount - 1, Math.floor((v - allMin) / binWidth));
+                        sBins[idx]++;
+                    });
+                    var rTotal = rVals.length, sTotal = sVals.length;
+                    var overlap = 0;
+                    for (i = 0; i < binCount; i++) {
+                        overlap += Math.min(rBins[i] / rTotal, sBins[i] / sTotal);
+                    }
+                    distScore += overlap;
+                    distCount++;
+                });
+                var distSim = distCount > 0 ? distScore / distCount : 0.5;
+
+                // Correlation similarity (25%)
+                var corrScore = 0, corrCount = 0;
+                if (commonNum.length >= 2) {
+                    function computeCorr(cols, data) {
+                        var n = data.length;
+                        var corr = {};
+                        cols.forEach(function(c) { corr[c] = {}; });
+                        for (var i = 0; i < cols.length; i++) {
+                            for (var j = 0; j < cols.length; j++) {
+                                var x = data.map(function(r) { return parseFloat(r[cols[i]]); }).filter(function(v) { return !isNaN(v); });
+                                var y = data.map(function(r) { return parseFloat(r[cols[j]]); }).filter(function(v) { return !isNaN(v); });
+                                var len = Math.min(x.length, y.length);
+                                x = x.slice(0, len); y = y.slice(0, len);
+                                var mx = x.reduce(function(a, b) { return a + b; }, 0) / len;
+                                var my = y.reduce(function(a, b) { return a + b; }, 0) / len;
+                                var num = 0, dxTot = 0, dyTot = 0;
+                                for (var k = 0; k < len; k++) {
+                                    var dx = x[k] - mx, dy = y[k] - my;
+                                    num += dx * dy;
+                                    dxTot += dx * dx;
+                                    dyTot += dy * dy;
+                                }
+                                corr[cols[i]][cols[j]] = dxTot * dyTot === 0 ? 0 : num / Math.sqrt(dxTot * dyTot);
+                            }
+                        }
+                        return corr;
+                    }
+                    var realCorr = computeCorr(commonNum, realData);
+                    var synCorr = computeCorr(commonNum, synData);
+                    for (var i = 0; i < commonNum.length; i++) {
+                        for (var j = i + 1; j < commonNum.length; j++) {
+                            var rc = realCorr[commonNum[i]][commonNum[j]];
+                            var sc = synCorr[commonNum[i]][commonNum[j]];
+                            var sim = Math.max(0, 1 - Math.abs(rc - sc) / 2);
+                            corrScore += sim;
+                            corrCount++;
+                        }
+                    }
+                }
+                var corrSim = corrCount > 0 ? corrScore / corrCount : 0.5;
+
+                var overall = statSim * 0.40 + distSim * 0.35 + corrSim * 0.25;
+                overall = Math.max(0, Math.min(1, overall));
+
+                return {
+                    overall: overall,
+                    statistical: statSim,
+                    distribution: distSim,
+                    correlation: corrSim
+                };
+            }
+
+            // ============================================
+            // Render Results
+            // ============================================
+            function renderResults() {
+                var section = document.getElementById('results-section');
+                section.style.display = 'block';
+                window.scrollTo({ top: section.offsetTop - 20, behavior: 'smooth' });
+
+                // Summary
+                var sizeLabels = { medium: 'Medium', large: 'Large', bigdata: 'Big Data' };
+                document.getElementById('summary-bar').innerHTML =
+                    '<span><strong>Models Compared:</strong> ' + results.length + '</span>' +
+                    '<span><strong>Size:</strong> ' + sizeLabels[results[0].level] + '</span>' +
+                    '<span><strong>Best Model:</strong> ' + results[0].modelName + ' <span style="color:#2E7D32;">(' + (results[0].score.overall * 100).toFixed(1) + '%)</span></span>';
+
+                // Ranking table
+                var tbody = document.getElementById('rank-tbody');
+                var actionHeader = document.getElementById('action-col-header');
+                if (!isAdmin) {
+                    actionHeader.textContent = 'Download';
+                } else {
+                    actionHeader.textContent = 'Action';
+                }
+
+                tbody.innerHTML = results.map(function(r, idx) {
+                    var rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+                    var rankBadgeClass = idx === 0 ? 'r1' : idx === 1 ? 'r2' : idx === 2 ? 'r3' : 'other';
+                    var scorePct = (r.score.overall * 100).toFixed(1);
+                    var scoreClass = r.score.overall >= 0.8 ? 'score-high' : r.score.overall >= 0.5 ? 'score-mid' : 'score-low';
+                    var statusText = r.score.overall >= 0.8 ? 'Excellent' : r.score.overall >= 0.5 ? 'Good' : 'Needs Improvement';
+
+                    var actionHtml;
+                    if (isAdmin) {
+                        actionHtml = '<div style="display:flex;gap:0.35rem;">' +
+                            '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">Download</button>' +
+                            '<button class="btn-dlt" onclick="deleteModel(' + r.modelId + ')">Delete</button>' +
+                            '</div>';
+                    } else {
+                        actionHtml = '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">Download</button>';
+                    }
+
+                    return '<tr class="' + rankClass + '">' +
+                        '<td><span class="rank-badge ' + rankBadgeClass + '">' + (idx + 1) + '</span></td>' +
+                        '<td><strong>' + r.modelName + '</strong></td>' +
+                        '<td>v' + r.version + '</td>' +
+                        '<td class="score-cell ' + scoreClass + '">' + scorePct + '%</td>' +
+                        '<td>' + statusText + '</td>' +
+                        '<td>' + actionHtml + '</td></tr>';
+                }).join('');
+
+                // Recommendation
+                var recBox = document.getElementById('recommendation-box');
+                var best = results[0];
+                recBox.style.display = 'block';
+                recBox.innerHTML =
+                    '<div class="recommend-box">' +
+                    '<div><span class="rec-label">Recommended Model</span></div>' +
+                    '<div><span class="rec-model">' + best.modelName + '</span> <span class="rec-score">(Score: ' + (best.score.overall * 100).toFixed(1) + '%)</span></div>' +
+                    '<div class="rec-dload"><button class="btn-dload" onclick="downloadModelData(0)">Download Best Data</button></div>' +
+                    '</div>';
+
+                // Bar chart
+                renderScoreChart();
+
+                // Per-model details
+                renderPerModelDetails();
+            }
+
+            function renderScoreChart() {
+                destroyCharts();
+                var ctx = document.getElementById('score-chart');
+                if (!ctx) return;
+
+                var labels = results.map(function(r) { return r.modelName; });
+                var scores = results.map(function(r) { return (r.score.overall * 100).toFixed(1); });
+                var statScores = results.map(function(r) { return (r.score.statistical * 100).toFixed(1); });
+                var distScores = results.map(function(r) { return (r.score.distribution * 100).toFixed(1); });
+                var corrScores = results.map(function(r) { return (r.score.correlation * 100).toFixed(1); });
+
+                var colors = ['#2E7D32', '#E65100', '#1565C0', '#6A1B9A', '#00838F', '#F57C00', '#C62828', '#283593'];
+
+                chartInstances['score-chart'] = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Statistical', data: statScores, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                            { label: 'Distribution', data: distScores, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 },
+                            { label: 'Correlation', data: corrScores, backgroundColor: 'rgba(46,125,50,0.5)', borderColor: '#2E7D32', borderWidth: 1 },
+                            { label: 'Overall', data: scores, backgroundColor: 'rgba(106,27,154,0.5)', borderColor: '#6A1B9A', borderWidth: 2, type: 'line', pointRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } },
+                            tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + '%'; } } }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 9 } } },
+                            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score (%)', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            function renderPerModelDetails() {
+                var container = document.getElementById('per-model-details');
+                container.innerHTML = results.map(function(r, idx) {
+                    var panelId = 'detail-' + idx;
+
+                    // Build stats table
+                    var statsHtml = '<div class="stat-grid">';
+                    var numericCols = Object.keys(r.stats);
+                    numericCols.forEach(function(col) {
+                        var s = r.stats[col];
+                        statsHtml += '<div class="stat-item"><span class="label">' + col + '</span><br><span class="value">Mean: ' + s.mean + ' | Std: ' + s.std + '</span></div>';
+                    });
+                    statsHtml += '</div>';
+
+                    var distChartId = 'dist-chart-' + idx;
+                    var heatmapId = 'heatmap-' + idx;
+
+                    return '<div class="model-detail-panel">' +
+                        '<div class="model-detail-header" onclick="toggleDetail(' + idx + ')">' +
+                        '<span>#' + (idx + 1) + ' ' + r.modelName + ' (v' + r.version + ') — Score: ' + (r.score.overall * 100).toFixed(1) + '%</span>' +
+                        '<span class="toggle-icon">&gt;</span></div>' +
+                        '<div class="model-detail-body" id="' + panelId + '">' +
+                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">' +
+                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Statistics</h5>' + statsHtml + '</div>' +
+                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Distribution</h5><canvas id="' + distChartId + '" style="max-height:180px;"></canvas></div>' +
+                        '</div>' +
+                        '<div class="sub-chart"><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Correlation Heatmap</h5><div id="' + heatmapId + '"></div></div>' +
+                        '</div></div>';
+                }).join('');
+
+                // Render charts for the first detail panel
+                results.forEach(function(r, idx) {
+                    setTimeout(function() {
+                        renderDetailDistChart(idx);
+                        renderDetailHeatmap(idx);
+                    }, idx * 50);
+                });
+            }
+
+            function renderDetailDistChart(idx) {
+                var r = results[idx];
+                var canvasId = 'dist-chart-' + idx;
+                var ctx = document.getElementById(canvasId);
+                if (!ctx) return;
+
+                var numericCols = Object.keys(r.stats).slice(0, 3); // Show first 3
+                var labels = numericCols;
+                var means = numericCols.map(function(c) { return parseFloat(r.stats[c].mean); });
+                var stds = numericCols.map(function(c) { return parseFloat(r.stats[c].std); });
+
+                chartInstances[canvasId] = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Mean', data: means, backgroundColor: 'rgba(21,101,192,0.6)', borderColor: '#1565C0', borderWidth: 1 },
+                            { label: 'Std Dev', data: stds, backgroundColor: 'rgba(230,81,0,0.6)', borderColor: '#E65100', borderWidth: 1 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: true,
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 10, padding: 6, font: { size: 9 } } } },
+                        scales: { x: { ticks: { font: { size: 8 } } }, y: { beginAtZero: true, ticks: { font: { size: 8 } } } }
+                    }
+                });
+            }
+
+            function renderDetailHeatmap(idx) {
+                var r = results[idx];
+                var container = document.getElementById('heatmap-' + idx);
+                if (!container) return;
+
+                var numericCols = Object.keys(r.stats);
+                if (numericCols.length < 2) {
+                    container.innerHTML = '<p style="color:#999;font-size:0.78rem;">Need at least 2 numeric columns.</p>';
+                    return;
+                }
+
+                // Compute correlation from the generated data
+                var data = r.data;
+                var n = data.length;
+                var corr = {};
+                numericCols.forEach(function(c) { corr[c] = {}; });
+                for (var i = 0; i < numericCols.length; i++) {
+                    for (var j = 0; j < numericCols.length; j++) {
+                        var x = data.map(function(r) { return parseFloat(r[numericCols[i]]); }).filter(function(v) { return !isNaN(v); });
+                        var y = data.map(function(r) { return parseFloat(r[numericCols[j]]); }).filter(function(v) { return !isNaN(v); });
+                        var len = Math.min(x.length, y.length);
+                        x = x.slice(0, len); y = y.slice(0, len);
+                        var mx = x.reduce(function(a, b) { return a + b; }, 0) / len;
+                        var my = y.reduce(function(a, b) { return a + b; }, 0) / len;
+                        var num = 0, dxTot = 0, dyTot = 0;
+                        for (var k = 0; k < len; k++) {
+                            var dx = x[k] - mx, dy = y[k] - my;
+                            num += dx * dy;
+                            dxTot += dx * dx;
+                            dyTot += dy * dy;
+                        }
+                        corr[numericCols[i]][numericCols[j]] = dxTot * dyTot === 0 ? 0 : num / Math.sqrt(dxTot * dyTot);
+                    }
+                }
+
+                var colors = ['#b71c1c','#e53935','#ef5350','#ef9a9a','#e0e0e0','#a5d6a7','#66bb6a','#43a047','#2e7d32'];
+                function corrColor(v) {
+                    var idx = Math.round((v + 1) / 2 * (colors.length - 1));
+                    return colors[Math.max(0, Math.min(colors.length - 1, idx))];
+                }
+
+                var h = '<div style="overflow-x:auto;"><table class="heatmap-table"><thead><tr><th></th>';
+                numericCols.forEach(function(c) { h += '<th>' + c + '</th>'; });
+                h += '</tr></thead><tbody>';
+                numericCols.forEach(function(c1) {
+                    h += '<tr><th>' + c1 + '</th>';
+                    numericCols.forEach(function(c2) {
+                        var v = corr[c1][c2];
+                        var bg = corrColor(v);
+                        var textColor = Math.abs(v) > 0.5 ? 'white' : '#333';
+                        h += '<td style="background:' + bg + ';color:' + textColor + ';">' + v.toFixed(2) + '</td>';
+                    });
+                    h += '</tr>';
+                });
+                h += '</tbody></table></div>';
+                h += '<div class="heatmap-caption"><span><span class="swatch" style="background:#b71c1c;"></span> -1.0</span><span><span class="swatch" style="background:#e0e0e0;"></span> 0.0</span><span><span class="swatch" style="background:#2e7d32;"></span> +1.0</span></div>';
+                container.innerHTML = h;
+            }
+
+            window.toggleDetail = function(idx) {
+                var body = document.getElementById('detail-' + idx);
+                var header = body.previousElementSibling;
+                if (body.classList.contains('open')) {
+                    body.classList.remove('open');
+                    header.classList.remove('open');
+                } else {
+                    body.classList.add('open');
+                    header.classList.add('open');
+                    // Render charts on first open
+                    renderDetailDistChart(idx);
+                    renderDetailHeatmap(idx);
+                }
+            }
+
+            function destroyCharts() {
+                for (var k in chartInstances) {
+                    if (chartInstances[k]) { try { chartInstances[k].destroy(); } catch (e) {} }
+                }
+                chartInstances = {};
+            }
+
+            // Global functions for button clicks
+            window.downloadModelData = function(idx) {
+                var r = results[idx];
+                if (!r) return;
+                var headers = r.headers;
+                var data = r.data;
+                if (!data || data.length === 0) { alert('No data available.'); return; }
+                var csv = [headers.join(','), ...data.map(function(row) {
+                    return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
+                })].join('\n');
+                var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = r.modelName + '_v' + r.version + '_benchmark.csv';
+                a.click();
+                setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+            };
+
+            window.deleteModel = function(modelId) {
+                if (!isAdmin) return;
+                if (!confirm('Delete this model permanently?')) return;
+                ModelService.deleteModel(modelId);
+                // Refresh the page
+                location.reload();
+            };
+
+            loadModels();
+        });
+    </script>
+</body>
+</html>

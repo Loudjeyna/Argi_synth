@@ -432,3 +432,30 @@ table td {
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 .gap-1 { gap: 0.5rem; }
+
+/* Model List Status Badges */
+.status-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.status-trained { background: #E8F5E9; color: #2E7D32; }
+.status-in_progress { background: #FFF8E1; color: #E65100; }
+.status-failed { background: #FFEBEE; color: #C62828; }
+
+/* Button Small */
+.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+
+/* Model row hover */
+.model-row { cursor: pointer; transition: background 0.15s; }
+.model-row:hover { background: #F0F9F0; }
+
+/* Search bar for model list */
+.search-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.search-bar input, .search-bar select { padding: 0.5rem 0.75rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.85rem; }
+.search-bar input:focus, .search-bar select:focus { outline: none; border-color: #2E7D32; }
+.search-bar .search-input { flex: 1; min-width: 180px; }
+
+/* Pagination for model list */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+.pagination .page-btn { padding: 0.3rem 0.7rem; border: 1px solid #E0E0E0; border-radius: 4px; font-size: 0.82rem; cursor: pointer; background: white; }
+.pagination .page-btn:hover { border-color: #2E7D32; color: #2E7D32; }
+.pagination .page-btn.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+.pagination .page-btn:disabled { opacity: 0.4; cursor: default; }
+.pagination .page-info { font-size: 0.82rem; color: #666; }

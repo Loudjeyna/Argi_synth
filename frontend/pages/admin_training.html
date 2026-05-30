@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - New Training</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .gan-grid { display: inline-grid; grid-template-columns: auto 30px auto 30px auto 30px auto; align-items: center; justify-items: center; gap: 0.5rem; margin: 1rem auto; }
+        .gan-cell { display: flex; flex-direction: column; align-items: center; }
+        .gan-box { padding: 1.2rem 1rem; border-radius: 12px; text-align: center; min-width: 140px; font-weight: 600; font-size: 0.9rem; }
+        .gan-box.real { background: #E3F2FD; border: 2px solid #1565C0; color: #0D47A1; }
+        .gan-box.generator { background: #E8F5E9; border: 2px solid #2E7D32; color: #1B5E20; }
+        .gan-box.discriminator { background: #FFF3E0; border: 2px solid #FF9800; color: #E65100; }
+        .gan-box.synthetic { background: #F3E5F5; border: 2px solid #7B1FA2; color: #4A148C; }
+        .gan-box.loss { background: #FFEBEE; border: 2px dashed #E53935; color: #C62828; min-width: 100px; font-size: 0.8rem; }
+        .gan-arrow-h { font-size: 1.6rem; color: #666; line-height: 1; }
+        .gan-arrow-v { font-size: 1.2rem; color: #666; line-height: 1; }
+        .gan-sub { font-size: 0.65rem; color: #999; font-weight: 400; }
+        .gan-feedback { font-size: 0.75rem; color: #E53935; font-weight: 500; }
+        .gan-backprop { font-size: 0.7rem; color: #C62828; font-weight: 500; text-align: center; max-width: 140px; line-height: 1.3; }
+        .pipeline { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 1.5rem 0; flex-wrap: wrap; }
+        .pipeline-stage { background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; min-width: 110px; flex: 1; max-width: 160px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pipeline-stage.wide { min-width: 240px; max-width: 300px; flex: 1.8; }
+        .pipeline-stage .stage-number { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #2E7D32; color: white; width: 24px; height: 24px; border-radius: 50%; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .pipeline-stage .stage-icon { font-size: 1.3rem; line-height: 1; margin-top: 0.2rem; }
+        .pipeline-stage .stage-title { font-weight: 700; font-size: 0.8rem; color: #1F2937; margin-top: 0.2rem; }
+        .pipeline-stage .stage-desc { font-size: 0.65rem; color: #9CA3AF; margin-top: 0.15rem; line-height: 1.2; }
+        .pipeline-arrow { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #2E7D32; padding: 0 0.15rem; min-width: 20px; font-weight: bold; }
+        .pipeline-stage.wide .stage-title { font-size: 0.9rem; }
+        .pipeline-stage .stage-highlight { background: #FFF8E1; border: 1px solid #FF9800; border-radius: 6px; padding: 0.3rem; margin-top: 0.3rem; font-size: 0.6rem; color: #E65100; width: 100%; }
+        .gan-inner { display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin-top: 0.4rem; width: 100%; }
+        .gan-inner-box { padding: 0.5rem 0.3rem; border-radius: 8px; font-size: 0.7rem; font-weight: 600; min-width: 75px; flex: 1; }
+        .gan-inner-box.generator-inner { background: #E8F5E9; border: 2px solid #2E7D32; color: #1B5E20; }
+        .gan-inner-box.discriminator-inner { background: #FFF3E0; border: 2px solid #FF9800; color: #E65100; }
+        .gan-inner-arrows { display: flex; flex-direction: column; align-items: center; gap: 0; font-size: 1rem; line-height: 1; }
+        .gan-inner-arrow.forward { color: #2E7D32; }
+        .gan-inner-arrow.backward { color: #E53935; }
+        .gan-inner-label { font-size: 0.55rem; color: #999; margin-top: 0.1rem; }
+        .upload-zone { display: flex; align-items: center; gap: 0.75rem; padding: 1.25rem; border: 2px dashed #A5D6A7; border-radius: 12px; background: #F9FDF9; cursor: pointer; transition: all 0.25s; margin-top: 0.5rem; }
+        .upload-zone:hover { border-color: #2E7D32; background: #F0F9F0; }
+        .upload-zone.has-file { border-style: solid; border-color: #4CAF50; background: #E8F5E9; }
+        .upload-zone .upload-icon { width: 36px; height: 36px; border-radius: 50%; background: #E8F5E9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .upload-zone .upload-icon svg { width: 18px; height: 18px; stroke: #2E7D32; stroke-width: 1.8; fill: none; }
+        .upload-zone .upload-text { flex: 1; }
+        .upload-zone .upload-text .primary { font-size: 0.9rem; font-weight: 600; color: #1B5E20; display: block; }
+        .upload-zone .upload-text .secondary { font-size: 0.75rem; color: #999; display: block; margin-top: 0.1rem; }
+        .upload-zone input[type="file"] { display: none; }
+        .cleaning-pipeline { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+        .cleaning-step { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; transition: all 0.3s; }
+        .cleaning-step[data-status="pending"] { opacity: 0.6; }
+        .cleaning-step[data-status="running"] { border-color: #FF9800; box-shadow: 0 0 0 2px rgba(255,152,0,0.15); }
+        .cleaning-step[data-status="completed"] { border-color: #4CAF50; }
+        .cleaning-step[data-status="error"] { border-color: #F44336; }
+        .cleaning-step-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: #FAFBFA; cursor: default; }
+        .cleaning-step[data-status="running"] .cleaning-step-header { background: #FFF8E1; }
+        .cleaning-step[data-status="completed"] .cleaning-step-header { background: #E8F5E9; }
+        .cleaning-step[data-status="error"] .cleaning-step-header { background: #FFEBEE; }
+        .step-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; flex-shrink: 0; }
+        .step-badge.default { background: #E5E7EB; color: #666; }
+        .step-badge.running { background: #FF9800; color: white; }
+        .step-badge.completed { background: #4CAF50; color: white; }
+        .step-badge.error { background: #F44336; color: white; }
+        .step-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
+        .step-status { font-size: 0.8rem; color: #999; }
+        .step-status.running { color: #FF9800; font-weight: 500; }
+        .step-status.completed { color: #4CAF50; font-weight: 500; }
+        .step-status.error { color: #F44336; font-weight: 500; }
+        .cleaning-step-details { padding: 0 1rem 0.75rem 1rem; font-size: 0.85rem; color: #555; display: none; }
+        .cleaning-step-details.open { display: block; }
+        .step-detail-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+        .step-detail-row .success { color: #4CAF50; }
+        .step-detail-row .warning { color: #FF9800; }
+        .step-detail-row .error { color: #F44336; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+        .report-card { background: #F9FAFB; border-radius: 8px; padding: 1rem; border-left: 4px solid #2E7D32; }
+        .report-card.warning { border-left-color: #FF9800; }
+        .report-card.danger { border-left-color: #F44336; }
+        .report-card .report-value { font-size: 1.3rem; font-weight: 700; color: #1B5E20; }
+        .report-card.warning .report-value { color: #E65100; }
+        .report-card.danger .report-value { color: #C62828; }
+        .report-card .report-label { font-size: 0.75rem; color: #999; margin-top: 0.15rem; }
+        .report-section { margin: 0.5rem 0; }
+        .report-section-title { font-weight: 600; font-size: 0.85rem; color: #333; margin-bottom: 0.3rem; }
+        .report-list { list-style: none; padding: 0; }
+        .cleaning-check { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 6px; margin: 0.3rem 0; }
+        .cleaning-check.pass { background: #E8F5E9; }
+        .cleaning-check.fail { background: #FFEBEE; }
+        .ico { display: inline-block; width: 14px; height: 14px; vertical-align: middle; flex-shrink: 0; position: relative; }
+        .ico-check::before { content: ''; display: block; width: 7px; height: 3.5px; border-left: 2px solid #4CAF50; border-bottom: 2px solid #4CAF50; transform: rotate(-45deg) translate(0, -2px); position: absolute; top: 4px; left: 3px; }
+        .ico-warning::before { content: '!'; display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #FF9800; color: white; font-size: 10px; font-weight: 700; line-height: 1; }
+        .ico-error::before { content: ''; display: block; width: 10px; height: 2px; background: #F44336; transform: rotate(45deg); position: absolute; top: 6px; left: 2px; }
+        .ico-error::after { content: ''; display: block; width: 10px; height: 2px; background: #F44336; transform: rotate(-45deg); position: absolute; top: 6px; left: 2px; }
+        .ico-clock::before { content: ''; display: block; width: 10px; height: 10px; border: 2px solid #666; border-radius: 50%; position: absolute; top: 0; left: 0; }
+        .ico-clock::after { content: ''; display: block; width: 4px; height: 2px; background: #666; position: absolute; top: 4px; left: 5px; transform-origin: 0 0; transform: rotate(45deg); }
+        .ico-gear::before { content: ''; display: block; width: 8px; height: 8px; border: 2px solid #666; border-radius: 50%; position: absolute; top: 1px; left: 1px; }
+        .ico-gear::after { content: ''; display: block; width: 12px; height: 12px; border: 1.5px dashed #999; border-radius: 50%; position: absolute; top: -1px; left: -1px; }
+        .ico-lightbulb::before { content: ''; display: block; width: 8px; height: 10px; border: 2px solid #FF9800; border-radius: 50% 50% 40% 40%; position: absolute; top: 1px; left: 1px; }
+        .ico-lightbulb::after { content: ''; display: block; width: 2px; height: 3px; background: #FF9800; position: absolute; bottom: 1px; left: 5px; }
+        .ico-database::before { content: ''; display: block; width: 8px; height: 6px; border: 2px solid #2E7D32; border-radius: 0 0 4px 4px; position: absolute; top: 4px; left: 1px; }
+        .ico-database::after { content: ''; display: block; width: 8px; height: 3px; border: 2px solid #2E7D32; border-bottom: none; border-radius: 4px 4px 0 0; position: absolute; top: -1px; left: 1px; }
+        .form-card { background: #F9FAFB; border-radius: 8px; padding: 1.25rem; border: 1px solid #E5E7EB; }
+        .form-card h4 { margin-bottom: 1rem; color: #1B5E20; font-size: 1rem; }
+        .training-params { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .outlier-advanced { margin-top: 0.75rem; padding: 0.75rem; background: #FAFBFA; border-radius: 8px; border: 1px solid #E5E7EB; }
+        .outlier-advanced table { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+        .outlier-advanced th { text-align: left; padding: 0.4rem 0.5rem; background: #E8F5E9; color: #1B5E20; font-weight: 600; border-bottom: 2px solid #A5D6A7; }
+        .outlier-advanced td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #E5E7EB; }
+        .strategy-select { padding: 0.25rem 0.4rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 0.8rem; background: white; cursor: pointer; }
+        .outlier-toggle-btn { margin-top: 0.5rem; font-size: 0.82rem; cursor: pointer; padding: 0.4rem 0.8rem; border: 1px solid #D1D5DB; border-radius: 6px; background: #FAFBFA; color: #555; transition: all 0.2s; }
+        .outlier-toggle-btn:hover { border-color: #FF9800; color: #E65100; background: #FFF8E1; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header"><h2>New Training</h2><p>Create a new CTGAN model with your dataset</p></div>
+
+
+
+            <!-- Section 2: Dataset Import -->
+            <div class="card">
+                <h3 class="card-title">Dataset Import</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Upload a CSV or Excel file to use as training data for the CTGAN model.</p>
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                    </div>
+                    <div class="upload-text">
+                        <span class="primary" id="upload-primary-text">Click to select CSV or Excel file</span>
+                        <span class="secondary">Supports .csv, .xlsx, .xls</span>
+                    </div>
+                    <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls">
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button id="import-dataset-btn" class="btn btn-primary">Upload</button>
+                </div>
+                <div id="dataset-table-container" style="display: none; margin-top: 1rem;">
+                    <div class="table-container"><table id="dataset-table"></table></div>
+                    <div id="dataset-stats" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;"></div>
+                </div>
+            </div>
+
+            <!-- Section 3: Data Cleaning Pipeline -->
+            <div class="card" id="cleaning-section" style="display: none;">
+                <h3 class="card-title">Data Cleaning Pipeline</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">5-step automated pipeline to prepare your dataset for CTGAN training.</p>
+                <div class="cleaning-pipeline" id="cleaning-pipeline">
+                    <div class="cleaning-step" id="cleaning-step-a" data-status="pending">
+                        <div class="cleaning-step-header">
+                            <div class="step-badge default">A</div>
+                            <div class="step-title">Missing Values</div>
+                            <div class="step-status pending">Pending</div>
+                        </div>
+                        <div class="cleaning-step-details" id="cleaning-details-a"></div>
+                    </div>
+                    <div class="cleaning-step" id="cleaning-step-b" data-status="pending">
+                        <div class="cleaning-step-header">
+                            <div class="step-badge default">B</div>
+                            <div class="step-title">Duplicate Values</div>
+                            <div class="step-status pending">Pending</div>
+                        </div>
+                        <div class="cleaning-step-details" id="cleaning-details-b"></div>
+                    </div>
+                    <div class="cleaning-step" id="cleaning-step-c" data-status="pending">
+                        <div class="cleaning-step-header">
+                            <div class="step-badge default">C</div>
+                            <div class="step-title">Data Type Detection</div>
+                            <div class="step-status pending">Pending</div>
+                        </div>
+                        <div class="cleaning-step-details" id="cleaning-details-c"></div>
+                    </div>
+                    <div class="cleaning-step" id="cleaning-step-d" data-status="pending">
+                        <div class="cleaning-step-header">
+                            <div class="step-badge default">D</div>
+                            <div class="step-title">Outliers Detection (IQR)</div>
+                            <div class="step-status pending">Pending</div>
+                        </div>
+                        <div class="cleaning-step-details" id="cleaning-details-d"></div>
+                    </div>
+                    <div class="cleaning-step" id="cleaning-step-e" data-status="pending">
+                        <div class="cleaning-step-header">
+                            <div class="step-badge default">E</div>
+                            <div class="step-title">Constant Columns Removal</div>
+                            <div class="step-status pending">Pending</div>
+                        </div>
+                        <div class="cleaning-step-details" id="cleaning-details-e"></div>
+                    </div>
+                </div>
+                <button id="start-cleaning-btn" class="btn btn-primary" style="margin-top: 1rem;">Start Data Cleaning</button>
+            </div>
+
+            <!-- Section 4: Data Cleaning Report -->
+            <div class="card" id="cleaning-report-section" style="display: none;">
+                <h3 class="card-title">Data Cleaning Report</h3>
+                <div id="cleaning-report-content"></div>
+            </div>
+
+            <!-- Section 5: Training Configuration -->
+            <div class="card" id="training-config-section" style="display: none;">
+                <h3 class="card-title">Training Configuration</h3>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label for="model-name">Model Name</label>
+                        <input type="text" id="model-name" class="form-control" placeholder="e.g., Crop CTGAN v1">
+                    </div>
+                    <div class="training-params">
+                        <div class="form-group">
+                            <label for="train-epochs">Epochs</label>
+                            <select id="train-epochs" class="form-control">
+                                <option value="100">100</option>
+                                <option value="300">300</option>
+                                <option value="500" selected>500</option>
+                                <option value="1000">1000</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="train-batch-size">Batch Size</label>
+                            <select id="train-batch-size" class="form-control">
+                                <option value="128" selected>128</option>
+                                <option value="256">256</option>
+                                <option value="512">512</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="train-lr">Learning Rate</label>
+                            <select id="train-lr" class="form-control">
+                                <option value="0.0001">0.0001</option>
+                                <option value="0.0002" selected>0.0002</option>
+                                <option value="0.0005">0.0005</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="add-training-btn" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">
+                        <span class="ico ico-gear"></span> Add Training
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section 6: Training Progress -->
+            <div class="card" id="training-progress-section" style="display: none;">
+                <h3 class="card-title">Training Progress</h3>
+                <div id="training-progress-content">
+                    <p style="color: #666; font-size: 0.9rem;">Creating model and simulating training...</p>
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem;">
+                            <span>Training epochs</span>
+                            <span id="progress-text">0%</span>
+                        </div>
+                        <div style="height: 8px; background: #E0E0E0; border-radius: 4px; overflow: hidden;">
+                            <div id="progress-bar" style="height: 100%; width: 0%; background: #2E7D32; border-radius: 4px; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                    <div id="progress-status" style="font-size: 0.85rem; color: #666;"></div>
+                </div>
+            </div>
+
+            <!-- Section 7: Result -->
+            <div class="card" id="training-result-section" style="display: none;">
+                <h3 class="card-title">Training Complete</h3>
+                <div id="training-result-content" style="margin-bottom: 1rem;">
+                    <div class="status-message status-success">
+                        <strong>Model created successfully!</strong> You can now view and manage it from the Models page.
+                    </div>
+                    <div id="result-details"></div>
+                </div>
+                <a href="admin_models.html" class="btn btn-primary">View All Models</a>
+                <a href="admin_training.html" class="btn btn-outline" style="margin-left: 0.5rem;">Create Another Model</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/model.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        (function() {
+            var logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
+
+        var _uploadedData = null;
+        var _cleanedData = null;
+        var _cleaningReport = null;
+        var _outlierState = { preRows: null, preHeaders: null };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            initUploadZone();
+            initUploadButton();
+            initCleanButton();
+            initAddTraining();
+            initFileInputChange();
+        });
+
+        // ================================================================
+        // Upload Zone (click to browse)
+        // ================================================================
+
+        function initUploadZone() {
+            var zone = document.getElementById('upload-zone');
+            var input = document.getElementById('csv-file-input');
+            zone.addEventListener('click', function() { input.click(); });
+        }
+
+        function initFileInputChange() {
+            document.getElementById('csv-file-input').addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    var zone = document.getElementById('upload-zone');
+                    zone.classList.add('has-file');
+                    document.getElementById('upload-primary-text').textContent = this.files[0].name;
+                } else {
+                    resetUploadUI();
+                }
+            });
+        }
+
+        function resetUploadUI() {
+            _uploadedData = null;
+            _cleanedData = null;
+            _cleaningReport = null;
+            var zone = document.getElementById('upload-zone');
+            zone.classList.remove('has-file');
+            document.getElementById('upload-primary-text').textContent = 'Click to select CSV or Excel file';
+            zone.querySelector('.secondary').textContent = 'Supports .csv, .xlsx, .xls';
+            document.getElementById('dataset-table-container').style.display = 'none';
+            document.getElementById('dataset-table').innerHTML = '';
+            document.getElementById('dataset-stats').innerHTML = '';
+            document.getElementById('cleaning-section').style.display = 'none';
+            document.getElementById('cleaning-report-section').style.display = 'none';
+            document.getElementById('training-config-section').style.display = 'none';
+            document.getElementById('start-cleaning-btn').disabled = false;
+            document.getElementById('start-cleaning-btn').textContent = 'Start Data Cleaning';
+            resetCleaningSteps();
+            var btn = document.getElementById('import-dataset-btn');
+            btn.textContent = 'Upload';
+            btn.style.background = '';
+            btn.disabled = false;
+        }
+
+        function resetCleaningSteps() {
+            ['a','b','c','d','e'].forEach(function(s) {
+                var el = document.getElementById('cleaning-step-' + s);
+                if (el) {
+                    el.setAttribute('data-status', 'pending');
+                    var badge = el.querySelector('.step-badge');
+                    if (badge) { badge.className = 'step-badge default'; badge.textContent = s.toUpperCase(); }
+                    var st = el.querySelector('.step-status');
+                    if (st) { st.textContent = 'Pending'; st.className = 'step-status pending'; }
+                    var det = el.querySelector('.cleaning-step-details');
+                    if (det) { det.classList.remove('open'); det.innerHTML = ''; }
+                }
+            });
+        }
+
+        // ================================================================
+        // Upload Button
+        // ================================================================
+
+        function initUploadButton() {
+            document.getElementById('import-dataset-btn').addEventListener('click', function() {
+                var input = document.getElementById('csv-file-input');
+                if (!input.files || input.files.length === 0) { input.click(); return; }
+                processUploadedFile();
+            });
+        }
+
+        function processUploadedFile() {
+            var input = document.getElementById('csv-file-input');
+            var file = input.files[0];
+            if (!file) return;
+
+            if (_uploadedData) resetUploadUI();
+
+            var btn = document.getElementById('import-dataset-btn');
+            btn.textContent = 'Uploading...';
+            btn.disabled = true;
+
+            var fileName = file.name;
+            var isExcel = /\.xlsx?$/i.test(fileName);
+
+            var showFileResult = function(parsed) {
+                if (!parsed || !parsed.rows || parsed.rows.length === 0) {
+                    alert('Could not parse file. Please check the format.');
+                    btn.textContent = 'Upload';
+                    btn.disabled = false;
+                    input.value = '';
+                    return;
+                }
+                _uploadedData = parsed;
+                _cleanedData = null;
+
+                var zone = document.getElementById('upload-zone');
+                zone.classList.add('has-file');
+                document.getElementById('upload-primary-text').textContent = fileName;
+                zone.querySelector('.secondary').textContent = parsed.rows.length + ' rows, ' + parsed.headers.length + ' columns';
+
+                var tableHtml = buildPreviewTable(parsed);
+                document.getElementById('dataset-table-container').style.display = 'block';
+                document.getElementById('dataset-table').innerHTML = tableHtml;
+                document.getElementById('dataset-stats').innerHTML =
+                    '<span>Rows: <strong>' + parsed.rows.length + '</strong></span> &middot; ' +
+                    '<span>Columns: <strong>' + parsed.headers.length + '</strong></span> &middot; ' +
+                    '<span>Column names: <strong>' + parsed.headers.join(', ') + '</strong></span>';
+
+                btn.innerHTML = '<span class="ico ico-check"></span> Uploaded';
+                btn.style.background = '#4CAF50';
+                document.getElementById('cleaning-section').style.display = 'block';
+            };
+
+            if (isExcel) {
+                var fileReader = new FileReader();
+                fileReader.onload = function(e) {
+                    var parsed = parseExcel(new Uint8Array(e.target.result));
+                    showFileResult(parsed);
+                };
+                fileReader.onerror = function() {
+                    alert('Error reading Excel file.');
+                    btn.textContent = 'Upload'; btn.disabled = false;
+                };
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                var textReader = new FileReader();
+                textReader.onload = function(e) {
+                    var parsed = parseCSV(e.target.result);
+                    showFileResult(parsed);
+                };
+                textReader.onerror = function() {
+                    alert('Error reading CSV file.');
+                    btn.textContent = 'Upload'; btn.disabled = false;
+                };
+                textReader.readAsText(file);
+            }
+        }
+
+        // ================================================================
+        // CSV / Excel Parsing
+        // ================================================================
+
+        function parseCSV(text) {
+            var lines = text.replace(/\r\n/g, '\n').split('\n').filter(function(l) { return l.trim(); });
+            if (lines.length < 2) return null;
+            // Support quoted commas
+            var parseLine = function(line) {
+                var result = [], current = '', inQuotes = false;
+                for (var i = 0; i < line.length; i++) {
+                    var ch = line[i];
+                    if (ch === '"') { inQuotes = !inQuotes; }
+                    else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                    else { current += ch; }
+                }
+                result.push(current.trim());
+                return result;
+            };
+            var headers = parseLine(lines[0]);
+            var rows = [];
+            for (var i = 1; i < lines.length; i++) {
+                var vals = parseLine(lines[i]);
+                if (vals.length !== headers.length) continue;
+                var row = {};
+                for (var j = 0; j < headers.length; j++) row[headers[j]] = vals[j];
+                rows.push(row);
+            }
+            return { headers: headers, rows: rows };
+        }
+
+        function parseExcel(data) {
+            var workbook = XLSX.read(data, { type: 'array' });
+            var sheet = workbook.Sheets[workbook.SheetNames[0]];
+            var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            if (!json || json.length === 0) return null;
+            var headers = Object.keys(json[0]);
+            var rows = json.map(function(r) {
+                var row = {};
+                headers.forEach(function(h) { row[h] = r[h] !== undefined ? String(r[h]) : ''; });
+                return row;
+            });
+            return { headers: headers, rows: rows };
+        }
+
+        function buildPreviewTable(parsed) {
+            var headers = parsed.headers;
+            var rows = parsed.rows.slice(0, 10);
+            var html = '<thead><tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead>';
+            html += '<tbody>' + rows.map(function(r) {
+                return '<tr>' + headers.map(function(h) { return '<td>' + (r[h] || '') + '</td>'; }).join('') + '</tr>';
+            }).join('') + '</tbody>';
+            return html;
+        }
+
+        // ================================================================
+        // Data Cleaning Pipeline
+        // ================================================================
+
+        function setStepUI(stepId, status, badgeClass, statusText) {
+            var el = document.getElementById('cleaning-step-' + stepId);
+            if (!el) return;
+            el.setAttribute('data-status', status);
+            var badge = el.querySelector('.step-badge');
+            if (badge) { badge.className = 'step-badge ' + badgeClass; badge.textContent = stepId.toUpperCase(); }
+            var st = el.querySelector('.step-status');
+            if (st) { st.textContent = statusText; st.className = 'step-status ' + status; }
+        }
+
+        function setStepDetails(stepId, html) {
+            var det = document.getElementById('cleaning-details-' + stepId);
+            if (!det) return;
+            det.innerHTML = html;
+            det.classList.add('open');
+        }
+
+        function initCleanButton() {
+            document.getElementById('start-cleaning-btn').addEventListener('click', function() {
+                if (!_uploadedData) return;
+                var btn = this;
+                btn.disabled = true;
+                btn.textContent = 'Cleaning...';
+                resetCleaningSteps();
+                runCleaningPipeline();
+            });
+        }
+
+        function runCleaningPipeline() {
+            var data = JSON.parse(JSON.stringify(_uploadedData));
+            var headers = data.headers;
+            var rows = data.rows;
+            var report = {};
+
+            // Step A: Missing Values
+            setStepUI('a', 'running', 'running', 'Running...');
+            setTimeout(function() {
+                var resultA = stepMissingValues(headers, rows);
+                _cleanedData = { headers: resultA.headers, rows: resultA.rows };
+                report.missing = resultA.report;
+                setStepDetails('a', resultA.detailsHtml);
+                setStepUI('a', 'completed', 'completed', 'Completed');
+                runStepB();
+            }, 400);
+
+            function runStepB() {
+                setStepUI('b', 'running', 'running', 'Running...');
+                setTimeout(function() {
+                    var resultB = stepDuplicates(_cleanedData.headers, _cleanedData.rows);
+                    _cleanedData = { headers: resultB.headers, rows: resultB.rows };
+                    report.duplicates = resultB.report;
+                    setStepDetails('b', resultB.detailsHtml);
+                    setStepUI('b', 'completed', 'completed', 'Completed');
+                    runStepC();
+                }, 400);
+            }
+
+            function runStepC() {
+                setStepUI('c', 'running', 'running', 'Running...');
+                setTimeout(function() {
+                    var resultC = stepTypeDetection(_cleanedData.headers, _cleanedData.rows);
+                    report.types = resultC.report;
+                    setStepDetails('c', resultC.detailsHtml);
+                    setStepUI('c', 'completed', 'completed', 'Completed');
+                    runStepD();
+                }, 400);
+            }
+
+            function runStepD() {
+                setStepUI('d', 'running', 'running', 'Running...');
+                setTimeout(function() {
+                    _outlierState.preRows = JSON.parse(JSON.stringify(_cleanedData.rows));
+                    _outlierState.preHeaders = _cleanedData.headers.slice();
+                    var resultD = stepOutliers(_cleanedData.headers, _cleanedData.rows);
+                    _cleanedData = { headers: resultD.headers, rows: resultD.rows };
+                    report.outliers = resultD.report;
+                    report.outlierAdvancedHtml = resultD.advancedHtml;
+                    setStepDetails('d', resultD.detailsHtml);
+                    setStepUI('d', 'completed', 'completed', 'Completed');
+                    runStepE();
+                }, 400);
+            }
+
+            function runStepE() {
+                setStepUI('e', 'running', 'running', 'Running...');
+                setTimeout(function() {
+                    var resultE = stepConstantColumns(_cleanedData.headers, _cleanedData.rows);
+                    _cleanedData = { headers: resultE.headers, rows: resultE.rows };
+                    report.constants = resultE.report;
+                    setStepDetails('e', resultE.detailsHtml);
+                    setStepUI('e', 'completed', 'completed', 'Completed');
+
+                    _cleaningReport = report;
+                    showCleaningReport(report);
+                    document.getElementById('start-cleaning-btn').textContent = 'Cleaning Complete';
+                }, 400);
+            }
+        }
+
+        // ================================================================
+        // Cleaning Step Implementations
+        // ================================================================
+
+        function stepMissingValues(headers, rows) {
+            var totalCells = headers.length * rows.length;
+            var missingCount = 0;
+            var perCol = {};
+            headers.forEach(function(h) { perCol[h] = 0; });
+
+            var r, c, val;
+            for (r = 0; r < rows.length; r++) {
+                for (c = 0; c < headers.length; c++) {
+                    val = rows[r][headers[c]];
+                    if (val === '' || val === null || val === undefined || val === 'NA' || val === 'N/A') {
+                        perCol[headers[c]]++;
+                        missingCount++;
+                    }
+                }
+            }
+
+            var fillCount = 0;
+            for (c = 0; c < headers.length; c++) {
+                var col = headers[c];
+                if (perCol[col] === 0) continue;
+                var vals = rows.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                var fillVal;
+                if (vals.length > 0) {
+                    fillVal = (vals.reduce(function(a, b) { return a + b; }, 0) / vals.length).toFixed(2);
+                } else {
+                    var mode = {};
+                    var maxCount = 0;
+                    rows.forEach(function(r) {
+                        var v = r[col];
+                        if (v === '' || v === null || v === undefined || v === 'NA' || v === 'N/A') return;
+                        mode[v] = (mode[v] || 0) + 1;
+                        if (mode[v] > maxCount) { maxCount = mode[v]; fillVal = v; }
+                    });
+                    fillVal = fillVal || '';
+                }
+                for (r = 0; r < rows.length; r++) {
+                    val = rows[r][col];
+                    if (val === '' || val === null || val === undefined || val === 'NA' || val === 'N/A') {
+                        rows[r][col] = fillVal;
+                        fillCount++;
+                    }
+                }
+            }
+
+            var pct = ((missingCount / Math.max(1, totalCells)) * 100).toFixed(1);
+            var detailsHtml = '';
+            if (missingCount === 0) {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> No missing values found.</div>';
+            } else {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> Found <strong>' + missingCount + '</strong> missing values (' + pct + '% of cells). Filled <strong>' + fillCount + '</strong> values.</div>';
+                headers.forEach(function(h) {
+                    if (perCol[h] > 0) {
+                        var colPct = ((perCol[h] / rows.length) * 100).toFixed(1);
+                        detailsHtml += '<div class="step-detail-row"><span class="warning">N:</span> ' + h + ' — ' + perCol[h] + ' missing (' + colPct + '%)</div>';
+                    }
+                });
+            }
+
+            return {
+                headers: headers,
+                rows: rows,
+                report: { totalMissing: missingCount, fillCount: fillCount, perCol: perCol },
+                detailsHtml: detailsHtml
+            };
+        }
+
+        function stepDuplicates(headers, rows) {
+            var before = rows.length;
+            var seen = {};
+            var unique = [];
+            rows.forEach(function(row) {
+                var key = headers.map(function(h) { return row[h]; }).join('|');
+                if (!seen[key]) { seen[key] = true; unique.push(row); }
+            });
+            var removed = before - unique.length;
+
+            return {
+                headers: headers,
+                rows: unique,
+                report: { before: before, after: unique.length, removed: removed },
+                detailsHtml: '<div class="cleaning-check ' + (removed > 0 ? 'pass' : 'pass') + '"><span class="ico ico-check"></span> ' +
+                    'Before: <strong>' + before + '</strong> rows, After: <strong>' + unique.length + '</strong> rows' +
+                    (removed > 0 ? '. Removed <strong>' + removed + '</strong> duplicate(s).' : '. No duplicates found.') + '</div>'
+            };
+        }
+
+        function stepTypeDetection(headers, rows) {
+            var types = {};
+            headers.forEach(function(col) {
+                var hasFloat = false, hasInt = false, hasDate = false, hasCat = false;
+                var sample = rows.slice(0, 100);
+                sample.forEach(function(row) {
+                    var val = String(row[col]).trim();
+                    if (val === '') return;
+                    if (/^\d{4}-\d{2}-\d{2}/.test(val) || /^\d{2}\/\d{2}\/\d{4}/.test(val)) { hasDate = true; }
+                    else if (/^-?\d+\.?\d*$/.test(val)) {
+                        if (val.indexOf('.') !== -1) hasFloat = true;
+                        else hasInt = true;
+                    } else { hasCat = true; }
+                });
+                if (hasDate && !hasCat && !hasFloat && !hasInt) types[col] = 'datetime';
+                else if ((hasFloat || hasInt) && !hasCat && !hasDate) types[col] = 'numeric';
+                else types[col] = 'categorical';
+            });
+
+            var detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> Types detected (no data conversion performed).</div>';
+            detailsHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; margin-top: 0.5rem;">';
+            headers.forEach(function(h) {
+                detailsHtml += '<div class="step-detail-row"><span class="' + (types[h] === 'numeric' ? 'success' : types[h] === 'datetime' ? 'warning' : '') + '">' + types[h] + '</span> ' + h + '</div>';
+            });
+            detailsHtml += '</div>';
+
+            return {
+                headers: headers,
+                rows: rows,
+                report: types,
+                detailsHtml: detailsHtml
+            };
+        }
+
+        function stepOutliers(headers, rows) {
+            var numericCols = [];
+            var sample100 = rows.slice(0, 100);
+            headers.forEach(function(h) {
+                var nums = sample100.map(function(r) { return parseFloat(r[h]); }).filter(function(v) { return !isNaN(v); });
+                if (nums.length > 10) numericCols.push(h);
+            });
+
+            var outliers = {};
+            var bounds = {};
+            var autoStrategy = {};
+
+            numericCols.forEach(function(col) {
+                var vals = rows.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                if (vals.length < 4) { outliers[col] = 0; bounds[col] = null; autoStrategy[col] = 'keep'; return; }
+                var sorted = vals.slice().sort(function(a, b) { return a - b; });
+                var q1 = sorted[Math.floor(sorted.length * 0.25)];
+                var q3 = sorted[Math.floor(sorted.length * 0.75)];
+                var iqr = q3 - q1;
+                var lower = q1 - 1.5 * iqr;
+                var upper = q3 + 1.5 * iqr;
+                bounds[col] = { lower: lower, upper: upper, q1: q1, q3: q3, iqr: iqr };
+                var count = 0;
+                vals.forEach(function(v) { if (v < lower || v > upper) count++; });
+                var pct = (count / vals.length) * 100;
+                outliers[col] = count;
+
+                if (pct > 10 || (col === 'rainfall' && lower < 0) || (col === 'humidity' && (upper > 100 || lower < 0))) {
+                    autoStrategy[col] = 'cap';
+                } else if (pct < 1) {
+                    autoStrategy[col] = 'remove';
+                } else {
+                    autoStrategy[col] = 'keep';
+                }
+            });
+
+            // Apply auto strategy
+            var removedRows = 0;
+            for (var c = 0; c < numericCols.length; c++) {
+                var colName = numericCols[c];
+                if (!bounds[colName]) continue;
+                var b = bounds[colName];
+                var strat = autoStrategy[colName];
+                if (strat === 'cap') {
+                    for (var r = 0; r < rows.length; r++) {
+                        var v = parseFloat(rows[r][colName]);
+                        if (!isNaN(v)) {
+                            if (v < b.lower) rows[r][colName] = b.lower.toFixed(2);
+                            if (v > b.upper) rows[r][colName] = b.upper.toFixed(2);
+                        }
+                    }
+                } else if (strat === 'remove') {
+                    var keep = [];
+                    for (var r2 = 0; r2 < rows.length; r2++) {
+                        var v2 = parseFloat(rows[r2][colName]);
+                        if (isNaN(v2) || (v2 >= b.lower && v2 <= b.upper)) {
+                            keep.push(rows[r2]);
+                        } else {
+                            removedRows++;
+                        }
+                    }
+                    rows = keep;
+                }
+            }
+
+            var detailsHtml = '';
+            var totalOutliers = 0;
+            numericCols.forEach(function(col) {
+                totalOutliers += outliers[col] || 0;
+                if (bounds[col]) {
+                    var b = bounds[col];
+                    var stratLabel = autoStrategy[col] === 'cap' ? 'Capped' : (autoStrategy[col] === 'remove' ? 'Removed' : 'Kept');
+                    detailsHtml += '<div class="step-detail-row"><span class="' + (autoStrategy[col] === 'keep' ? 'success' : 'warning') + '">' +
+                        col + ': ' + (outliers[col] || 0) + ' outliers (IQR=' + b.iqr.toFixed(1) + ') — Strategy: ' + stratLabel + '</span></div>';
+                }
+            });
+            if (totalOutliers === 0) {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> No outliers detected.</div>';
+            } else {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-warning"></span> Outliers detected and handled automatically.</div>' + detailsHtml;
+            }
+
+            // Advanced HTML
+            var advHtml = '<p style="font-size:0.85rem;color:#666;margin-bottom:0.5rem;">Override auto-strategy per column:</p>';
+            advHtml += '<div class="outlier-advanced">';
+            advHtml += '<table><thead><tr><th>Column</th><th>Outliers</th><th>Range</th><th>Strategy</th></tr></thead><tbody>';
+            numericCols.forEach(function(col) {
+                if (!bounds[col]) return;
+                var b = bounds[col];
+                advHtml += '<tr><td>' + col + '</td><td>' + (outliers[col] || 0) + '</td>' +
+                    '<td>' + b.lower.toFixed(1) + ' - ' + b.upper.toFixed(1) + '</td>' +
+                    '<td><select class="strategy-select" data-col="' + col + '">' +
+                    '<option value="keep"' + (autoStrategy[col] === 'keep' ? ' selected' : '') + '>Keep</option>' +
+                    '<option value="cap"' + (autoStrategy[col] === 'cap' ? ' selected' : '') + '>Cap</option>' +
+                    '<option value="remove"' + (autoStrategy[col] === 'remove' ? ' selected' : '') + '>Remove</option>' +
+                    '</select></td></tr>';
+            });
+            advHtml += '</tbody></table>';
+            advHtml += '<button class="btn btn-outline" style="margin-top:0.5rem;font-size:0.82rem;" onclick="applyAdvancedOutlierStrategy()">Apply Advanced Strategy</button></div>';
+
+            return {
+                headers: headers,
+                rows: rows,
+                report: { total: totalOutliers, perCol: outliers, autoStrategy: autoStrategy, bounds: bounds, rowsAfterRemoval: rows.length },
+                detailsHtml: detailsHtml,
+                advancedHtml: advHtml
+            };
+        }
+
+        function stepConstantColumns(headers, rows) {
+            var toRemove = [];
+            headers.forEach(function(col) {
+                var first = rows.length > 0 ? rows[0][col] : null;
+                var constant = true;
+                for (var i = 1; i < rows.length; i++) {
+                    if (rows[i][col] !== first) { constant = false; break; }
+                }
+                if (constant) toRemove.push(col);
+            });
+
+            var remainingHeaders = headers.filter(function(h) { return toRemove.indexOf(h) === -1; });
+            var newRows = rows.map(function(r) {
+                var nr = {};
+                remainingHeaders.forEach(function(h) { nr[h] = r[h]; });
+                return nr;
+            });
+
+            var detailsHtml = '';
+            if (toRemove.length > 0) {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> Removed constant column(s): <strong>' + toRemove.join(', ') + '</strong></div>';
+            } else {
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> No constant columns found.</div>';
+            }
+
+            return {
+                headers: remainingHeaders,
+                rows: newRows,
+                report: { removed: toRemove },
+                detailsHtml: detailsHtml
+            };
+        }
+
+        // ================================================================
+        // Cleaning Report
+        // ================================================================
+
+        function showCleaningReport(report) {
+            var section = document.getElementById('cleaning-report-section');
+            section.style.display = 'block';
+            document.getElementById('training-config-section').style.display = 'block';
+
+            var beforeRows = _uploadedData.rows.length;
+            var afterRows = _cleanedData.rows.length;
+            var beforeCols = _uploadedData.headers.length;
+            var afterCols = _cleanedData.headers.length;
+            var missingFilled = report.missing ? report.missing.fillCount : 0;
+            var dupRemoved = report.duplicates ? report.duplicates.removed : 0;
+            var constRemoved = report.constants ? report.constants.removed : [];
+
+            var typesHtml = '';
+            if (report.types) {
+                typesHtml = '<div class="report-section"><div class="report-section-title">Detected Types</div>';
+                typesHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;">';
+                Object.keys(report.types).forEach(function(col) {
+                    var t = report.types[col];
+                    var icon = t === 'numeric' ? '<span class="ico ico-hash"></span>' : t === 'datetime' ? '<span class="ico ico-clock"></span>' : '<span class="ico ico-tag"></span>';
+                    var bg = t === 'numeric' ? '#E8F5E9' : t === 'datetime' ? '#FFF8E1' : '#F3E5F5';
+                    var color = t === 'numeric' ? '#2E7D32' : t === 'datetime' ? '#E65100' : '#7B1FA2';
+                    var label = t.charAt(0).toUpperCase() + t.slice(1);
+                    typesHtml += '<div style="display:flex;align-items:center;gap:0.5rem;background:' + bg + ';border-radius:6px;padding:0.5rem 0.75rem;border:1px solid ' + color + '33;">' +
+                        '<div style="width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:' + color + ';">' +
+                        (t === 'numeric' ? '# ' : t === 'datetime' ? 'D' : 'A') + '</div>' +
+                        '<div><div style="font-weight:600;font-size:0.85rem;color:' + color + ';">' + label + '</div><div style="font-size:0.72rem;color:#666;">' + col + '</div></div></div>';
+                });
+                typesHtml += '</div></div>';
+            }
+
+            var outlierHtml = '';
+            if (report.outliers && report.outliers.total > 0) {
+                outlierHtml = '<div class="report-section"><div class="report-section-title">Outlier Warnings</div>';
+                outlierHtml += '<div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:0.75rem;">';
+                outlierHtml += '<div style="font-size:0.85rem;font-weight:600;color:#E65100;margin-bottom:0.5rem;">' + report.outliers.total + ' outliers handled across ' + Object.keys(report.outliers.bounds || {}).length + ' columns</div>';
+                if (report.outliers.bounds) {
+                    outlierHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.4rem;">';
+                    Object.keys(report.outliers.bounds).forEach(function(col) {
+                        var b = report.outliers.bounds[col];
+                        if (b) outlierHtml += '<div style="background:white;border-radius:6px;padding:0.5rem;border:1px solid #E5E7EB;">' +
+                            '<div style="font-weight:600;font-size:0.82rem;color:#333;">' + col + '</div>' +
+                            '<div style="font-size:0.72rem;color:#999;margin-top:0.15rem;">IQR: ' + b.iqr.toFixed(1) + '</div>' +
+                            '<div style="font-size:0.72rem;color:#999;">Range: [' + b.lower.toFixed(1) + ', ' + b.upper.toFixed(1) + ']</div></div>';
+                    });
+                    outlierHtml += '</div>';
+                }
+                outlierHtml += '</div></div>';
+            }
+
+            var constHtml = '';
+            if (constRemoved.length > 0) {
+                constHtml = '<div class="report-section"><div class="report-section-title">Constant Columns Removed</div><div style="font-size:0.82rem;">' + constRemoved.join(', ') + '</div></div>';
+            }
+
+            var content = '<div class="report-grid">' +
+                '<div class="report-card"><div class="report-value">' + beforeRows + ' &rarr; ' + afterRows + '</div><div class="report-label">Rows (before &rarr; after)</div></div>' +
+                '<div class="report-card' + (beforeCols !== afterCols ? ' warning' : '') + '"><div class="report-value">' + beforeCols + ' &rarr; ' + afterCols + '</div><div class="report-label">Columns (before &rarr; after)</div></div>' +
+                '<div class="report-card' + (missingFilled > 0 ? ' warning' : '') + '"><div class="report-value">' + missingFilled + '</div><div class="report-label">Missing values filled</div></div>' +
+                '<div class="report-card' + (dupRemoved > 0 ? ' warning' : '') + '"><div class="report-value">' + dupRemoved + '</div><div class="report-label">Duplicates removed</div></div>' +
+                '</div>' +
+                typesHtml + outlierHtml + constHtml;
+
+            document.getElementById('cleaning-report-content').innerHTML = content;
+        }
+
+        // ================================================================
+        // Advanced Outlier Strategy
+        // ================================================================
+
+        window.applyAdvancedOutlierStrategy = function() {
+            if (!_outlierState.preRows || !_outlierState.preHeaders) return;
+            var rows = JSON.parse(JSON.stringify(_outlierState.preRows));
+            var headers = _outlierState.preHeaders.slice();
+
+            var selects = document.querySelectorAll('.strategy-select');
+            var strategies = {};
+            selects.forEach(function(sel) { strategies[sel.getAttribute('data-col')] = sel.value; });
+
+            var numericCols = [];
+            var sample100 = rows.slice(0, 100);
+            headers.forEach(function(h) {
+                var nums = sample100.map(function(r) { return parseFloat(r[h]); }).filter(function(v) { return !isNaN(v); });
+                if (nums.length > 10) numericCols.push(h);
+            });
+
+            var removedCount = 0;
+            numericCols.forEach(function(col) {
+                if (!strategies[col]) return;
+                var vals = rows.map(function(r) { return parseFloat(r[col]); }).filter(function(v) { return !isNaN(v); });
+                if (vals.length < 4) return;
+                var sorted = vals.slice().sort(function(a, b) { return a - b; });
+                var q1 = sorted[Math.floor(sorted.length * 0.25)];
+                var q3 = sorted[Math.floor(sorted.length * 0.75)];
+                var iqr = q3 - q1;
+                var lower = q1 - 1.5 * iqr;
+                var upper = q3 + 1.5 * iqr;
+
+                var strat = strategies[col];
+                if (strat === 'cap') {
+                    for (var r = 0; r < rows.length; r++) {
+                        var v = parseFloat(rows[r][col]);
+                        if (!isNaN(v)) {
+                            if (v < lower) rows[r][col] = lower.toFixed(2);
+                            if (v > upper) rows[r][col] = upper.toFixed(2);
+                        }
+                    }
+                } else if (strat === 'remove') {
+                    var keep = [];
+                    for (var r2 = 0; r2 < rows.length; r2++) {
+                        var v2 = parseFloat(rows[r2][col]);
+                        if (isNaN(v2) || (v2 >= lower && v2 <= upper)) {
+                            keep.push(rows[r2]);
+                        } else {
+                            removedCount++;
+                        }
+                    }
+                    rows = keep;
+                }
+            });
+
+            _cleanedData = { headers: headers, rows: rows };
+            if (_outlierState.preHeaders) {
+                _cleanedData.headers = headers;
+            }
+
+            // Update report
+            if (_cleaningReport && _cleaningReport.outliers) {
+                _cleaningReport.outliers.rowsAfterRemoval = rows.length;
+            }
+
+            alert('Advanced strategy applied. Rows after removal: ' + rows.length + '. The changes are reflected in the model.');
+        };
+
+        // ================================================================
+        // Add Training
+        // ================================================================
+
+        function initAddTraining() {
+            document.getElementById('add-training-btn').addEventListener('click', function() {
+                var modelName = document.getElementById('model-name').value.trim();
+                if (!modelName) { alert('Please enter a model name.'); return; }
+                if (!_cleanedData) { alert('Please run data cleaning first.'); return; }
+
+                var epochs = parseInt(document.getElementById('train-epochs').value) || 10;
+                var batchSize = parseInt(document.getElementById('train-batch-size').value) || 32;
+                var lr = parseFloat(document.getElementById('train-lr').value) || 0.0002;
+
+                var btn = this;
+                btn.disabled = true;
+                btn.textContent = 'Creating model...';
+
+                // Create model
+                var model = ModelService.addModel({
+                    name: modelName,
+                    epochs: epochs,
+                    batchSize: batchSize,
+                    learningRate: lr,
+                    fileName: _uploadedData ? _cleanedData.headers.length + ' cols' : '',
+                    originalRows: _uploadedData ? _uploadedData.rows.length : 0,
+                    originalCols: _uploadedData ? _uploadedData.headers.length : 0,
+                    headers: _cleanedData.headers,
+                    cleanedData: _cleanedData.rows,
+                    cleaningReport: _cleaningReport
+                });
+
+                // Add history entry
+                try {
+                    HistoryService.addEntry({
+                        type: 'model_training',
+                        action: 'Created model "' + modelName + '"',
+                        details: 'Epochs: ' + epochs + ', Batch: ' + batchSize + ', LR: ' + lr + ', Dataset: ' + _uploadedData.rows.length + ' rows',
+                        userId: AuthService.getCurrentUser().id,
+                        userName: AuthService.getCurrentUser().username
+                    });
+                } catch (e) {}
+
+                // Show progress
+                document.getElementById('training-config-section').style.display = 'none';
+                document.getElementById('training-progress-section').style.display = 'block';
+
+                // Simulate training progress
+                var progress = 0;
+                var interval = setInterval(function() {
+                    progress += 5;
+                    document.getElementById('progress-bar').style.width = progress + '%';
+                    document.getElementById('progress-text').textContent = progress + '%';
+                    document.getElementById('progress-status').textContent = 'Training epoch ' + Math.ceil(progress / 10) + ' of ' + Math.ceil(epochs) + '...';
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        document.getElementById('progress-status').textContent = 'Training complete!';
+                        document.getElementById('progress-text').textContent = '100%';
+                        document.getElementById('progress-bar').style.width = '100%';
+
+                        // Update model status to trained
+                        ModelService.updateModel(model.id, { status: 'trained' });
+                        var lossValues = ModelService.generateLossValues(epochs);
+                        var trainDuration = parseFloat((epochs * 0.3 + Math.random() * 1.5).toFixed(1));
+                        var quality = ModelService.classifyTrainingQuality(lossValues.generatorLoss, lossValues.discriminatorLoss);
+                        ModelService.updateVersion(model.id, 1, {
+                            status: 'trained',
+                            evaluation: {
+                                generatorLoss: lossValues.generatorLoss,
+                                discriminatorLoss: lossValues.discriminatorLoss,
+                                trainingDuration: trainDuration,
+                                trainingQuality: quality
+                            }
+                        });
+
+                        // Show result
+                        setTimeout(function() {
+                            document.getElementById('training-progress-section').style.display = 'none';
+                            document.getElementById('training-result-section').style.display = 'block';
+                            document.getElementById('result-details').innerHTML =
+                                '<div style="margin-top:0.5rem;font-size:0.9rem;">' +
+                                '<p><strong>Model:</strong> ' + modelName + '</p>' +
+                                '<p><strong>Dataset:</strong> ' + (_uploadedData ? _uploadedData.rows.length + ' rows' : 'N/A') + '</p>' +
+                                '<p><strong>Epochs:</strong> ' + epochs + '</p>' +
+                                '<p><strong>Batch Size:</strong> ' + batchSize + '</p>' +
+                                '<p><strong>Learning Rate:</strong> ' + lr + '</p>' +
+                                '</div>';
+                        }, 500);
+                    }
+                }, 200);
+            });
+        }
+    </script>
+</body>
+</html>

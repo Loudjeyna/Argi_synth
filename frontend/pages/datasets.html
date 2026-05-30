@@ -3,15 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Datasets</title>
+    <title>SynthAI - Generated Data Dashboard</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
-        .dataset-actions { display: flex; gap: 0.5rem; }
-        .dataset-actions a, .dataset-actions button { padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; text-decoration: none; }
-        .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
-        .pagination-bar button { padding: 0.4rem 0.8rem; border: 1px solid #E0E0E0; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #2E7D32; }
+        .stat-card .stat-val { font-size: 1.5rem; font-weight: 700; color: #1B5E20; }
+        .stat-card .stat-label { font-size: 0.78rem; color: #999; margin-top: 0.15rem; }
+        .filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+        .filter-bar input, .filter-bar select { padding: 0.5rem 0.75rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.85rem; }
+        .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: #2E7D32; }
+        .filter-bar .search-input { flex: 1; min-width: 160px; }
+        .gen-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .gen-table th { background: #F5F7F5; padding: 0.65rem 0.75rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #E0E0E0; white-space: nowrap; }
+        .gen-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #F0F0F0; }
+        .gen-table tr:hover td { background: #F9FDF9; }
+        .gen-table .actions-cell { display: flex; gap: 0.35rem; flex-wrap: nowrap; }
+        .gen-table .actions-cell button, .gen-table .actions-cell a { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; text-decoration: none; cursor: pointer; border: 1px solid #E0E0E0; background: white; color: #333; white-space: nowrap; }
+        .gen-table .actions-cell button:hover, .gen-table .actions-cell a:hover { border-color: #2E7D32; color: #2E7D32; }
+        .gen-table .file-link { color: #1565C0; text-decoration: none; font-family: 'Courier New', monospace; font-size: 0.78rem; cursor: pointer; }
+        .gen-table .file-link:hover { text-decoration: underline; }
+        .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 0.4rem; margin-top: 1rem; flex-wrap: wrap; }
+        .pagination-bar button { padding: 0.35rem 0.7rem; border: 1px solid #E0E0E0; background: white; border-radius: 4px; cursor: pointer; font-size: 0.82rem; }
         .pagination-bar button.active { background: #2E7D32; color: white; border-color: #2E7D32; }
-        .pagination-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination-bar button:disabled { opacity: 0.4; cursor: default; }
+        .pagination-bar .page-info { font-size: 0.8rem; color: #999; margin-left: 0.5rem; }
+        .preview-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .preview-modal.active { display: flex; }
+        .preview-modal-content { background: white; border-radius: 12px; max-width: 900px; width: 92%; max-height: 82vh; overflow: auto; padding: 1.5rem; }
+        .preview-modal-content h3 { margin-bottom: 0.5rem; }
+        .preview-modal-content .close-modal { float: right; cursor: pointer; font-size: 1.3rem; color: #999; line-height: 1; }
+        .preview-modal-content .close-modal:hover { color: #333; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .preview-table th { background: #F5F7F5; padding: 0.45rem 0.5rem; text-align: left; font-weight: 600; color: #666; border-bottom: 1px solid #E0E0E0; white-space: nowrap; }
+        .preview-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #F0F0F0; }
+        .model-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.78rem; font-weight: 500; background: #E8F5E9; color: #2E7D32; }
+        .version-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.72rem; background: #FFF8E1; color: #E65100; font-weight: 600; }
+        .empty-state { text-align: center; padding: 3rem 1rem; color: #999; }
+        .empty-state svg { width: 48px; height: 48px; fill: #E0E0E0; margin-bottom: 0.75rem; }
+        .empty-state p { font-size: 0.95rem; }
+        .empty-state a { color: #2E7D32; }
+        .level-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+        .btn-eval { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; border: 1px solid #E0E0E0; background: white; color: #1565C0; text-decoration: none; white-space: nowrap; }
+        .btn-eval:hover { border-color: #1565C0; background: #E3F2FD; }
     </style>
 </head>
 <body>
@@ -22,33 +56,75 @@
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
         </aside>
+
         <main class="main-content">
-            <div class="page-header"><h2>Datasets Archive</h2><p>All generated synthetic datasets with validation results</p></div>
+            <div class="page-header">
+                <h2>Generated Data Dashboard</h2>
+                <p>Browse, preview, and download all synthetic datasets generated from your models</p>
+            </div>
+
+            <div class="dashboard-stats" id="dashboard-stats"></div>
             <div id="status-msg"></div>
+
             <div class="card">
+                <div class="filter-bar">
+                    <input type="text" class="search-input" id="search-input" placeholder="Search by model name...">
+                    <select id="size-filter">
+                        <option value="all">All Sizes</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                        <option value="Big Data">Big Data</option>
+                    </select>
+                    <select id="sort-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="rows-desc">Most Rows</option>
+                        <option value="rows-asc">Fewest Rows</option>
+                    </select>
+                </div>
+
                 <div class="table-container">
-                    <table>
+                    <table class="gen-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Date</th>
+                                <th>Model Name</th>
+                                <th>Version</th>
+                                <th>Size</th>
                                 <th>Rows</th>
-                                <th>Level</th>
-                                <th>Quality</th>
-                                <th>Similarity</th>
-                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>File URL</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="datasets-tbody"></tbody>
                     </table>
                 </div>
+                <div id="empty-state" class="empty-state" style="display:none;"></div>
                 <div class="pagination-bar" id="pagination-bar"></div>
             </div>
         </main>
     </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h3>Data Preview <span id="preview-title" style="font-size:0.85rem;color:#999;font-weight:400;"></span></h3>
+            <div id="preview-table-container" style="overflow-x:auto;">
+                <table class="preview-table" id="preview-table">
+                    <thead id="preview-thead"></thead>
+                    <tbody id="preview-tbody"></tbody>
+                </table>
+            </div>
+            <p id="preview-footer" style="font-size:0.78rem;color:#999;margin-top:0.75rem;"></p>
+        </div>
+    </div>
+
     <script src="../js/services/auth.js"></script>
+    <script src="../js/services/model.js"></script>
     <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
     <script>
         (function() {
@@ -70,81 +146,131 @@
             try { App.setupSidebar(); } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
-            var datasets = [];
-            try { datasets = DataService.getGenerations() || []; } catch (e) {}
-
-            if (datasets.length === 0) {
-                document.getElementById('datasets-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-muted">No datasets yet. <a href="generate_data.html">Generate your first dataset</a></td></tr>';
-                return;
-            }
-
             var currentPage = 1;
             var perPage = 10;
+            var allDatasets = [];
+            var filteredDatasets = [];
+
+            function loadData() {
+                try {
+                    allDatasets = DataService.getGenerations() || [];
+                } catch (e) { allDatasets = []; }
+
+                // Compute stats
+                var totalGens = allDatasets.length;
+                var totalRows = allDatasets.reduce(function(s, g) { return s + (g.rows || 0); }, 0);
+                var fromModels = allDatasets.filter(function(g) { return g.modelName; }).length;
+
+                document.getElementById('dashboard-stats').innerHTML =
+                    '<div class="stat-card"><div class="stat-val">' + totalGens + '</div><div class="stat-label">Total Generations</div></div>' +
+                    '<div class="stat-card"><div class="stat-val">' + totalRows.toLocaleString() + '</div><div class="stat-label">Total Rows</div></div>' +
+                    '<div class="stat-card"><div class="stat-val">' + fromModels + '</div><div class="stat-label">From Models</div></div>' +
+                    '<div class="stat-card" style="border-left-color:#FF9800;"><div class="stat-val">' + (totalGens > 0 ? Math.round(totalRows / totalGens).toLocaleString() : 0) + '</div><div class="stat-label">Avg Rows/Generation</div></div>';
+
+                applyFilters();
+            }
+
+            function applyFilters() {
+                var query = document.getElementById('search-input').value.toLowerCase().trim();
+                var sizeFilter = document.getElementById('size-filter').value;
+                var sort = document.getElementById('sort-select').value;
+
+                filteredDatasets = allDatasets.filter(function(g) {
+                    if (query && g.modelName && g.modelName.toLowerCase().indexOf(query) === -1) return false;
+                    if (query && !g.modelName) return false;
+                    if (sizeFilter !== 'all' && g.level !== sizeFilter) return false;
+                    return true;
+                });
+
+                // Sort
+                filteredDatasets.sort(function(a, b) {
+                    switch (sort) {
+                        case 'oldest': return (a.timestamp || 0) - (b.timestamp || 0);
+                        case 'rows-desc': return (b.rows || 0) - (a.rows || 0);
+                        case 'rows-asc': return (a.rows || 0) - (b.rows || 0);
+                        default: return (b.timestamp || 0) - (a.timestamp || 0);
+                    }
+                });
+
+                currentPage = 1;
+                renderTable();
+            }
 
             function renderTable() {
                 var tbody = document.getElementById('datasets-tbody');
+                var emptyEl = document.getElementById('empty-state');
                 var pagination = document.getElementById('pagination-bar');
-                var start = (currentPage - 1) * perPage;
-                var pageData = datasets.slice(start, start + perPage);
 
-                if (pageData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No datasets</td></tr>';
+                if (filteredDatasets.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyEl.style.display = 'block';
+                    emptyEl.innerHTML = '<p>No datasets match your criteria.</p>' +
+                        (allDatasets.length === 0 ? '<p style="margin-top:0.5rem;"><a href="generate_data.html">Generate your first dataset</a></p>' : '');
                     pagination.innerHTML = '';
                     return;
                 }
+                emptyEl.style.display = 'none';
 
-                tbody.innerHTML = pageData.map(function(d, i) {
-                    var idx = start + i + 1;
-                    var preview = d.preview;
-                    var quality = 0, similarity = 0, passed = false;
-                    if (preview && preview.validation) {
-                        quality = preview.validation.qualityScore || 0;
-                        similarity = preview.validation.similarityPct || 0;
-                        passed = preview.validation.passed || false;
-                    } else {
-                        // Compute validation if not stored
-                        try {
-                            var v = DataService.validatePreview(preview);
-                            quality = v.qualityScore;
-                            similarity = v.similarityPct;
-                            passed = v.passed;
-                        } catch (e) {}
-                    }
-                    var qualityColor = quality >= 85 ? '#2E7D32' : quality >= 70 ? '#FF9800' : '#F44336';
-                    var levelBadge = d.level === 'Big Data' ? 'badge-premium' : d.level === 'Large' ? 'badge-warning' : 'badge-free';
-                    var statusHtml = passed ? '<span class="badge badge-success">Valid</span>' : '<span class="badge badge-warning">Review</span>';
-                    var actions = '<div class="dataset-actions">' +
-                        '<a href="dataset_viewer.html?id=' + d.id + '" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View</a>' +
-                        '<button onclick="deleteDataset(' + d.id + ')" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; color: #E53935; border-color: #E53935;">Delete</button>' +
+                var start = (currentPage - 1) * perPage;
+                var pageData = filteredDatasets.slice(start, start + perPage);
+
+                var levelClasses = { 'Medium': 'badge-free', 'Large': 'badge-warning', 'Big Data': 'badge-premium' };
+
+                tbody.innerHTML = pageData.map(function(g) {
+                    var d = new Date(g.date || g.timestamp);
+                    var dateStr = d.toLocaleDateString();
+                    var timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    var modelName = g.modelName || 'Standalone';
+                    var modelVer = g.modelVersion || '-';
+                    var levelClass = levelClasses[g.level] || 'badge-free';
+                    var fileUrl = g.fileUrl || '';
+
+                    var actions =
+                        '<div class="actions-cell">' +
+                        '<button onclick="previewGeneration(' + g.id + ')" title="Preview first 10 rows">Preview</button>' +
+                        '<a href="data_evaluation.html?id=' + g.id + '" class="btn-eval" title="Compare with original data">Evaluate</a>' +
+                        '<button onclick="exportGeneration(' + g.id + ')" title="Download CSV">Export</button>' +
+                        '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="Delete">Delete</button>' +
                         '</div>';
+
+                    var fileLinkHtml = fileUrl ?
+                        '<span class="file-link" onclick="exportGeneration(' + g.id + ')" title="Click to download from cloud">' + fileUrl.substring(0, 30) + '...</span>' :
+                        '<span style="color:#999;font-size:0.75rem;">Not available</span>';
+
                     return '<tr>' +
-                        '<td>' + idx + '</td>' +
-                        '<td>' + new Date(d.date).toLocaleDateString() + '</td>' +
-                        '<td>' + (d.rows || 0).toLocaleString() + '</td>' +
-                        '<td><span class="badge ' + levelBadge + '">' + (d.level || 'Medium') + '</span></td>' +
-                        '<td><strong style="color:' + qualityColor + ';">' + quality + '%</strong></td>' +
-                        '<td>' + similarity + '%</td>' +
-                        '<td>' + statusHtml + '</td>' +
+                        '<td><span class="model-badge">' + modelName + '</span></td>' +
+                        '<td><span class="version-badge">v' + modelVer + '</span></td>' +
+                        '<td><span class="level-tag ' + levelClass + '">' + (g.level || 'Medium') + '</span></td>' +
+                        '<td><strong>' + (g.rows || 0).toLocaleString() + '</strong></td>' +
+                        '<td>' + dateStr + '</td>' +
+                        '<td>' + timeStr + '</td>' +
+                        '<td>' + fileLinkHtml + '</td>' +
                         '<td>' + actions + '</td></tr>';
                 }).join('');
 
-                var totalPages = Math.ceil(datasets.length / perPage);
+                // Pagination
+                var totalPages = Math.ceil(filteredDatasets.length / perPage);
                 if (totalPages <= 1) {
-                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem;">' + datasets.length + ' dataset(s)</span>';
-                    return;
+                    pagination.innerHTML = '<span class="page-info">' + filteredDatasets.length + ' generation(s)</span>';
+                } else {
+                    var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                    for (var i = 1; i <= totalPages; i++) {
+                        ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+                    }
+                    ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
+                    ph += '<span class="page-info">Page ' + currentPage + ' of ' + totalPages + ' (' + filteredDatasets.length + ' total)</span>';
+                    pagination.innerHTML = ph;
                 }
-                var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
-                for (var i = 1; i <= totalPages; i++) {
-                    ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
-                }
-                ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
-                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + '</span>';
-                pagination.innerHTML = ph;
             }
+
+            // Event handlers
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('size-filter').addEventListener('change', applyFilters);
+            document.getElementById('sort-select').addEventListener('change', applyFilters);
 
             document.getElementById('pagination-bar').addEventListener('click', function(e) {
                 if (e.target.dataset.page) {
-                    var totalPages = Math.ceil(datasets.length / perPage);
+                    var totalPages = Math.ceil(filteredDatasets.length / perPage);
                     if (e.target.dataset.page === 'prev' && currentPage > 1) currentPage--;
                     else if (e.target.dataset.page === 'next' && currentPage < totalPages) currentPage++;
                     else if (e.target.dataset.page !== 'prev' && e.target.dataset.page !== 'next') currentPage = parseInt(e.target.dataset.page);
@@ -153,13 +279,59 @@
                 }
             });
 
-            renderTable();
+            // Preview modal
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('preview-modal').classList.remove('active');
+            });
+            document.getElementById('preview-modal').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+
+            loadData();
         });
 
-        function deleteDataset(id) {
-            if (!confirm('Delete this dataset and its validation data?')) return;
+        // Global functions for button handlers
+        function previewGeneration(id) {
+            var rows = DataService.getGenerationPreviewRows(id, 10);
+            var gen = DataService.getGenerationById(id);
+            if (!rows || !gen) { alert('No preview data available.'); return; }
+
+            var preview = gen.preview;
+            var headers = preview ? preview.headers : Object.keys(rows[0]);
+
+            document.getElementById('preview-title').textContent = '(' + (gen.modelName || 'Standalone') + ' - first ' + rows.length + ' of ' + (gen.rows || 0) + ' rows)';
+
+            var thead = document.getElementById('preview-thead');
+            thead.innerHTML = '<tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
+
+            var tbody = document.getElementById('preview-tbody');
+            tbody.innerHTML = rows.map(function(row) {
+                return '<tr>' + headers.map(function(h) {
+                    var val = row[h];
+                    if (val === undefined || val === null) val = '';
+                    if (typeof val === 'number') val = val.toFixed ? val.toFixed(2) : val;
+                    return '<td>' + val + '</td>';
+                }).join('') + '</tr>';
+            }).join('');
+
+            document.getElementById('preview-footer').textContent = 'Showing ' + rows.length + ' preview rows. Full dataset: ' + (gen.rows || 0).toLocaleString() + ' rows.';
+            document.getElementById('preview-modal').classList.add('active');
+        }
+
+        function exportGeneration(id) {
+            var ok = DataService.exportGeneration(id);
+            if (!ok) alert('Export failed. The dataset may no longer be available.');
+        }
+
+        function deleteGeneration(id) {
+            if (!confirm('Delete this generation permanently?')) return;
             var gens = DataService.getGenerations().filter(function(g) { return g.id !== id; });
             localStorage.setItem('synthai_generations', JSON.stringify(gens));
+            // Clear cached data
+            if (window.DataService && DataService.revokeCloudUrl) {
+                var gen = DataService.getGenerationById(id);
+                if (gen && gen.fileUrl) DataService.revokeCloudUrl(gen.fileUrl);
+            }
             location.reload();
         }
     </script>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Model Details</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detail-card { background: #F9FAFB; border-radius: 8px; padding: 1rem; border-left: 4px solid #2E7D32; }
+        .detail-card.warning { border-left-color: #FF9800; }
+        .detail-card.danger { border-left-color: #F44336; }
+        .detail-card .detail-value { font-size: 1rem; font-weight: 600; color: #1B5E20; margin-top: 0.2rem; }
+        .detail-card .detail-label { font-size: 0.78rem; color: #999; }
+        .info-row { display: flex; padding: 0.5rem 0; border-bottom: 1px solid #F0F0F0; font-size: 0.9rem; }
+        .info-row .info-label { width: 160px; font-weight: 500; color: #666; flex-shrink: 0; }
+        .info-row .info-value { flex: 1; color: #333; }
+        .gen-row { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.75rem; border-bottom: 1px solid #F0F0F0; font-size: 0.85rem; }
+        .gen-row:last-child { border-bottom: none; }
+        .gen-row .gen-date { color: #666; }
+        .section-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .section-card h3 { font-size: 1.1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary-light); }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .config-item { text-align: center; padding: 1rem; background: #F5F7F5; border-radius: 8px; }
+        .config-item .config-val { font-size: 1.3rem; font-weight: 700; color: #1B5E20; }
+        .config-item .config-label { font-size: 0.78rem; color: #999; margin-top: 0.25rem; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: #2E7D32; text-decoration: none; font-size: 0.9rem; margin-bottom: 1rem; }
+        .back-link:hover { text-decoration: underline; }
+        .gen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .generate-options { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-top: 1rem; padding: 1rem; background: #F9FAFB; border-radius: 8px; }
+        .generate-options .form-group { margin-bottom: 0; min-width: 120px; }
+        .empty-gen { text-align: center; padding: 1.5rem; color: #999; font-size: 0.9rem; background: #F9FAFB; border-radius: 8px; }
+        .header-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .retrain-params { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .eval-item { padding: 0.6rem 0.8rem; background: #F9FAFB; border-radius: 6px; border-left: 3px solid #2E7D32; }
+        .eval-item .eval-label { font-size: 0.72rem; color: #999; text-transform: uppercase; letter-spacing: 0.3px; }
+        .eval-item .eval-value { font-size: 1rem; font-weight: 600; color: #1B5E20; margin-top: 0.1rem; }
+        .eval-item .eval-value.loss-gen { color: #1565C0; }
+        .eval-item .eval-value.loss-disc { color: #E65100; }
+        .eval-item .eval-value.loss-val { font-family: 'Courier New', monospace; font-size: 1.05rem; }
+        .quality-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+        .quality-good { background: #E8F5E9; color: #2E7D32; }
+        .quality-acceptable { background: #FFF8E1; color: #E65100; }
+        .quality-needs_improvement { background: #FFEBEE; color: #C62828; }
+        .imbalance-warning { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: #FFF3E0; border-left: 4px solid #FF9800; border-radius: 6px; font-size: 0.85rem; color: #E65100; margin-top: 0.5rem; }
+        .version-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .version-table th { background: #F5F7F5; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #E0E0E0; white-space: nowrap; }
+        .version-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #F0F0F0; }
+        .version-table tr:hover td { background: #F9FDF9; }
+        .version-table .loss-cell { font-family: 'Courier New', monospace; font-size: 0.82rem; }
+        .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 0.3rem; }
+        .version-table .quality-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content" id="main-content">
+            <a href="admin_models.html" class="back-link">&larr; Back to Models</a>
+            <div class="page-header" id="model-page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                    <h2 id="model-name-display">Model Details</h2>
+                    <p id="model-subtitle">Loading...</p>
+                </div>
+                <div class="header-actions">
+                    <button id="retrain-btn" class="btn btn-outline" style="border-color:var(--primary);color:var(--primary);">Retrain Model</button>
+                </div>
+            </div>
+
+            <div id="model-not-found" style="display:none;">
+                <div class="card" style="text-align:center;padding:2rem;">
+                    <p style="font-size:1.1rem;color:#666;">Model not found.</p>
+                    <a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;">Back to Models</a>
+                </div>
+            </div>
+
+            <div id="model-content" style="display:none;">
+                <!-- Status & Times -->
+                <div class="detail-grid" id="model-meta-grid"></div>
+
+                <!-- Dataset Info -->
+                <div class="section-card">
+                    <h3>Original Dataset</h3>
+                    <div id="dataset-info-content"></div>
+                </div>
+
+                <!-- Cleaning Report -->
+                <div class="section-card">
+                    <h3>Cleaning Report</h3>
+                    <div id="cleaning-report-content"></div>
+                </div>
+
+                <!-- Training Config -->
+                <div class="section-card">
+                    <h3>Training Configuration</h3>
+                    <div id="training-config-content"></div>
+                </div>
+
+                <!-- Training Evaluation -->
+                <div class="section-card">
+                    <h3>Training Evaluation</h3>
+                    <div id="training-evaluation-content">
+                        <div class="empty-gen">No evaluation data available. Train the model first.</div>
+                    </div>
+                </div>
+
+                <!-- Version History -->
+                <div class="section-card">
+                    <h3>Version History <span id="version-history-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <div id="version-history-content">
+                        <div class="empty-gen">No versions available.</div>
+                    </div>
+                </div>
+
+                <!-- Retrain Panel (hidden by default) -->
+                <div class="section-card" id="retrain-section" style="display:none;">
+                    <h3>Retrain Model</h3>
+                    <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Adjust training parameters and retrain this model using its existing dataset.</p>
+                    <div class="retrain-params">
+                        <div class="form-group">
+                            <label for="retrain-epochs">Epochs</label>
+                            <select id="retrain-epochs" class="form-control">
+                                <option value="100">100</option>
+                                <option value="300">300</option>
+                                <option value="500" selected>500</option>
+                                <option value="1000">1000</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="retrain-batch-size">Batch Size</label>
+                            <select id="retrain-batch-size" class="form-control">
+                                <option value="128" selected>128</option>
+                                <option value="256">256</option>
+                                <option value="512">512</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="retrain-lr">Learning Rate</label>
+                            <select id="retrain-lr" class="form-control">
+                                <option value="0.0001">0.0001</option>
+                                <option value="0.0002" selected>0.0002</option>
+                                <option value="0.0005">0.0005</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+                        <button id="start-retrain-btn" class="btn btn-primary">Start Retrain</button>
+                        <button id="cancel-retrain-btn" class="btn btn-outline">Cancel</button>
+                    </div>
+                    <div id="retrain-progress" style="display:none;margin-top:1rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem;">
+                            <span>Retraining...</span>
+                            <span id="retrain-progress-text">0%</span>
+                        </div>
+                        <div style="height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;">
+                            <div id="retrain-progress-bar" style="height:100%;width:0%;background:#2E7D32;border-radius:4px;transition:width 0.3s;"></div>
+                        </div>
+                        <div id="retrain-status-text" style="font-size:0.82rem;color:#666;margin-top:0.3rem;"></div>
+                    </div>
+                    <div id="retrain-result" style="display:none;margin-top:1rem;" class="status-message status-success"></div>
+                </div>
+
+                <!-- Training History -->
+                <div class="section-card">
+                    <h3>Training History <span id="version-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <div id="training-history-content">
+                        <div class="empty-gen">No training history available.</div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/data.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/services/model.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        (function() {
+            var logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
+
+        var _currentModel = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var modelId = parseInt(params.get('id'));
+                if (!modelId) { showNotFound(); return; }
+
+                var model = ModelService.getModel(modelId);
+                if (!model) { showNotFound(); return; }
+
+                _currentModel = model;
+                renderModel(model);
+                initRetrain(model);
+            } catch (e) {
+                console.error('Error initializing model details page:', e);
+                var mc = document.getElementById('model-content');
+                if (mc) { mc.style.display = 'block'; mc.innerHTML = '<div class="card" style="text-align:center;padding:2rem;"><p style="color:#C62828;font-size:1.1rem;">An error occurred loading this page.</p><p style="color:#999;font-size:0.85rem;margin-top:0.5rem;">' + e.message + '</p><a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;">Back to Models</a></div>'; }
+                var nf = document.getElementById('model-not-found');
+                if (nf) { nf.style.display = 'none'; }
+            }
+        });
+
+        function showNotFound() {
+            document.getElementById('model-content').style.display = 'none';
+            document.getElementById('model-not-found').style.display = 'block';
+            document.getElementById('model-subtitle').textContent = 'Model not found';
+        }
+
+        function renderModel(model) {
+            document.getElementById('model-name-display').textContent = model.name;
+            var date = new Date(model.createdAt);
+            document.getElementById('model-subtitle').textContent = 'Created ' + date.toLocaleString();
+
+            var statusLabels = { trained: 'Trained', in_progress: 'In Progress', failed: 'Failed' };
+            var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
+
+            var versions = model.versions || [];
+            var retrainCount = versions.filter(function(v) { return v.type === 'retrain'; }).length;
+
+            document.getElementById('model-meta-grid').innerHTML =
+                '<div class="detail-card"><div class="detail-label">Status</div><div class="detail-value" style="color:' + (statusColors[model.status] || '#666') + ';">' + (statusLabels[model.status] || model.status) + '</div></div>' +
+                '<div class="detail-card"><div class="detail-label">Created</div><div class="detail-value" style="font-size:0.9rem;">' + date.toLocaleString() + '</div></div>' +
+                '<div class="detail-card"><div class="detail-label">Versions</div><div class="detail-value">' + versions.length + '</div></div>' +
+                '<div class="detail-card" style="border-left-color:#FF9800;"><div class="detail-label">Retrains</div><div class="detail-value">' + retrainCount + '</div></div>';
+
+            var di = model.datasetInfo || {};
+            document.getElementById('dataset-info-content').innerHTML =
+                '<div class="info-row"><span class="info-label">File</span><span class="info-value">' + (di.fileName || 'N/A') + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Original Rows</span><span class="info-value">' + (di.originalRows || 0) + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Original Columns</span><span class="info-value">' + (di.originalCols || 0) + '</span></div>' +
+                '<div class="info-row"><span class="info-label">Headers</span><span class="info-value">' + (di.headers ? di.headers.join(', ') : 'N/A') + '</span></div>';
+
+            var cr = model.cleaningReport;
+            if (cr) {
+                var crHtml = '';
+                if (cr.missing) crHtml += '<div class="info-row"><span class="info-label">Missing Values</span><span class="info-value">' + (cr.missing.fillCount || 0) + ' filled</span></div>';
+                if (cr.duplicates) crHtml += '<div class="info-row"><span class="info-label">Duplicates</span><span class="info-value">' + (cr.duplicates.removed || 0) + ' removed</span></div>';
+                if (cr.constants && cr.constants.removed && cr.constants.removed.length > 0) crHtml += '<div class="info-row"><span class="info-label">Constant Columns</span><span class="info-value">' + cr.constants.removed.join(', ') + ' removed</span></div>';
+                if (cr.outliers) crHtml += '<div class="info-row"><span class="info-label">Outliers</span><span class="info-value">' + (cr.outliers.total || 0) + ' handled</span></div>';
+                if (cr.types) {
+                    var typesList = Object.keys(cr.types).map(function(k) { return k + ': ' + cr.types[k]; }).join(', ');
+                    crHtml += '<div class="info-row"><span class="info-label">Detected Types</span><span class="info-value">' + typesList + '</span></div>';
+                }
+                document.getElementById('cleaning-report-content').innerHTML = crHtml || '<p style="color:#999;font-size:0.9rem;">No cleaning report available.</p>';
+            } else {
+                document.getElementById('cleaning-report-content').innerHTML = '<p style="color:#999;font-size:0.9rem;">No cleaning report available.</p>';
+            }
+
+            var cfg = model.config || {};
+            document.getElementById('training-config-content').innerHTML =
+                '<div class="config-grid">' +
+                '<div class="config-item"><div class="config-val">' + (cfg.epochs || '-') + '</div><div class="config-label">Epochs</div></div>' +
+                '<div class="config-item"><div class="config-val">' + (cfg.batchSize || '-') + '</div><div class="config-label">Batch Size</div></div>' +
+                '<div class="config-item"><div class="config-val">' + (cfg.learningRate || '-') + '</div><div class="config-label">Learning Rate</div></div>' +
+                '</div>';
+
+            renderTrainingEvaluation(model);
+            renderTrainingHistory(model);
+            renderVersionHistory(model);
+            document.getElementById('model-content').style.display = 'block';
+        }
+
+        function renderTrainingEvaluation(model) {
+            var container = document.getElementById('training-evaluation-content');
+            var versions = model.versions || [];
+            var latest = versions[versions.length - 1];
+            if (!latest || !latest.evaluation) {
+                container.innerHTML = '<div class="empty-gen">No evaluation data available. Train the model first.</div>';
+                return;
+            }
+            var ev = latest.evaluation;
+            var cfg = latest.config || {};
+            var d = new Date(latest.createdAt);
+            var dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            var statusLabels = { trained: 'Completed', in_progress: 'In Progress', failed: 'Failed' };
+            var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
+            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityClass = 'quality-' + (ev.trainingQuality || 'needs_improvement');
+            var imbalance = ModelService.trainingImbalanceWarning(ev.generatorLoss, ev.discriminatorLoss);
+
+            container.innerHTML =
+                '<div class="eval-grid" style="margin-bottom:0.75rem;">' +
+                '<div class="eval-item"><div class="eval-label">Model Name</div><div class="eval-value">' + model.name + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Version Number</div><div class="eval-value">' + latest.version + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Training Date &amp; Time</div><div class="eval-value" style="font-size:0.9rem;">' + dateStr + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Training Duration</div><div class="eval-value">' + ev.trainingDuration + 's</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Epochs</div><div class="eval-value">' + (cfg.epochs || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Batch Size</div><div class="eval-value">' + (cfg.batchSize || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Learning Rate</div><div class="eval-value">' + (cfg.learningRate || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">Training Status</div><div class="eval-value" style="color:' + (statusColors[latest.status] || '#666') + ';">' + (statusLabels[latest.status] || latest.status) + '</div></div>' +
+                '<div class="eval-item" style="border-left-color:#1565C0;"><div class="eval-label">Generator Loss</div><div class="eval-value loss-val loss-gen">' + ev.generatorLoss.toFixed(4) + '</div></div>' +
+                '<div class="eval-item" style="border-left-color:#E65100;"><div class="eval-label">Discriminator Loss</div><div class="eval-value loss-val loss-disc">' + ev.discriminatorLoss.toFixed(4) + '</div></div>' +
+                '<div class="eval-item" style="grid-column:1/2;"><div class="eval-label">Training Quality</div><div class="eval-value"><span class="quality-badge ' + qualityClass + '">' + (qualityLabels[ev.trainingQuality] || ev.trainingQuality) + '</span></div></div>' +
+                '<div class="eval-item" style="border-left-color:#9C27B0;grid-column:2/3;"><div class="eval-label">Loss Gap</div><div class="eval-value loss-val" style="color:#9C27B0;">' + Math.abs(ev.generatorLoss - ev.discriminatorLoss).toFixed(4) + '</div></div>' +
+                '</div>' +
+                (imbalance ? '<div class="imbalance-warning"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M8 1L1 14h14L8 1z" fill="#FF9800"/><path d="M8 5v4M8 12v-1" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg><span><strong>Possible Training Imbalance</strong> — Large gap between Generator Loss (' + ev.generatorLoss.toFixed(4) + ') and Discriminator Loss (' + ev.discriminatorLoss.toFixed(4) + '). Consider adjusting training parameters.</span></div>' : '');
+        }
+
+        function renderVersionHistory(model) {
+            var container = document.getElementById('version-history-content');
+            var versions = model.versions || [];
+            document.getElementById('version-history-count').textContent = '(' + versions.length + ' total)';
+            if (versions.length === 0) {
+                container.innerHTML = '<div class="empty-gen">No versions available.</div>';
+                return;
+            }
+            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityClasses = { good: 'quality-good', acceptable: 'quality-acceptable', needs_improvement: 'quality-needs_improvement' };
+            var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
+            var statusLabels = { trained: 'Completed', in_progress: 'In Progress', failed: 'Failed' };
+
+            var rows = versions.slice().reverse().map(function(v) {
+                var d = new Date(v.createdAt);
+                var dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                var cfg = v.config || {};
+                var ev = v.evaluation;
+                var genLoss = ev ? ev.generatorLoss.toFixed(4) : '-';
+                var discLoss = ev ? ev.discriminatorLoss.toFixed(4) : '-';
+                var quality = ev ? (ev.trainingQuality || '') : '';
+                var qLabel = qualityLabels[quality] || '';
+                var qClass = qualityClasses[quality] || '';
+                var label = v.type === 'initial' ? 'Initial Training' : 'Retrain #' + v.version;
+                return '<tr>' +
+                    '<td><strong>' + label + '</strong></td>' +
+                    '<td>' + dateStr + '</td>' +
+                    '<td>' + (cfg.epochs || '-') + '</td>' +
+                    '<td class="loss-cell" style="color:#1565C0;">' + genLoss + '</td>' +
+                    '<td class="loss-cell" style="color:#E65100;">' + discLoss + '</td>' +
+                    '<td>' + (qLabel ? '<span class="quality-tag ' + qClass + '">' + qLabel + '</span>' : '-') + '</td>' +
+                    '<td><span class="status-dot" style="background:' + (statusColors[v.status] || '#999') + ';"></span>' + (statusLabels[v.status] || v.status) + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            container.innerHTML =
+                '<div class="table-container" style="max-height:400px;overflow-y:auto;">' +
+                '<table class="version-table">' +
+                '<thead><tr><th>Version</th><th>Date</th><th>Epochs</th><th>Generator Loss</th><th>Discriminator Loss</th><th>Quality</th><th>Status</th></tr></thead>' +
+                '<tbody>' + rows + '</tbody></table></div>';
+        }
+
+        function renderTrainingHistory(model) {
+            var container = document.getElementById('training-history-content');
+            var versions = model.versions || [];
+            document.getElementById('version-count').textContent = '(' + versions.length + ' total)';
+            if (versions.length === 0) {
+                container.innerHTML = '<div class="empty-gen">No training history available.</div>';
+                return;
+            }
+            var statusLbl = { trained: 'Trained', in_progress: 'In Progress', failed: 'Failed' };
+            var statusDot = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
+            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityClasses = { good: 'quality-good', acceptable: 'quality-acceptable', needs_improvement: 'quality-needs_improvement' };
+            container.innerHTML = versions.slice().reverse().map(function(v, idx) {
+                var d = new Date(v.createdAt);
+                var dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                var cfg = v.config || {};
+                var isInitial = v.type === 'initial';
+                var label = isInitial ? 'Initial Training' : 'Retrain #' + v.version;
+                var statusColor = statusDot[v.status] || '#999';
+                var statusLabel = statusLbl[v.status] || v.status;
+                var badgeBg = isInitial ? '#E8F5E9' : '#FFF8E1';
+                var badgeColor = isInitial ? '#2E7D32' : '#E65100';
+                var badgeLetter = isInitial ? '1' : v.version;
+                var isLast = idx === versions.length - 1;
+                var ev = v.evaluation;
+                var genLoss = ev ? ev.generatorLoss.toFixed(4) : null;
+                var discLoss = ev ? ev.discriminatorLoss.toFixed(4) : null;
+                var quality = ev ? (ev.trainingQuality || '') : '';
+                var qClass = qualityClasses[quality] || '';
+                var qLabel = qualityLabels[quality] || '';
+                var duration = ev ? (ev.trainingDuration + 's') : '';
+                return '<div style="display:flex;gap:1rem;padding:0.5rem 0;position:relative;">' +
+                    '<div style="display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0;">' +
+                    '<div style="width:32px;height:32px;border-radius:50%;background:' + badgeBg + ';color:' + badgeColor + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;border:2px solid ' + badgeColor + ';position:relative;z-index:1;">' + badgeLetter + '</div>' +
+                    (isLast ? '' : '<div style="width:2px;flex:1;background:#E0E0E0;margin:2px 0;"></div>') +
+                    '</div>' +
+                    '<div style="flex:1;padding-bottom:' + (isLast ? '0' : '0.75rem') + ';">' +
+                    '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="font-weight:600;font-size:0.9rem;color:#333;">' + label + '</span>' +
+                    '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:' + statusColor + ';font-weight:500;">' +
+                    '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + statusColor + ';"></span>' + statusLabel + '</span>' +
+                    (qLabel ? '<span class="quality-badge ' + qClass + '" style="font-size:0.7rem;padding:0.15rem 0.5rem;">' + qLabel + '</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size:0.78rem;color:#999;margin-top:0.15rem;">' + dateStr + (duration ? ' &middot; ' + duration : '') + (v.datasetInfo && v.datasetInfo.originalRows ? ' &middot; ' + v.datasetInfo.originalRows + ' rows' : '') + '</div>' +
+                    (genLoss !== null ? '<div style="font-size:0.78rem;color:#999;margin-top:0.1rem;"><span style="color:#1565C0;">G:</span> ' + genLoss + ' &nbsp; <span style="color:#E65100;">D:</span> ' + discLoss + '</div>' : '') +
+                    '<div style="display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;">' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">' + cfg.epochs + ' ep</span>' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">bs ' + cfg.batchSize + '</span>' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">lr ' + cfg.learningRate + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        // ================================================================
+        // Retrain
+        // ================================================================
+
+        function initRetrain(model) {
+            var retrainBtn = document.getElementById('retrain-btn');
+            var retrainSection = document.getElementById('retrain-section');
+            var cancelBtn = document.getElementById('cancel-retrain-btn');
+            var startBtn = document.getElementById('start-retrain-btn');
+
+            if (model.config) {
+                setSelectValue('retrain-epochs', model.config.epochs);
+                setSelectValue('retrain-batch-size', model.config.batchSize);
+                setSelectValue('retrain-lr', model.config.learningRate);
+            }
+
+            retrainBtn.addEventListener('click', function() {
+                var isHidden = retrainSection.style.display === 'none';
+                retrainSection.style.display = isHidden ? 'block' : 'none';
+                document.getElementById('retrain-progress').style.display = 'none';
+                document.getElementById('retrain-result').style.display = 'none';
+                if (isHidden) {
+                    setTimeout(function() {
+                        retrainSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            });
+
+            cancelBtn.addEventListener('click', function() {
+                retrainSection.style.display = 'none';
+            });
+
+            startBtn.addEventListener('click', function() { startRetrain(model); });
+        }
+
+        function setSelectValue(id, val) {
+            var sel = document.getElementById(id);
+            if (!sel) return;
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value == val) { sel.selectedIndex = i; return; }
+            }
+        }
+
+        function startRetrain(model) {
+            var epochs = parseInt(document.getElementById('retrain-epochs').value);
+            var batchSize = parseInt(document.getElementById('retrain-batch-size').value);
+            var lr = parseFloat(document.getElementById('retrain-lr').value);
+
+            var versionData = {
+                epochs: epochs,
+                batchSize: batchSize,
+                learningRate: lr
+            };
+
+            // Create version
+            var version = ModelService.addVersion(model.id, versionData);
+            if (!version) { alert('Failed to create version.'); return; }
+
+            // Show progress
+            document.getElementById('start-retrain-btn').disabled = true;
+            document.getElementById('cancel-retrain-btn').disabled = true;
+            document.getElementById('retrain-progress').style.display = 'block';
+            document.getElementById('retrain-result').style.display = 'none';
+
+            // Simulate training
+            var progress = 0;
+            var interval = setInterval(function() {
+                progress += 5;
+                document.getElementById('retrain-progress-bar').style.width = progress + '%';
+                document.getElementById('retrain-progress-text').textContent = progress + '%';
+                document.getElementById('retrain-status-text').textContent = 'Training epoch ' + Math.ceil(progress / (100 / epochs)) + ' of ' + epochs + '...';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('retrain-status-text').textContent = 'Retraining complete!';
+                    document.getElementById('retrain-progress-bar').style.width = '100%';
+                    document.getElementById('retrain-progress-text').textContent = '100%';
+
+                    // Update version and model status
+                    ModelService.updateModel(model.id, { status: 'trained' });
+                    var lossValues = ModelService.generateLossValues(epochs);
+                    var trainDuration = parseFloat((epochs * 0.3 + Math.random() * 1.5).toFixed(1));
+                    var quality = ModelService.classifyTrainingQuality(lossValues.generatorLoss, lossValues.discriminatorLoss);
+                    ModelService.updateVersion(model.id, version.version, {
+                        status: 'trained',
+                        evaluation: {
+                            generatorLoss: lossValues.generatorLoss,
+                            discriminatorLoss: lossValues.discriminatorLoss,
+                            trainingDuration: trainDuration,
+                            trainingQuality: quality
+                        }
+                    });
+
+                    // History
+                    try {
+                        HistoryService.addEntry({
+                            type: 'model_retrain',
+                            action: 'Retrained model "' + model.name + '" (v' + version.version + ')',
+                            details: 'Epochs: ' + epochs + ', Batch: ' + batchSize + ', LR: ' + lr,
+                            userId: AuthService.getCurrentUser().id,
+                            userName: AuthService.getCurrentUser().username
+                        });
+                    } catch (e) {}
+
+                    setTimeout(function() {
+                        // Show result
+                        var resultDiv = document.getElementById('retrain-result');
+                        resultDiv.style.display = 'block';
+                        resultDiv.className = 'status-message status-success';
+                        resultDiv.innerHTML = '<strong>Retrain complete!</strong> Version ' + version.version + ' trained with ' + epochs + ' epochs.';
+                        document.getElementById('start-retrain-btn').disabled = false;
+                        document.getElementById('cancel-retrain-btn').disabled = false;
+
+                        // Refresh model data
+                        _currentModel = ModelService.getModel(model.id);
+                        renderModel(_currentModel);
+                    }, 500);
+                }
+            }, 200);
+        }
+
+    </script>
+</body>
+</html>

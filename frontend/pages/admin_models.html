@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthAI - Models</title>
+    <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .search-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+        .search-bar input, .search-bar select { padding: 0.5rem 0.75rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.85rem; }
+        .search-bar input:focus, .search-bar select:focus { outline: none; border-color: #2E7D32; }
+        .search-bar .search-input { flex: 1; min-width: 180px; }
+        .model-row { cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+        .model-row:hover { background: #F0F9F0; border-left-color: #2E7D32; }
+        .model-row.status-in_progress { border-left-color: #FF9800; }
+        .model-row.status-trained { border-left-color: #2E7D32; }
+        .model-row.status-failed { border-left-color: #F44336; }
+        .model-name { font-weight: 600; color: #1B5E20; }
+        .empty-state { text-align: center; padding: 2rem; color: #999; }
+        .empty-state p { margin-top: 0.5rem; }
+        .status-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .status-trained { background: #E8F5E9; color: #2E7D32; }
+        .status-trained .dot { background: #2E7D32; }
+        .status-in_progress { background: #FFF8E1; color: #E65100; }
+        .status-in_progress .dot { background: #FF9800; }
+        .status-failed { background: #FFEBEE; color: #C62828; }
+        .status-failed .dot { background: #F44336; }
+        .model-actions { display: flex; gap: 0.5rem; }
+        .model-actions .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+        .filter-date { display: flex; gap: 0.5rem; align-items: center; }
+        .filter-date label { font-size: 0.8rem; color: #666; }
+        .clear-filters { font-size: 0.8rem; color: #2E7D32; cursor: pointer; text-decoration: underline; border:none;background:none; }
+        .clear-filters:hover { color: #1B5E20; }
+        .pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+        .pagination .page-btn { padding: 0.3rem 0.7rem; border: 1px solid #E0E0E0; border-radius: 4px; font-size: 0.82rem; cursor: pointer; background: white; min-width: 32px; text-align: center; }
+        .pagination .page-btn:hover { border-color: #2E7D32; color: #2E7D32; }
+        .pagination .page-btn.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+        .pagination .page-btn:disabled { opacity: 0.4; cursor: default; }
+        .pagination .page-info { font-size: 0.82rem; color: #666; }
+        .version-chip { display: inline-block; font-size: 0.72rem; background: #F5F7F5; color: #666; padding: 0.1rem 0.4rem; border-radius: 4px; border: 1px solid #E5E7EB; }
+        .model-age { font-size: 0.75rem; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div id="user-panel"></div>
+            <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2>Models</h2>
+                    <p>All trained CTGAN models</p>
+                </div>
+                <a href="admin_training.html" class="btn btn-primary">
+                    <span class="ico ico-gear"></span> New Training
+                </a>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid" id="model-kpis"></div>
+
+            <!-- Search & Filter -->
+            <div class="card">
+                <div class="search-bar">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search by model name...">
+                    <select id="status-filter">
+                        <option value="all">All Status</option>
+                        <option value="trained">Trained</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                    <div class="filter-date">
+                        <label>From:</label>
+                        <input type="date" id="date-from">
+                        <label>To:</label>
+                        <input type="date" id="date-to">
+                    </div>
+                    <button id="clear-filters-btn" class="clear-filters">Clear Filters</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="models-table">
+                        <thead>
+                            <tr>
+                                <th style="min-width:160px;">Model Name</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th>Versions</th>
+                                <th>Dataset</th>
+                                <th>Config</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="models-tbody"></tbody>
+                    </table>
+                    <div id="models-empty" class="empty-state" style="display:none;">
+                        <p>No models found.</p>
+                        <a href="admin_training.html" class="btn btn-primary" style="margin-top: 0.5rem; text-decoration: none;">Create your first model</a>
+                    </div>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/services/auth.js"></script>
+    <script src="../js/services/model.js"></script>
+    <script src="../js/services/history.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        (function() {
+            var logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
+                    window.location.href = '/pages/login.html';
+                });
+            }
+        })();
+
+        var ITEMS_PER_PAGE = 10;
+        var currentPage = 1;
+        var filteredModels = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                var user = AuthService.getCurrentUser();
+                if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
+            } catch (e) { window.location.href = '/pages/login.html'; return; }
+
+            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupUserPanel(); } catch (e) {}
+
+            renderKPIs();
+            renderTable();
+
+            document.getElementById('search-input').addEventListener('input', onFilterChange);
+            document.getElementById('status-filter').addEventListener('change', onFilterChange);
+            document.getElementById('date-from').addEventListener('change', onFilterChange);
+            document.getElementById('date-to').addEventListener('change', onFilterChange);
+            document.getElementById('clear-filters-btn').addEventListener('click', function() {
+                document.getElementById('search-input').value = '';
+                document.getElementById('status-filter').value = 'all';
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+                onFilterChange();
+            });
+        });
+
+        function getCurrentProductionId() {
+            try {
+                var prod = ModelService.getProductionModel();
+                return prod ? prod.id : null;
+            } catch (e) { return null; }
+        }
+
+        function setProduction(id) {
+            ModelService.setProductionModel(id);
+            renderKPIs();
+            renderTable();
+        }
+
+        function unsetProduction(id) {
+            if (!confirm('Unset this model as the production model? Farmers will no longer use it for predictions.')) return;
+            ModelService.unsetProductionModel();
+            renderKPIs();
+            renderTable();
+        }
+
+        function onFilterChange() {
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderKPIs() {
+            var stats = ModelService.getStats();
+            var prodModel = ModelService.getProductionModel();
+            var prodHtml = prodModel
+                ? '<div class="kpi-card" style="border-left-color: #2E7D32;"><div class="kpi-value" style="font-size:1rem;">' + prodModel.name + '</div><div class="kpi-label">Production Model</div></div>'
+                : '<div class="kpi-card" style="border-left-color: #999;"><div class="kpi-value" style="font-size:1rem;color:#999;">Not Set</div><div class="kpi-label">Production Model</div></div>';
+            document.getElementById('model-kpis').innerHTML =
+                '<div class="kpi-card"><div class="kpi-value">' + stats.total + '</div><div class="kpi-label">Total Models</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + stats.trained + '</div><div class="kpi-label">Trained</div></div>' +
+                '<div class="kpi-card" style="border-left-color: #FF9800;"><div class="kpi-value">' + stats.inProgress + '</div><div class="kpi-label">In Progress</div></div>' +
+                '<div class="kpi-card" style="border-left-color: #F44336;"><div class="kpi-value">' + stats.failed + '</div><div class="kpi-label">Failed</div></div>' +
+                prodHtml;
+        }
+
+        function getFilterValues() {
+            return {
+                query: document.getElementById('search-input').value.trim(),
+                status: document.getElementById('status-filter').value,
+                dateFrom: document.getElementById('date-from').value,
+                dateTo: document.getElementById('date-to').value
+            };
+        }
+
+        function renderTable() {
+            var filters = getFilterValues();
+            var allModels = ModelService.getModels();
+
+            // Apply filters
+            filteredModels = allModels.slice();
+            if (filters.query) {
+                var q = filters.query.toLowerCase();
+                filteredModels = filteredModels.filter(function(m) { return m.name.toLowerCase().indexOf(q) !== -1; });
+            }
+            if (filters.status && filters.status !== 'all') {
+                filteredModels = filteredModels.filter(function(m) { return m.status === filters.status; });
+            }
+            if (filters.dateFrom) {
+                var from = new Date(filters.dateFrom).getTime();
+                filteredModels = filteredModels.filter(function(m) { return new Date(m.createdAt).getTime() >= from; });
+            }
+            if (filters.dateTo) {
+                var to = new Date(filters.dateTo).getTime() + 86400000;
+                filteredModels = filteredModels.filter(function(m) { return new Date(m.createdAt).getTime() <= to; });
+            }
+
+            var totalPages = Math.ceil(filteredModels.length / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            var start = (currentPage - 1) * ITEMS_PER_PAGE;
+            var pageItems = filteredModels.slice(start, start + ITEMS_PER_PAGE);
+
+            var tbody = document.getElementById('models-tbody');
+            var empty = document.getElementById('models-empty');
+            var pagination = document.getElementById('pagination');
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                pagination.innerHTML = '';
+                return;
+            }
+            empty.style.display = 'none';
+
+            var statusLabels = { trained: 'Trained', in_progress: 'In Progress', failed: 'Failed' };
+            var statusClasses = { trained: 'status-trained', in_progress: 'status-in_progress', failed: 'status-failed' };
+
+            var currentProdId = getCurrentProductionId();
+            tbody.innerHTML = pageItems.map(function(m) {
+                var date = new Date(m.createdAt);
+                var dateStr = date.toLocaleDateString();
+                var timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                var configStr = m.config ? (m.config.epochs + ' ep, ' + m.config.batchSize + ' bs') : '-';
+                var datasetStr = m.datasetInfo ? (m.datasetInfo.originalRows + ' rows') : '-';
+                var versions = m.versions || [];
+                var verCount = versions.length;
+                var verStr = verCount > 0 ? verCount + ' (' + versions.filter(function(v) { return v.type === 'retrain'; }).length + 'R)' : '0';
+                var ageDays = Math.floor((Date.now() - date.getTime()) / 86400000);
+                var ageStr = ageDays === 0 ? 'Today' : ageDays === 1 ? 'Yesterday' : ageDays + 'd ago';
+                var rowClass = 'model-row ' + (statusClasses[m.status] || '');
+                var isProd = currentProdId === m.id;
+                var prodBadge = isProd ? ' <span class="status-badge status-trained" style="font-size:0.7rem;padding:0.1rem 0.4rem;"><span class="dot"></span> PRODUCTION</span>' : '';
+                var setProdBtn = isProd
+                    ? '<button class="btn btn-outline btn-sm" onclick="unsetProduction(' + m.id + ')" style="color:#E65100;border-color:#FFE0B2;">Unset Prod</button> '
+                    : (m.status === 'trained' ? '<button class="btn btn-outline btn-sm" onclick="setProduction(' + m.id + ')" style="color:#2E7D32;border-color:#C8E6C9;">Set Prod</button> ' : '');
+                return '<tr class="' + rowClass + '" data-id="' + m.id + '">' +
+                    '<td><div class="model-name">' + m.name + prodBadge + '</div><div class="model-age">' + ageStr + '</div></td>' +
+                    '<td style="font-size:0.82rem;color:#666;white-space:nowrap;">' + dateStr + '<br><span style="font-size:0.72rem;">' + timeStr + '</span></td>' +
+                    '<td><span class="status-badge ' + (statusClasses[m.status] || 'status-in_progress') + '"><span class="dot"></span> ' + (statusLabels[m.status] || m.status) + '</span></td>' +
+                    '<td style="font-size:0.85rem;"><span class="version-chip">' + verStr + '</span></td>' +
+                    '<td style="font-size:0.85rem;">' + datasetStr + '</td>' +
+                    '<td style="font-size:0.82rem;color:#666;white-space:nowrap;">' + configStr + '</td>' +
+                    '<td class="model-actions" style="white-space:nowrap;">' +
+                    '<button class="btn btn-outline btn-sm" onclick="viewModel(' + m.id + ')">View</button> ' +
+                    setProdBtn +
+                    '<button class="btn btn-danger btn-sm" onclick="deleteModel(' + m.id + ')">Delete</button>' +
+                    '</td>' +
+                    '</tr>';
+            }).join('');
+
+            // Row click = view
+            tbody.querySelectorAll('.model-row').forEach(function(row) {
+                row.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') return;
+                    viewModel(parseInt(this.getAttribute('data-id')));
+                });
+            });
+
+            // Pagination
+            var pHtml = '';
+            pHtml += '<button class="page-btn" onclick="goToPage(' + (currentPage - 1) + ')"' + (currentPage <= 1 ? ' disabled' : '') + '>Prev</button>';
+            pHtml += '<span class="page-info">' + start + '-' + Math.min(start + ITEMS_PER_PAGE, filteredModels.length) + ' of ' + filteredModels.length + '</span>';
+            for (var p = 1; p <= totalPages; p++) {
+                pHtml += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goToPage(' + p + ')">' + p + '</button>';
+            }
+            pHtml += '<button class="page-btn" onclick="goToPage(' + (currentPage + 1) + ')"' + (currentPage >= totalPages ? ' disabled' : '') + '>Next</button>';
+            pagination.innerHTML = pHtml;
+        }
+
+        function goToPage(page) {
+            var totalPages = Math.ceil(filteredModels.length / ITEMS_PER_PAGE) || 1;
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+        }
+
+        function viewModel(id) {
+            window.location.href = 'admin_model_details.html?id=' + id;
+        }
+
+        function deleteModel(id) {
+            if (!confirm('Delete this model permanently?')) return;
+            ModelService.deleteModel(id);
+            renderKPIs();
+            renderTable();
+        }
+    </script>
+</body>
+</html>
