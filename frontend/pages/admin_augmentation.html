@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynthAI - Data Augmentation & Analytics</title>
+<link rel="stylesheet" href="../styles/global.css">
+<style>
+.augment-container { max-width: 1200px; }
+.multiplier-grid { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.multiplier-btn { flex: 1; min-width: 120px; padding: 1.5rem; border: 2px solid #E0E0E0; border-radius: 12px; background: #fff; text-align: center; cursor: pointer; transition: all 0.2s; }
+.multiplier-btn:hover { border-color: #2E7D32; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,125,50,0.15); }
+.multiplier-btn.active { border-color: #2E7D32; background: #E8F5E9; }
+.multiplier-btn .multiplier-value { font-size: 2rem; font-weight: 700; color: #1B5E20; }
+.multiplier-btn .multiplier-label { font-size: 0.85rem; color: #666; margin-top: 0.25rem; }
+.quality-score { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 600; font-size: 1.1rem; }
+.quality-excellent { background: #E8F5E9; color: #2E7D32; }
+.quality-good { background: #E3F2FD; color: #1565C0; }
+.quality-fair { background: #FFF3E0; color: #E65100; }
+.quality-poor { background: #FFEBEE; color: #C62828; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+@media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } }
+.aug-preview-table { max-height: 400px; overflow-y: auto; border: 1px solid #E0E0E0; border-radius: 8px; }
+.aug-preview-table table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.aug-preview-table th { position: sticky; top: 0; background: #f5f5f5; padding: 0.5rem; text-align: left; border-bottom: 2px solid #E0E0E0; }
+.upload-zone { border: 2px dashed #ccc; border-radius: 12px; padding: 3rem; text-align: center; cursor: pointer; transition: all 0.2s; background: #FAFAFA; }
+.upload-zone:hover, .upload-zone.dragover { border-color: #2E7D32; background: #E8F5E9; }
+.file-info { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F0F8F0; border-radius: 8px; margin: 1rem 0; }
+.file-info .name { font-weight: 600; color: #1B5E20; }
+.file-info .meta { font-size: 0.8rem; color: #666; margin-top: 0.25rem; }
+.aug-log-card { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #E0E0E0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.aug-log-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.aug-log-info { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+.aug-log-info span { font-size: 0.9rem; color: #333; }
+.aug-log-info .label { color: #999; font-size: 0.8rem; }
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+@media (max-width: 1100px) { .comparison-grid { grid-template-columns: 1fr; } }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-content { background: #fff; border-radius: 12px; padding: 2rem; max-width: 900px; width: 95%; max-height: 85vh; overflow-y: auto; }
+.step-indicator { display: flex; align-items: center; justify-content: center; margin: 1.5rem 0; gap: 0.5rem; }
+.step { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 2rem; background: #f5f5f5; color: #999; font-size: 0.85rem; }
+.step.active { background: #E8F5E9; color: #2E7D32; font-weight: 600; }
+.step.completed { background: #E8F5E9; color: #2E7D32; }
+.step-line { width: 40px; height: 2px; background: #E0E0E0; }
+.step-line.active { background: #2E7D32; }
+</style>
+</head>
+<body>
+<div class="app-container">
+<aside class="sidebar">
+<div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+<div id="user-panel"></div>
+<nav class="sidebar-nav" id="sidebar-nav"></nav>
+<div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+</aside>
+<main class="main-content">
+<div class="page-header"><h2>Data Augmentation & Analytics</h2><p>Manage, monitor and perform data augmentation across the platform</p></div>
+
+<div class="actions-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+<button id="show-create-btn" class="btn btn-primary">+ New Augmentation</button>
+<button id="refresh-btn" class="btn btn-outline">Refresh</button>
+</div>
+
+<div id="create-section" style="display:none;" class="card" style="margin-bottom:1.5rem;">
+<h3 class="card-title">Create Augmentation</h3>
+<div id="parse-error" class="status-message status-error" style="display:none;"></div>
+
+<div class="step-indicator">
+<div class="step active" id="step-1"><span>1</span> Upload</div>
+<div class="step-line" id="step-line-2"></div>
+<div class="step" id="step-2"><span>2</span> Configure</div>
+<div class="step-line" id="step-line-3"></div>
+<div class="step" id="step-3"><span>3</span> Generate</div>
+</div>
+
+<div class="upload-zone" id="upload-zone">
+<svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:#999;margin-bottom:1rem;"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+<p style="color:#999;">Drag & drop a CSV file here, or click to browse</p>
+<p style="font-size:0.8rem;color:#bbb;margin-top:0.5rem;">Maximum file size: 10MB</p>
+<input type="file" id="file-input" accept=".csv" style="display:none;">
+</div>
+<div id="file-info-area" style="display:none;"></div>
+
+<div id="base-info" style="display:none;">
+<div class="kpi-grid" id="base-stats" style="margin-top:1rem;"></div>
+<div style="margin-top:1rem;">
+<h4>Select Augmentation Multiplier</h4>
+<div class="multiplier-grid">
+<div class="multiplier-btn" data-multiplier="2"><div class="multiplier-value">x2</div><div class="multiplier-label">Double the data</div></div>
+<div class="multiplier-btn" data-multiplier="5"><div class="multiplier-value">x5</div><div class="multiplier-label">5x the data</div></div>
+<div class="multiplier-btn" data-multiplier="10"><div class="multiplier-value">x10</div><div class="multiplier-label">10x the data</div></div>
+</div>
+<button id="generate-aug-btn" class="btn btn-primary" disabled>Generate Augmented Data</button>
+<div id="aug-progress" style="display:none;margin-top:1rem;">
+<div class="progress-bar-outer"><div class="progress-bar-inner" id="aug-progress-bar" style="width:0%;"></div></div>
+<p id="aug-progress-text" style="font-size:0.85rem;color:#666;margin-top:0.5rem;">Processing...</p>
+</div>
+</div>
+</div>
+
+<div id="aug-result" style="display:none;margin-top:1.5rem;">
+<div class="card">
+<h4>Augmentation Results</h4>
+<div class="kpi-grid" id="result-stats" style="grid-template-columns:repeat(4,1fr);"></div>
+<div style="margin-top:1rem;">
+<div id="quality-badge"></div>
+<p id="correlation-info" style="font-size:0.85rem;color:#666;margin-top:0.5rem;"></p>
+</div>
+<div class="stats-grid">
+<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;">Original Statistics</h5><div id="original-stats-table"></div></div>
+<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;">Augmented Statistics</h5><div id="augmented-stats-table"></div></div>
+</div>
+<h5 style="margin-top:1rem;">Data Preview</h5>
+<div class="aug-preview-table">
+<table><thead id="aug-preview-thead"></thead><tbody id="aug-preview-tbody"></tbody></table>
+</div>
+<div style="display:flex;gap:0.75rem;margin-top:1rem;">
+<button id="download-aug-btn" class="btn btn-primary">Download CSV</button>
+<button id="reset-create-btn" class="btn btn-outline">New Augmentation</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="kpi-grid" id="system-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.5rem;"></div>
+
+<div class="card">
+<div class="mini-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+<h3 class="card-title" style="margin:0;">All Augmentations</h3>
+</div>
+<div id="no-logs" style="text-align:center;padding:2rem;color:#999;">No augmentations found in the system.</div>
+<div id="aug-logs-container"></div>
+</div>
+</main>
+</div>
+
+<div class="modal-overlay" id="detail-modal">
+<div class="modal-content">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+<h3 style="margin:0;">Augmentation Details</h3>
+<button id="close-detail" class="btn btn-outline" style="padding:0.3rem 0.75rem;">Close</button>
+</div>
+<div id="detail-content"></div>
+</div>
+</div>
+
+<script src="../js/services/auth.js"></script>
+<script src="../js/services/payment.js"></script>
+<script src="../js/services/data.js"></script>
+<script src="../js/services/model.js"></script>
+<script src="../js/app.js"></script>
+<script>
+(function() {
+var user = AuthService.getCurrentUser();
+if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
+AuthService.syncSessionFromStorage();
+App.setupSidebar();
+App.setupUserPanel();
+App.setupLogout();
+var currentUser = AuthService.getCurrentUser();
+var basePreview = null;
+var selectedMultiplier = null;
+var augResult = null;
+
+function renderSystemStats() {
+var stats = { total: 0, totalOriginal: 0, totalAugmented: 0, avgQuality: 0 };
+try { stats = DataService.getAugmentationStats(); } catch(e) {}
+document.getElementById('system-stats').innerHTML =
+'<div class="kpi-card"><div class="kpi-value">' + stats.total + '</div><div class="kpi-label">Total Augmentations</div></div>' +
+'<div class="kpi-card"><div class="kpi-value">' + (stats.totalOriginal || 0).toLocaleString() + '</div><div class="kpi-label">Original Rows</div></div>' +
+'<div class="kpi-card"><div class="kpi-value">' + (stats.totalAugmented || 0).toLocaleString() + '</div><div class="kpi-label">Augmented Rows</div></div>' +
+'<div class="kpi-card" style="border-left-color:#4CAF50;"><div class="kpi-value">' + (stats.avgQuality || 0) + '%</div><div class="kpi-label">Avg Quality</div></div>';
+}
+
+function qualityClass(score) {
+if (score >= 90) return 'quality-excellent';
+if (score >= 75) return 'quality-good';
+if (score >= 50) return 'quality-fair';
+return 'quality-poor';
+}
+
+function renderLogs() {
+var augs = [];
+try { augs = DataService.getAugmentations() || []; } catch(e) {}
+var container = document.getElementById('aug-logs-container');
+var noLogs = document.getElementById('no-logs');
+if (augs.length === 0) { container.innerHTML = ''; noLogs.style.display = 'block'; return; }
+noLogs.style.display = 'none';
+container.innerHTML = augs.map(function(a) {
+var dateStr = 'N/A';
+try { dateStr = new Date(a.createdAt).toLocaleDateString(); } catch(e) {}
+var qScore = a.qualityScore || 0;
+var qLabel = a.qualityLabel || 'N/A';
+return '<div class="aug-log-card">' +
+'<div class="aug-log-info">' +
+'<span><strong>' + (a.type || 'generic').toUpperCase() + '</strong></span>' +
+'<span><span class="label">User:</span> ' + (a.userId || 'N/A') + '</span>' +
+'<span><span class="label">File:</span> ' + (a.fileName || 'Dataset') + '</span>' +
+'<span><span class="label">Original:</span> ' + (a.originalRows || 0).toLocaleString() + '</span>' +
+'<span><span class="label">Generated:</span> ' + (a.augmentedRows || 0).toLocaleString() + '</span>' +
+'<span><span class="label">Multiplier:</span> x' + a.multiplier + '</span>' +
+'<span class="status-badge ' + qualityClass(qScore) + '">' + qScore + '% - ' + qLabel + '</span>' +
+'<span style="color:#999;font-size:0.8rem;">' + dateStr + '</span>' +
+'</div>' +
+'<div style="display:flex;gap:0.5rem;">' +
+'<button class="btn btn-outline view-detail-btn" data-id="' + a.id + '" style="padding:0.4rem 0.75rem;font-size:0.85rem;">Details</button>' +
+'<button class="btn btn-primary dl-btn" data-id="' + a.id + '" style="padding:0.4rem 0.75rem;font-size:0.85rem;">Download</button>' +
+'</div>' +
+'</div>';
+}).join('');
+container.querySelectorAll('.view-detail-btn').forEach(function(btn) {
+btn.addEventListener('click', function() { showDetail(parseInt(this.dataset.id)); });
+});
+container.querySelectorAll('.dl-btn').forEach(function(btn) {
+btn.addEventListener('click', function() { DataService.exportAugmentation(parseInt(this.dataset.id)); });
+});
+}
+
+function showDetail(id) {
+var aug = DataService.getAugmentationById(id);
+if (!aug) { alert('Augmentation not found'); return; }
+var content = document.getElementById('detail-content');
+var html = '';
+html += '<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">' +
+'<div class="kpi-card" style="padding:0.75rem;"><div class="kpi-value" style="font-size:1.2rem;">' + (aug.type || 'generic').toUpperCase() + '</div><div class="kpi-label">Type</div></div>' +
+'<div class="kpi-card" style="padding:0.75rem;"><div class="kpi-value" style="font-size:1.2rem;">x' + aug.multiplier + '</div><div class="kpi-label">Multiplier</div></div>' +
+'<div class="kpi-card" style="padding:0.75rem;"><div class="kpi-value" style="font-size:1.2rem;">' + (aug.qualityScore || 0) + '%</div><div class="kpi-label">Quality Score</div></div>' +
+'<div class="kpi-card" style="padding:0.75rem;"><div class="kpi-value" style="font-size:1.2rem;">' + (aug.augmentedRows - aug.originalRows).toLocaleString() + '</div><div class="kpi-label">New Rows</div></div>' +
+'</div>';
+html += '<h4 style="margin:1rem 0 0.5rem;color:#1B5E20;">Original / Augmented Statistics</h4>';
+html += '<div class="comparison-grid">';
+var origStats = aug.originalStats || {};
+var augStats = aug.augmentedStats || {};
+var cols = Object.keys(origStats).slice(0, 8);
+if (cols.length > 0) {
+html += '<div class="card" style="box-shadow:none;border:1px solid #E0E0E0;padding:1rem;">' +
+'<h5 style="color:#1B5E20;margin-bottom:0.5rem;">Original Statistics</h5>' +
+'<table class="table" style="font-size:0.8rem;"><thead><tr><th>Feature</th><th>Mean</th><th>Std</th></tr></thead><tbody>';
+cols.forEach(function(c) {
+var s = origStats[c] || {};
+html += '<tr><td>' + c + '</td><td>' + (s.mean || '-') + '</td><td>' + (s.std || '-') + '</td></tr>';
+});
+html += '</tbody></table></div>';
+html += '<div class="card" style="box-shadow:none;border:1px solid #E0E0E0;padding:1rem;">' +
+'<h5 style="color:#1B5E20;margin-bottom:0.5rem;">Augmented Statistics</h5>' +
+'<table class="table" style="font-size:0.8rem;"><thead><tr><th>Feature</th><th>Mean</th><th>Std</th></tr></thead><tbody>';
+cols.forEach(function(c) {
+var s = augStats[c] || {};
+html += '<tr><td>' + c + '</td><td>' + (s.mean || '-') + '</td><td>' + (s.std || '-') + '</td></tr>';
+});
+html += '</tbody></table></div>';
+}
+html += '</div>';
+if (aug.preview && aug.preview.data) {
+var previewData = aug.preview.data.slice(0, 10);
+html += '<h4 style="margin:1rem 0 0.5rem;color:#1B5E20;">Data Preview (first 10 rows)</h4>';
+html += '<div style="max-height:300px;overflow-y:auto;border:1px solid #E0E0E0;border-radius:8px;">';
+html += '<table class="table" style="font-size:0.8rem;"><thead><tr>';
+(aug.headers || Object.keys(previewData[0] || {})).forEach(function(h) { html += '<th>' + h + '</th>'; });
+html += '</tr></thead><tbody>';
+previewData.forEach(function(row) {
+html += '<tr>';
+(aug.headers || Object.keys(row)).forEach(function(h) { html += '<td>' + (row[h] || '') + '</td>'; });
+html += '</tr>';
+});
+html += '</tbody></table></div>';
+}
+content.innerHTML = html;
+document.getElementById('detail-modal').style.display = 'flex';
+}
+
+document.getElementById('close-detail').addEventListener('click', function() { document.getElementById('detail-modal').style.display = 'none'; });
+document.getElementById('detail-modal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+document.getElementById('refresh-btn').addEventListener('click', function() { renderSystemStats(); renderLogs(); });
+
+document.getElementById('show-create-btn').addEventListener('click', function() {
+var section = document.getElementById('create-section');
+section.style.display = section.style.display === 'none' ? 'block' : 'none';
+});
+
+function updateStep(stepNum) {
+for (var i = 1; i <= 3; i++) {
+var el = document.getElementById('step-' + i);
+var line = document.getElementById('step-line-' + i);
+if (el) el.classList.remove('active', 'completed');
+if (line) line.classList.remove('active');
+if (i < stepNum) { if (el) el.classList.add('completed'); if (line) line.classList.add('active'); }
+else if (i === stepNum) if (el) el.classList.add('active');
+}
+}
+
+function renderPreviewTable(data, headers, theadId, tbodyId, limit) {
+limit = limit || 20;
+var thead = document.getElementById(theadId);
+var tbody = document.getElementById(tbodyId);
+if (!thead || !tbody) return;
+thead.innerHTML = '<tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
+tbody.innerHTML = data.slice(0, limit).map(function(row) {
+return '<tr>' + headers.map(function(h) { return '<td>' + (row[h] || '') + '</td>'; }).join('') + '</tr>';
+}).join('');
+}
+
+function renderStats(stats, containerId) {
+var container = document.getElementById(containerId);
+if (!container) return;
+if (!stats || Object.keys(stats).length === 0) { container.innerHTML = '<p style="color:#999;">No statistics available</p>'; return; }
+var html = '<table class="table"><thead><tr><th>Feature</th><th>Mean</th><th>Std</th><th>Min</th><th>Max</th></tr></thead><tbody>';
+for (var col in stats) {
+var s = stats[col];
+html += '<tr><td><strong>' + col + '</strong></td><td>' + s.mean + '</td><td>' + s.std + '</td><td>' + s.min + '</td><td>' + s.max + '</td></tr>';
+}
+html += '</tbody></table>';
+container.innerHTML = html;
+}
+
+var uploadZone = document.getElementById('upload-zone');
+var fileInput = document.getElementById('file-input');
+if (uploadZone && fileInput) {
+uploadZone.addEventListener('click', function() { fileInput.click(); });
+uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', function() { this.classList.remove('dragover'); });
+uploadZone.addEventListener('drop', function(e) { e.preventDefault(); this.classList.remove('dragover'); if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', function() { if (this.files.length > 0) handleFile(this.files[0]); });
+}
+
+function handleFile(file) {
+if (!file.name.match(/\.csv$/i)) { showError('Please upload a CSV file.'); return; }
+if (file.size > 10 * 1024 * 1024) { showError('File too large. Maximum size is 10MB.'); return; }
+hideError();
+var reader = new FileReader();
+reader.onload = function(e) {
+var csvText = e.target.result;
+var parsed = DataService.parseDataFromCSV(csvText);
+if (!parsed || !parsed.data || parsed.data.length === 0) { showError('Could not parse CSV.'); return; }
+parsed.fileName = file.name;
+basePreview = parsed;
+
+document.getElementById('file-info-area').innerHTML =
+'<div class="file-info"><div><div class="name">' + file.name + '</div><div class="meta">' + parsed.data.length.toLocaleString() + ' rows \u00b7 ' + parsed.headers.length + ' columns' + (parsed.type !== 'generic' ? ' \u00b7 ' + parsed.type.toUpperCase() : '') + '</div></div><button id="remove-file-btn" class="btn btn-outline" style="padding:0.4rem 1rem;">Change File</button></div>';
+document.getElementById('file-info-area').style.display = 'block';
+document.querySelector('.upload-zone').style.display = 'none';
+
+document.getElementById('base-info').style.display = 'block';
+document.getElementById('aug-result').style.display = 'none';
+updateStep(2);
+document.getElementById('base-stats').innerHTML =
+'<div class="kpi-card"><div class="kpi-value">' + parsed.data.length.toLocaleString() + '</div><div class="kpi-label">Original Rows</div></div>' +
+'<div class="kpi-card"><div class="kpi-value">' + parsed.headers.length + '</div><div class="kpi-label">Features</div></div>' +
+'<div class="kpi-card"><div class="kpi-value">CSV</div><div class="kpi-label">Format</div></div>' +
+'<div class="kpi-card"><div class="kpi-value">' + (parsed.type || 'generic').toUpperCase() + '</div><div class="kpi-label">Type</div></div>';
+renderPreviewTable(parsed.data, parsed.headers, 'base-preview-thead', 'base-preview-tbody');
+document.getElementById('generate-aug-btn').disabled = true;
+selectedMultiplier = null;
+document.querySelectorAll('.multiplier-btn').forEach(function(b) { b.classList.remove('active'); });
+
+document.getElementById('remove-file-btn').addEventListener('click', function() { resetCreate(); });
+};
+reader.readAsText(file);
+}
+
+function showError(msg) { var el = document.getElementById('parse-error'); if (el) { el.textContent = msg; el.style.display = 'block'; } }
+function hideError() { var el = document.getElementById('parse-error'); if (el) el.style.display = 'none'; }
+
+function resetCreate() {
+basePreview = null; selectedMultiplier = null; augResult = null;
+fileInput.value = '';
+document.getElementById('file-info-area').style.display = 'none';
+document.getElementById('file-info-area').innerHTML = '';
+document.querySelector('.upload-zone').style.display = 'block';
+document.getElementById('base-info').style.display = 'none';
+document.getElementById('aug-result').style.display = 'none';
+document.getElementById('generate-aug-btn').disabled = true;
+document.querySelectorAll('.multiplier-btn').forEach(function(b) { b.classList.remove('active'); });
+hideError();
+updateStep(1);
+}
+
+document.querySelectorAll('.multiplier-btn:not(.locked)').forEach(function(btn) {
+btn.addEventListener('click', function() {
+document.querySelectorAll('.multiplier-btn').forEach(function(b) { b.classList.remove('active'); });
+btn.classList.add('active');
+selectedMultiplier = parseInt(btn.dataset.multiplier);
+document.getElementById('generate-aug-btn').disabled = false;
+});
+});
+
+document.getElementById('generate-aug-btn').addEventListener('click', function() {
+if (!basePreview || !selectedMultiplier) return;
+var btn = this;
+btn.disabled = true;
+btn.textContent = 'Processing...';
+document.getElementById('aug-progress').style.display = 'block';
+updateStep(3);
+var progressBar = document.getElementById('aug-progress-bar');
+var pct = 0;
+var interval = setInterval(function() {
+pct += Math.random() * 15 + 5;
+if (pct > 90) pct = 90;
+progressBar.style.width = pct + '%';
+}, 400);
+setTimeout(function() {
+clearInterval(interval);
+progressBar.style.width = '100%';
+setTimeout(function() {
+var result = DataService.augmentDataset(basePreview, selectedMultiplier, currentUser.id);
+if (!result.success) { alert(result.message); btn.disabled = false; btn.textContent = 'Generate Augmented Data'; document.getElementById('aug-progress').style.display = 'none'; return; }
+augResult = result.result;
+document.getElementById('aug-result').style.display = 'block';
+document.getElementById('result-stats').innerHTML =
+'<div class="kpi-card" style="border-left-color: #2E7D32;"><div class="kpi-value">' + augResult.originalRows.toLocaleString() + '</div><div class="kpi-label">Original Rows</div></div>' +
+'<div class="kpi-card" style="border-left-color: #1565C0;"><div class="kpi-value">' + augResult.augmentedRows.toLocaleString() + '</div><div class="kpi-label">Augmented Rows</div></div>' +
+'<div class="kpi-card" style="border-left-color: #FF9800;"><div class="kpi-value">x' + augResult.multiplier + '</div><div class="kpi-label">Multiplier</div></div>' +
+'<div class="kpi-card" style="border-left-color: #4CAF50;"><div class="kpi-value">+' + ((augResult.augmentedRows - augResult.originalRows).toLocaleString()) + '</div><div class="kpi-label">New Rows</div></div>';
+var qLabel = augResult.qualityLabel.toLowerCase();
+var qClass = 'quality-' + qLabel;
+document.getElementById('quality-badge').innerHTML = '<span class="quality-score ' + qClass + '">Quality Score: ' + augResult.qualityScore + '% (' + augResult.qualityLabel + ')</span>';
+var corrSim = augResult.correlationSimilarity;
+document.getElementById('correlation-info').textContent = 'Correlation Preservation: ' + (corrSim !== null && corrSim !== undefined ? corrSim + '%' : 'N/A');
+renderStats(augResult.originalStats, 'original-stats-table');
+renderStats(augResult.augmentedStats, 'augmented-stats-table');
+renderPreviewTable(augResult.preview.data, augResult.headers, 'aug-preview-thead', 'aug-preview-tbody');
+btn.disabled = false;
+btn.textContent = 'Generate Augmented Data';
+document.getElementById('aug-progress').style.display = 'none';
+renderSystemStats();
+renderLogs();
+}, 500);
+}, 2000);
+});
+
+document.getElementById('download-aug-btn').addEventListener('click', function() { if (augResult) DataService.exportAugmentation(augResult.id); });
+document.getElementById('reset-create-btn').addEventListener('click', resetCreate);
+
+renderSystemStats();
+renderLogs();
+})();
+</script>
+</body>
+</html>

@@ -171,7 +171,7 @@
             var user;
             try {
                 user = AuthService.getCurrentUser();
-                if (!user || user.role !== 'farmer') { window.location.href = '/pages/login.html'; return; }
+                if (!user || (user.role !== 'farmer' && user.role !== 'admin')) { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
             try { AuthService.syncSessionFromStorage(); } catch (e) {}

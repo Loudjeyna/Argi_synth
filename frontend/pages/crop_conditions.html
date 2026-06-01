@@ -64,13 +64,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
             if (!user) { window.location.href = '/pages/login.html'; return; }
-            if (user.role !== 'farmer') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
+            if (user.role !== 'farmer' && user.role !== 'admin') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
             AuthService.syncSessionFromStorage();
             App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
 
             var crops = RecommendationService.getCrops();
             var select = document.getElementById('crop-select');
-            select.innerHTML = '<option value="">-- Choisir une culture --</option>' + crops.map(function(c) { return '<option value="' + c + '">' + RecommendationService.getCropDisplayName(c) + '</option>'; }).join('');
+            select.innerHTML = '<option value="">-- Select a crop --</option>' + crops.map(function(c) { return '<option value="' + c + '">' + RecommendationService.getCropDisplayName(c) + '</option>'; }).join('');
 
             function getLevelColor(level) {
                 const map = { Low: '#66BB6A', Medium: '#FF9800', High: '#F44336' };

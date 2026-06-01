@@ -18,12 +18,17 @@
         <main class="main-content">
             <div class="page-header"><h2>Dashboard</h2><p>System overview and quick actions</p></div>
             <div class="kpi-grid" id="kpi-grid"></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem;">
                 <div class="card"><h3 class="card-title">Generate Data</h3><p style="color: #666; margin-bottom: 1rem;">Generate synthetic data from trained models.</p><a href="generate_data.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Models</h3><p style="color: #666; margin-bottom: 1rem;">View all trained CTGAN models.</p><a href="admin_models.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
                 <div class="card"><h3 class="card-title">New Training</h3><p style="color: #666; margin-bottom: 1rem;">Create a new model with your dataset.</p><a href="admin_training.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Models</h3><p style="color: #666; margin-bottom: 1rem;">View all trained CTGAN models.</p><a href="admin_models.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Data Augmentation</h3><p style="color: #666; margin-bottom: 1rem;">Perform dataset augmentation and view analytics.</p><a href="admin_augmentation.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
                 <div class="card"><h3 class="card-title">Datasets</h3><p style="color: #666; margin-bottom: 1rem;">Browse and manage all generated datasets.</p><a href="datasets.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">View</a></div>
-                <div class="card"><h3 class="card-title">Model Comparison</h3><p style="color: #666; margin-bottom: 1rem;">Benchmark and compare multiple models side by side.</p><a href="model_comparison.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Compare</a></div>
+                <div class="card"><h3 class="card-title">Model Comparison</h3><p style="color: #666; margin-bottom: 1rem;">Benchmark and compare models side by side.</p><a href="model_comparison.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Compare</a></div>
+                <div class="card"><h3 class="card-title">Crop Prediction</h3><p style="color: #666; margin-bottom: 1rem;">Predict the most suitable crop for your soil.</p><a href="farmer_predict.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Crop Requirements</h3><p style="color: #666; margin-bottom: 1rem;">View ideal growing conditions for any crop.</p><a href="crop_conditions.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Soil vs Crop</h3><p style="color: #666; margin-bottom: 1rem;">Compare soil against crop requirements.</p><a href="conditions_crop.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+                <div class="card"><h3 class="card-title">Subscriptions</h3><p style="color: #666; margin-bottom: 1rem;">Monitor and manage user subscriptions.</p><a href="subscription.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
                 <div class="card"><h3 class="card-title">Manage Users</h3><p style="color: #666; margin-bottom: 1rem;">View and manage all platform users.</p><a href="admin_users.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
             </div>
         </main>

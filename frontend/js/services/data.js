@@ -722,6 +722,188 @@ const DataService = (function() {
         return data.slice(0, count);
     }
 
+    // ===================================================================
+    // DATA AUGMENTATION
+    // ===================================================================
+
+    const AUGMENTATIONS_KEY = 'synthai_augmentations';
+
+    function getAugmentations() {
+        return JSON.parse(localStorage.getItem(AUGMENTATIONS_KEY) || '[]');
+    }
+
+    function saveAugmentations(data) {
+        localStorage.setItem(AUGMENTATIONS_KEY, JSON.stringify(data));
+    }
+
+    function getAugmentationById(id) {
+        return getAugmentations().find(function(a) { return a.id === id; }) || null;
+    }
+
+    function getUserAugmentations(userId) {
+        return getAugmentations().filter(function(a) { return a.userId === userId; }).sort(function(a, b) { return b.createdAt - a.createdAt; });
+    }
+
+    function getAugmentationStats() {
+        var augs = getAugmentations();
+        if (augs.length === 0) return { total: 0, totalOriginal: 0, totalAugmented: 0, avgQuality: 0 };
+        var totalOriginal = augs.reduce(function(s, a) { return s + (a.originalRows || 0); }, 0);
+        var totalAugmented = augs.reduce(function(s, a) { return s + (a.augmentedRows || 0); }, 0);
+        var totalQuality = augs.reduce(function(s, a) { return s + (a.qualityScore || 0); }, 0);
+        return {
+            total: augs.length,
+            totalOriginal: totalOriginal,
+            totalAugmented: totalAugmented,
+            avgQuality: augs.length > 0 ? Math.round(totalQuality / augs.length) : 0
+        };
+    }
+
+    function parseDataFromCSV(csvText) {
+        if (!csvText) return null;
+        var lines = csvText.split('\n').filter(function(l) { return l.trim().length > 0; });
+        if (lines.length < 2) return null;
+        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"+|"+$/g, ''); });
+        var data = [];
+        var detectedType = 'generic';
+        var cropKeywords = ['label', 'crop', 'N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'];
+        var soilKeywords = ['organic_matter', 'moisture', 'texture', 'depth_cm'];
+        var weatherKeywords = ['precipitation', 'wind_speed', 'pressure', 'cloud_cover'];
+
+        for (var i = 1; i < lines.length; i++) {
+            var vals = lines[i].split(',').map(function(v) { return v.trim().replace(/^"+|"+$/g, ''); });
+            var row = {};
+            for (var j = 0; j < headers.length && j < vals.length; j++) {
+                row[headers[j]] = vals[j];
+            }
+            data.push(row);
+        }
+
+        var headerSet = headers.map(function(h) { return h.toLowerCase(); });
+        var cropScore = cropKeywords.filter(function(k) { return headerSet.indexOf(k) !== -1; }).length;
+        var soilScore = soilKeywords.filter(function(k) { return headerSet.indexOf(k) !== -1; }).length;
+        var weatherScore = weatherKeywords.filter(function(k) { return headerSet.indexOf(k) !== -1; }).length;
+        if (cropScore >= 5) detectedType = 'crop';
+        else if (soilScore >= 3) detectedType = 'soil';
+        else if (weatherScore >= 3) detectedType = 'weather';
+
+        return { headers: headers, data: data, type: detectedType };
+    }
+
+    function augmentDataset(basePreview, multiplier, userId) {
+        if (!basePreview || !basePreview.data || basePreview.data.length === 0) {
+            return { success: false, message: 'No data to augment.' };
+        }
+
+        if (multiplier !== 2 && multiplier !== 5 && multiplier !== 10) {
+            return { success: false, message: 'Invalid multiplier. Choose x2, x5, or x10.' };
+        }
+
+        var user = AuthService.getCurrentUser();
+        var isAdmin = user && user.role === 'admin';
+
+        if (!isAdmin) {
+            var allowed = PaymentService.getAugmentationLimit(userId);
+            if (allowed.indexOf(multiplier) === -1) {
+                return { success: false, message: 'Multiplier x' + multiplier + ' not available on your plan.' };
+            }
+        }
+
+        var originalData = basePreview.data;
+        var headers = basePreview.headers;
+        var numCols = headers.length;
+        var augmentedData = [];
+        var originalRows = originalData.length;
+
+        for (var r = 0; r < originalData.length; r++) {
+            var row = originalData[r];
+            for (var k = 0; k < (multiplier - 1); k++) {
+                var newRow = {};
+                for (var c = 0; c < numCols; c++) {
+                    var h = headers[c];
+                    var val = row[h];
+                    var numVal = parseFloat(val);
+                    if (!isNaN(numVal)) {
+                        var noise = (numVal * 0.1) * (Math.random() * 2 - 1);
+                        newRow[h] = (numVal + noise).toFixed(2);
+                    } else {
+                        newRow[h] = val;
+                    }
+                }
+                augmentedData.push(newRow);
+            }
+        }
+
+        var allData = originalData.concat(augmentedData);
+        var preview = {
+            headers: headers,
+            data: allData,
+            totalRows: allData.length,
+            type: basePreview.type || 'generic',
+            level: 'augmented'
+        };
+
+        // Compute statistics
+        var originalStats = generateStatistics({ headers: headers, data: originalData });
+        var augmentedStats = generateStatistics({ headers: headers, data: augmentedData });
+
+        // Compute quality score
+        var validation = validatePreview(preview);
+        var qualityScore = validation.qualityScore;
+        var qualityLabel = 'Poor';
+        if (qualityScore >= 90) qualityLabel = 'Excellent';
+        else if (qualityScore >= 75) qualityLabel = 'Good';
+        else if (qualityScore >= 50) qualityLabel = 'Fair';
+
+        // Compute correlation similarity
+        var correlationSim = computeCorrelationSimilarity(preview);
+
+        var entry = {
+            id: Date.now(),
+            userId: userId,
+            fileName: basePreview.fileName || 'uploaded_dataset.csv',
+            originalRows: originalRows,
+            augmentedRows: allData.length,
+            multiplier: multiplier,
+            qualityScore: qualityScore,
+            qualityLabel: qualityLabel,
+            correlationSimilarity: correlationSim,
+            originalStats: originalStats,
+            augmentedStats: augmentedStats,
+            headers: headers,
+            preview: preview,
+            type: basePreview.type || 'generic',
+            createdAt: Date.now(),
+            dateStr: new Date().toISOString()
+        };
+
+        var augs = getAugmentations();
+        augs.unshift(entry);
+        saveAugmentations(augs);
+
+        return { success: true, result: entry };
+    }
+
+    function exportAugmentation(id) {
+        var aug = getAugmentationById(id);
+        if (!aug) return false;
+        var data = aug.preview ? aug.preview.data : [];
+        if (data.length === 0) return false;
+        var headers = aug.headers || Object.keys(data[0]);
+        var csv = [headers.join(','),
+            ...data.map(function(row) {
+                return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
+            })
+        ].join('\n');
+        var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'augmented_' + (aug.type || 'data') + '_x' + aug.multiplier + '_' + Date.now() + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        return true;
+    }
+
     return {
         getGenerations, addGeneration, getGenerationStats, getDatasetConfig,
         getDatasetTypes, getAvailableLevels, generatePreview, generateStatistics,
@@ -730,13 +912,20 @@ const DataService = (function() {
         getCropNames: function() { return CROP_NAMES; },
         getSoilTextures: function() { return SOIL_TEXTURES.map(function(t) { return t.name; }); },
         getWeatherPatterns: function() { return WEATHER_PATTERNS.map(function(p) { return p.zone; }); },
-        // New model-based generation + cloud storage
         getAvailableModels: getAvailableModels,
         generateFromModel: generateFromModel,
         resolveCloudUrl: resolveCloudUrl,
         revokeCloudUrl: revokeCloudUrl,
         exportGeneration: exportGeneration,
         getGenerationPreviewRows: getGenerationPreviewRows,
-        generateFullData: generateFullData
+        generateFullData: generateFullData,
+        // Augmentation
+        getAugmentations: getAugmentations,
+        getAugmentationById: getAugmentationById,
+        getUserAugmentations: getUserAugmentations,
+        getAugmentationStats: getAugmentationStats,
+        parseDataFromCSV: parseDataFromCSV,
+        augmentDataset: augmentDataset,
+        exportAugmentation: exportAugmentation
     };
 })();

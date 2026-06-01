@@ -65,7 +65,8 @@ const AuthService = (function() {
 
     function canAttempt() {
         const user = getCurrentUser();
-        if (!user || user.plan === 'premium') return true;
+        if (!user) return false;
+        if (user.role === 'admin' || user.plan === 'premium') return true;
         const now = new Date();
         const lastReset = new Date(user.lastReset);
         if (now.getDate() !== lastReset.getDate()) {
@@ -87,7 +88,7 @@ const AuthService = (function() {
     function getRemainingAttempts() {
         const user = getCurrentUser();
         if (!user) return 0;
-        if (user.plan === 'premium') return Infinity;
+        if (user.role === 'admin' || user.plan === 'premium') return Infinity;
         if (user.plan === 'pro') return Math.max(0, 50 - (user.attempts || 0));
         const now = new Date();
         const lastReset = new Date(user.lastReset);

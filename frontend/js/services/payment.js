@@ -142,6 +142,8 @@ const PaymentService = (function() {
     function canAccessFeature(userId, feature) {
         const plan = getUserPlan(userId);
         if (plan === 'premium') return true;
+        const user = AuthService.getCurrentUser();
+        if (user && user.role === 'admin') return true;
         if (plan === 'pro') {
             return feature !== 'bigdata';
         }
@@ -155,9 +157,16 @@ const PaymentService = (function() {
         return access[plan] || ['medium'];
     }
 
+    function getAugmentationLimit(userId) {
+        var plan = getUserPlan(userId);
+        var limits = { free: [2], pro: [2, 5], premium: [2, 5, 10] };
+        return limits[plan] || [2];
+    }
+
     return {
         PLANS, getAvailablePlans, subscribe, getUserSubscription,
         simulatePayment, getPaymentHistory, getUserPlan,
-        getPlanDetails, canAccessFeature, getDatasetLimit
+        getPlanDetails, canAccessFeature, getDatasetLimit,
+        getAugmentationLimit
     };
 })();

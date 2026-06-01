@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title data-i18n="requirements.title">SynthAI - Crop Requirements</title>    <link rel="stylesheet" href="../styles/global.css">    <style>        .req-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }        .req-card { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-radius: 10px; padding: 1rem; border-left: 4px solid #2E7D32; }        .req-card .req-label { font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }        .req-card .req-value { font-size: 1.2rem; font-weight: 700; color: #1B5E20; margin-top: 0.2rem; }        .level-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.3rem; }    </style></head><body>    <div class="app-container">        <aside class="sidebar">            <div class="sidebar-brand"><img src="SynthAI_logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p data-i18n="tagline">Smart Agricultural Intelligence</p></div>            <div id="user-panel"></div>            <nav class="sidebar-nav" id="sidebar-nav"></nav>            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>        </aside>        <main class="main-content">            <div class="page-header"><h2 data-i18n="requirements.title">Crop Requirements</h2><p data-i18n="requirements.subtitle">Select a crop to view its ideal growing conditions</p></div>            <div id="status-msg"></div>            <div class="card">                <div class="form-row">                    <div class="form-group">                        <label for="req-crop" data-i18n="requirements.select_crop">Select a Crop</label>                        <select id="req-crop" class="form-control"></select>                    </div>                    <div class="form-group" style="display:flex;align-items:flex-end;gap:0.5rem;">                        <button id="req-btn" class="btn btn-primary" data-i18n="farmer.view_requirements">View Requirements</button>                        <button id="req-export-btn" class="btn btn-outline hidden" data-i18n="datasets.export_btn">Export CSV</button>                    </div>                </div>            </div>            <div id="req-result" class="hidden" style="margin-top:1rem;"></div>        </main>    </div>    <script src="../js/services/i18n.js"></script>        <script src="../js/services/auth.js"></script>    <script src="../js/services/recommendation.js"></script>    <script src="../js/services/history.js"></script>    <script src="../js/app.js"></script>    <script>        (function() {            var btn = document.getElementById('logout-btn');
+            if (btn) {                btn.addEventListener('click', function() {                    try { AuthService.logout();
+ }
+ catch (e) { sessionStorage.clear();
+ }
+                    window.location.href = '/pages/login.html';
+                }
+);
+            }
+        }
+)();
+        document.addEventListener('DOMContentLoaded', function() {            var user;
+            try {                user = AuthService.getCurrentUser();
+                if (!user || (user.role !== 'farmer' && user.role !== 'admin')) { window.location.href = '/pages/login.html';
+ return;
+ }
+            }
+ catch (e) { window.location.href = '/pages/login.html';
+ return;
+ }
+            try { AuthService.syncSessionFromStorage();
+ }
+ catch (e) {}
+            try { App.setupSidebar();
+ }
+ catch (e) {}
+            try { App.setupUserPanel();
+ }
+ catch (e) {}
+            var CROP_KEYS = RecommendationService.getCrops();
+            var sel = document.getElementById('req-crop');
+            sel.innerHTML = '<option value="" data-i18n="requirements.select_crop">-- Select a Crop --</option>' +                CROP_KEYS.map(function(c) { return '<option value="' + c + '">' + RecommendationService.getCropDisplayName(c) + '</option>';
+ }
+).join('');
+            function getLevelColor(lvl) {                return lvl === 'High' ? '#F44336' : lvl === 'Medium' ? '#FF9800' : '#66BB6A';
+            }
+            document.getElementById('req-btn').addEventListener('click', function() {                var crop = sel.value;
+                if (!crop) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">' + I18n.t('predict.select_crop') + '</div>';
+ return;
+ }
+                try { if (!AuthService.canAttempt()) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">' + I18n.t('predict.limit_reached') + ' <a href="subscription.html">' + I18n.t('predict.upgrade') + '</a></div>';
+ return;
+ }
+ }
+ catch(e) {}
+                try { AuthService.recordAttempt();
+ }
+ catch(e) {}
+                document.getElementById('status-msg').innerHTML = '';
+                var rec = RecommendationService.getCropRecommendation(crop);
+                var conds = RecommendationService.getCropConditions(crop);
+                var displayName = RecommendationService.getCropDisplayName(crop);
+                try { HistoryService.addEntry({ userId: user.id, type: 'crop_conditions', crop: crop, input: crop, result: displayName }
+);
+ }
+ catch(e) {}
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">' + I18n.t('requirements.optimal_for') + ' <strong>' + displayName + '</strong></div>';
+                var html = '<div class="card"><h3 class="card-title">' + displayName + ' ??? ' + I18n.t('requirements.ideal_conditions') + '</h3>' +                    '<div class="req-grid">' +                    '<div class="req-card"><div class="req-label" data-i18n="predict.nitrogen">Nitrogen (N)</div><div class="req-value">' + rec.optimal_n + ' mg/kg</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="predict.phosphorus">Phosphorus (P)</div><div class="req-value">' + rec.optimal_p + ' mg/kg</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="predict.potassium">Potassium (K)</div><div class="req-value">' + rec.optimal_k + ' mg/kg</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.temp">Temperature</div><div class="req-value">' + rec.optimal_temperature + '</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.humidity">Humidity</div><div class="req-value">' + rec.optimal_humidity + '</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.ph">Soil pH</div><div class="req-value">' + rec.optimal_ph + '</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.rainfall">Rainfall</div><div class="req-value">' + rec.optimal_rainfall + '</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.water">Water Requirement</div><div class="req-value"><span class="level-dot" style="background:' + getLevelColor(conds.water) + ';
+"></span>' + conds.water + '</div></div>' +                    '<div class="req-card"><div class="req-label" data-i18n="requirements.fertilizer">Fertilizer Level</div><div class="req-value"><span class="level-dot" style="background:' + getLevelColor(conds.fertilizer) + ';
+"></span>' + conds.fertilizer + '</div></div>' +                    '</div></div>';
+                document.getElementById('req-result').innerHTML = html;
+                document.getElementById('req-result').classList.remove('hidden');
+                document.getElementById('req-export-btn').classList.remove('hidden');
+            }
+);
+            document.getElementById('req-export-btn').addEventListener('click', function() {                var crop = sel.value;
+                if (!crop) return;
+                var rec = RecommendationService.getCropRecommendation(crop);
+                RecommendationService.exportResults(rec, 'conditions');
+            }
+);
+        }
+);
+    </script></body></html>

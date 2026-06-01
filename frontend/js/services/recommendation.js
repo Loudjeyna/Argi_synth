@@ -27,28 +27,28 @@ const RecommendationService = (function() {
     };
 
     var cropNames = {
-        ble_dur: "Bl\u00e9 dur",
-        orge: "Orge",
-        dattes: "Dattes",
+        ble_dur: "Durum Wheat",
+        orge: "Barley",
+        dattes: "Dates",
         zitoun: "Olives",
         oranges: "Oranges",
-        aneb: "Raisin",
-        karmous: "Figues",
-        rouman: "Grenade",
-        homos: "Pois chiches",
-        adas: "Lentilles",
-        batata: "Pomme de terre",
-        tomatish: "Tomates",
-        bsla: "Oignons",
-        dellaa: "Past\u00e8que",
+        aneb: "Grapes",
+        karmous: "Figs",
+        rouman: "Pomegranate",
+        homos: "Chickpeas",
+        adas: "Lentils",
+        batata: "Potatoes",
+        tomatish: "Tomatoes",
+        bsla: "Onions",
+        dellaa: "Watermelon",
         bettikh: "Melon",
-        felfel: "Poivrons",
-        zroudiya: "Carottes",
-        jelbana: "Petits pois",
-        michmich: "Abricots",
-        louz: "Amandes",
-        maize: "Ma\u00efs",
-        tournesol: "Tournesol"
+        felfel: "Peppers",
+        zroudiya: "Carrots",
+        jelbana: "Peas",
+        michmich: "Apricots",
+        louz: "Almonds",
+        maize: "Maize",
+        tournesol: "Sunflower"
     };
 
     function getCrops() {

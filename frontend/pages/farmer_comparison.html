@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title data-i18n="comparison.title">SynthAI - Soil vs Crop Comparison</title>    <link rel="stylesheet" href="../styles/global.css">    <style>        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 0.25rem; }        .input-group .unit { font-size: 0.7rem; color: #999; font-weight: 400; }        .input-group input, .input-group select { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.85rem; transition: border-color 0.15s; box-sizing: border-box; }        .input-group input:focus, .input-group select:focus { outline: none; border-color: #2E7D32; box-shadow: 0 0 0 2px rgba(46,125,50,0.1); }        .cmp-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }        .cmp-table th { background: #F5F7F5; padding: 0.5rem 0.65rem; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #E0E0E0; }        .cmp-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid #F0F0F0; }        .cmp-table tr:hover td { background: #F9FDF9; }        .status-badge-sm { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }        .status-badge-sm.good { background: #E8F5E9; color: #2E7D32; }        .status-badge-sm.low { background: #FFEBEE; color: #C62828; }        .status-badge-sm.high { background: #FFF3E0; color: #E65100; }        .summary-box { background: #F5F7F5; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #555; margin-top: 0.75rem; line-height: 1.6; }        .summary-box li { margin-bottom: 0.25rem; }    </style></head><body>    <div class="app-container">        <aside class="sidebar">            <div class="sidebar-brand"><img src="SynthAI_logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p data-i18n="tagline">Smart Agricultural Intelligence</p></div>            <div id="user-panel"></div>            <nav class="sidebar-nav" id="sidebar-nav"></nav>            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>        </aside>        <main class="main-content">            <div class="page-header"><h2 data-i18n="comparison.title">Soil vs Crop Comparison</h2><p data-i18n="comparison.subtitle">Compare your field conditions against a selected crop's ideal requirements</p></div>            <div id="status-msg"></div>            <div class="card">                <h3 class="card-title" data-i18n="comparison.your_soil">Your Field Conditions</h3>                <div class="input-grid">                    <div class="input-group"><label data-i18n="predict.nitrogen">Nitrogen (N) <span class="unit">mg/kg</span></label><input type="number" id="cmp-n" value="60" min="0" max="200" step="1"></div>                    <div class="input-group"><label data-i18n="predict.phosphorus">Phosphorus (P) <span class="unit">mg/kg</span></label><input type="number" id="cmp-p" value="45" min="0" max="200" step="1"></div>                    <div class="input-group"><label data-i18n="predict.potassium">Potassium (K) <span class="unit">mg/kg</span></label><input type="number" id="cmp-k" value="40" min="0" max="250" step="1"></div>                    <div class="input-group"><label data-i18n="predict.temp">Temperature <span class="unit">&deg;C</span></label><input type="number" id="cmp-temp" value="24" min="0" max="50" step="0.5"></div>                    <div class="input-group"><label data-i18n="predict.humidity">Humidity <span class="unit">%</span></label><input type="number" id="cmp-humidity" value="70" min="0" max="100" step="1"></div>                    <div class="input-group"><label data-i18n="predict.ph">Soil pH</label><input type="number" id="cmp-ph" value="6.5" min="0" max="14" step="0.1"></div>                    <div class="input-group"><label data-i18n="predict.rainfall">Rainfall <span class="unit">mm</span></label><input type="number" id="cmp-rain" value="180" min="0" max="500" step="5"></div>                </div>                <div class="form-row" style="margin-top:1rem;align-items:end;">                    <div class="form-group">                        <label for="cmp-crop" data-i18n="comparison.crop_needs">Compare Against</label>                        <select id="cmp-crop" class="form-control"></select>                    </div>                    <div class="form-group" style="display:flex;align-items:flex-end;gap:0.5rem;">                        <button id="compare-btn" class="btn btn-primary" data-i18n="comparison.compare_btn">Compare</button>                        <button id="reset-btn" class="btn btn-outline">Reset</button>                    </div>                </div>            </div>            <div id="cmp-result" class="hidden" style="margin-top:1rem;"></div>        </main>    </div>    <script src="../js/services/i18n.js"></script>        <script src="../js/services/auth.js"></script>    <script src="../js/services/recommendation.js"></script>    <script src="../js/services/history.js"></script>    <script src="../js/app.js"></script>    <script>        (function() {            var btn = document.getElementById('logout-btn');
+            if (btn) {                btn.addEventListener('click', function() {                    try { AuthService.logout();
+ }
+ catch (e) { sessionStorage.clear();
+ }
+                    window.location.href = '/pages/login.html';
+                }
+);
+            }
+        }
+)();
+        document.addEventListener('DOMContentLoaded', function() {            var user;
+            try {                user = AuthService.getCurrentUser();
+                if (!user || (user.role !== 'farmer' && user.role !== 'admin')) { window.location.href = '/pages/login.html';
+ return;
+ }
+            }
+ catch (e) { window.location.href = '/pages/login.html';
+ return;
+ }
+            try { AuthService.syncSessionFromStorage();
+ }
+ catch (e) {}
+            try { App.setupSidebar();
+ }
+ catch (e) {}
+            try { App.setupUserPanel();
+ }
+ catch (e) {}
+            var CROP_KEYS = RecommendationService.getCrops();
+            var sel = document.getElementById('cmp-crop');
+            sel.innerHTML = '<option value="" data-i18n="comparison.select_crop">-- Select a Crop --</option>' +                CROP_KEYS.map(function(c) { return '<option value="' + c + '">' + RecommendationService.getCropDisplayName(c) + '</option>';
+ }
+).join('');
+            function getConditions() {                return {                    n: parseFloat(document.getElementById('cmp-n').value) || 0,                    p: parseFloat(document.getElementById('cmp-p').value) || 0,                    k: parseFloat(document.getElementById('cmp-k').value) || 0,                    temperature: parseFloat(document.getElementById('cmp-temp').value) || 0,                    humidity: parseFloat(document.getElementById('cmp-humidity').value) || 0,                    ph: parseFloat(document.getElementById('cmp-ph').value) || 0,                    rainfall: parseFloat(document.getElementById('cmp-rain').value) || 0                }
+;
+            }
+            function validateInputs(conds) {                for (var k in conds) { if (isNaN(conds[k]) || conds[k] < 0) return false;
+ }
+                return true;
+            }
+            function computeComparison(conds, crop) {                var data = RecommendationService.getCropConditions(crop);
+                if (!data) return null;
+                var params = [                    { key:'Nitrogen',     current: conds.n,          idealLo: data.n[0],      idealHi: data.n[1] }
+,                    { key:'Phosphorus',   current: conds.p,          idealLo: data.p[0],      idealHi: data.p[1] }
+,                    { key:'Potassium',    current: conds.k,          idealLo: data.k[0],      idealHi: data.k[1] }
+,                    { key:'Temperature',  current: conds.temperature, idealLo: data.temp[0],   idealHi: data.temp[1] }
+,                    { key:'Humidity',     current: conds.humidity,    idealLo: data.humidity[0], idealHi: data.humidity[1] }
+,                    { key:'pH',           current: conds.ph,         idealLo: data.ph[0],     idealHi: data.ph[1] }
+,                    { key:'Rainfall',     current: conds.rainfall,   idealLo: data.rainfall[0], idealHi: data.rainfall[1] }
+                ];
+                var units = { Nitrogen:'mg/kg', Phosphorus:'mg/kg', Potassium:'mg/kg', Temperature:'??C', Humidity:'%', pH:'', Rainfall:'mm' }
+;
+                var idealMid = function(lo, hi) { return Math.round(((lo + hi) / 2) * 10) / 10;
+ }
+;
+                return params.map(function(p) {                    var mid = idealMid(p.idealLo, p.idealHi);
+                    var status;
+                    if (p.current >= p.idealLo && p.current <= p.idealHi) { status = 'Good';
+ }
+                    else if (p.current < p.idealLo) { status = 'Low';
+ }
+                    else { status = 'High';
+ }
+                    return { param: p.key, current: p.current, recommended: mid, status: status, unit: units[p.key] }
+;
+                }
+);
+            }
+            document.getElementById('compare-btn').addEventListener('click', function() {                var conds = getConditions();
+                if (!validateInputs(conds)) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please enter valid positive numbers.</div>';
+ return;
+ }
+                var crop = sel.value;
+                if (!crop) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please select a crop.</div>';
+ return;
+ }
+                try { if (!AuthService.canAttempt()) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Daily limit reached. <a href="subscription.html">Upgrade</a>.</div>';
+ return;
+ }
+ }
+ catch(e) {}
+                try { AuthService.recordAttempt();
+ }
+ catch(e) {}
+                document.getElementById('status-msg').innerHTML = '';
+                var comparison = computeComparison(conds, crop);
+                if (!comparison) { document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">No data for this crop.</div>';
+ return;
+ }
+                var displayName = RecommendationService.getCropDisplayName(crop);
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Comparison against <strong>' + displayName + '</strong> complete.</div>';
+                try { HistoryService.addEntry({ userId: user.id, type: 'soil_comparison', input: JSON.stringify(conds), result: 'Compared with ' + displayName }
+);
+ }
+ catch(e) {}
+                var html = '<div class="card"><h3 class="card-title">Soil vs ' + displayName + ' ??? Comparison</h3>' +                    '<div style="overflow-x:auto;
+"><table class="cmp-table"><thead><tr><th>Parameter</th><th>Current Value</th><th>Recommended Value</th><th>Status</th></tr></thead><tbody>';
+                var summaryItems = [];
+                comparison.forEach(function(c) {                    var cls = c.status === 'Good' ? 'good' : c.status === 'Low' ? 'low' : 'high';
+                    html += '<tr><td>' + c.param + '</td><td>' + c.current + ' ' + c.unit + '</td><td>' + c.recommended + ' ' + c.unit + '</td>' +                        '<td><span class="status-badge-sm ' + cls + '">' + c.status + '</span></td></tr>';
+                    if (c.status !== 'Good') {                        summaryItems.push(c.param + ' is ' + (c.status === 'Low' ? 'below' : 'above') + ' the recommended range for ' + displayName + '.');
+                    }
+                }
+);
+                html += '</tbody></table></div>';
+                var goodCount = comparison.filter(function(c) { return c.status === 'Good';
+ }
+).length;
+                var pct = Math.round((goodCount / comparison.length) * 100);
+                html += '<div class="summary-box"><strong>Summary:</strong> ' + goodCount + ' of ' + comparison.length + ' parameters are within optimal range (' + pct + '%).<br>';
+                if (summaryItems.length > 0) {                    html += '<ul style="margin:0.4rem 0 0 0;
+padding-left:1.2rem;
+">';
+                    summaryItems.forEach(function(s) { html += '<li>' + s + '</li>';
+ }
+);
+                    html += '</ul>';
+                }
+                var overall = pct >= 70 ? 'Soil conditions are <strong>suitable</strong> for ' + displayName + '.' :                    pct >= 40 ? 'Soil conditions are <strong>partially suitable</strong> for ' + displayName + '.' :                    'Soil conditions are <strong>not suitable</strong> for ' + displayName + '. Consider amendments or a different crop.';
+                html += '<br>' + overall + '</div></div>';
+                document.getElementById('cmp-result').innerHTML = html;
+                document.getElementById('cmp-result').classList.remove('hidden');
+                document.getElementById('cmp-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' }
+);
+            }
+);
+            document.getElementById('reset-btn').addEventListener('click', function() {                ['cmp-n','cmp-p','cmp-k','cmp-temp','cmp-humidity','cmp-ph','cmp-rain'].forEach(function(id) {                    var def = { 'cmp-n':60, 'cmp-p':45, 'cmp-k':40, 'cmp-temp':24, 'cmp-humidity':70, 'cmp-ph':6.5, 'cmp-rain':180 }
+;
+                    document.getElementById(id).value = def[id];
+                }
+);
+                sel.value = '';
+                document.getElementById('cmp-result').classList.add('hidden');
+                document.getElementById('cmp-result').innerHTML = '';
+                document.getElementById('status-msg').innerHTML = '';
+            }
+);
+        }
+);
+    </script></body></html>

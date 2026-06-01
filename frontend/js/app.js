@@ -25,7 +25,8 @@ const App = (function() {
             models: p('admin_models.html'),
             training: p('admin_training.html'),
             model_details: p('admin_model_details.html'),
-            comparison: p('model_comparison.html')
+            comparison: p('model_comparison.html'),
+            augmentation: p('admin_augmentation.html')
         }
     };
 
@@ -55,9 +56,13 @@ const App = (function() {
             links.push({ href: PAGES.admin.training, icon: 'gear', label: 'New Training' });
             links.push({ href: PAGES.admin.models, icon: 'database', label: 'Models' });
             links.push({ href: PAGES.company.generate, icon: 'database', label: 'Generate Data' });
-            links.push({ href: PAGES.admin.users, icon: 'users', label: 'Users' });
             links.push({ href: PAGES.company.datasets, icon: 'file', label: 'Datasets' });
+            links.push({ href: p('admin_augmentation.html'), icon: 'database', label: 'Data Augmentation' });
             links.push({ href: PAGES.admin.comparison, icon: 'chart', label: 'Model Comparison' });
+            links.push({ href: PAGES.farmer.predict, icon: 'brain', label: 'Crop Prediction' });
+            links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'Crop Requirements' });
+            links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscriptions' });
+            links.push({ href: PAGES.admin.users, icon: 'users', label: 'Users' });
         } else if (user.role === 'company') {
             links.push({ href: PAGES.company.home, icon: 'home', label: 'Dashboard' });
             links.push({ href: PAGES.company.generate, icon: 'database', label: 'Generate Data' });
@@ -66,7 +71,6 @@ const App = (function() {
             links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscription' });
         } else {
             links.push({ href: PAGES.farmer.home, icon: 'home', label: 'Dashboard' });
-            links.push({ href: PAGES.farmer.predict, icon: 'brain', label: 'Crop Prediction' });
             links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'Crop \u2192 Conditions' });
             links.push({ href: PAGES.farmer.conditions_crop, icon: 'search', label: 'Conditions \u2192 Crop' });
             links.push({ href: PAGES.farmer.history, icon: 'history', label: 'History' });
