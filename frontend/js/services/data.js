@@ -445,10 +445,16 @@ const DataService = (function() {
     }
 
     function saveGenerations(data) {
+        data.forEach(function(entry) {
+            if (entry.preview && Array.isArray(entry.preview.data)) {
+                entry.preview.data = entry.preview.data.slice(0, PREVIEW_ROW_LIMIT);
+            }
+        });
         localStorage.setItem(GENERATIONS_KEY, JSON.stringify(data));
     }
 
     var _fullDatasetCache = {};
+    var PREVIEW_ROW_LIMIT = 50;
 
     function addGeneration(entry) {
         var generations = getGenerations();
@@ -456,9 +462,10 @@ const DataService = (function() {
         entry.timestamp = Date.now();
         entry.date = new Date().toISOString();
         entry.status = 'completed';
-        // Store full dataset in memory, only preview (first 50) in localStorage
-        if (entry.preview && entry.preview.data) {
+        // Store full dataset in memory, only a small preview in localStorage
+        if (entry.preview && Array.isArray(entry.preview.data)) {
             _fullDatasetCache[entry.id] = entry.preview.data;
+            entry.preview.data = entry.preview.data.slice(0, PREVIEW_ROW_LIMIT);
             entry.preview._fullDataAvailable = true;
         }
         generations.unshift(entry);

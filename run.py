@@ -1,6 +1,6 @@
 import http.server, socketserver, os, sys, socket
 
-os.chdir(r'D:\Lodj_Memoire\SynthAI\frontend')
+os.chdir(r'I:\apps\Synth_AI\frontend')
 
 def find_free_port(start=8080, end=8090):
     for port in range(start, end):
