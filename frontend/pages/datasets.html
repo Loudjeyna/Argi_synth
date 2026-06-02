@@ -51,7 +51,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
@@ -93,7 +93,6 @@
                                 <th>Rows</th>
                                 <th>Date</th>
                                 <th>Time</th>
-                                <th>File URL</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -223,7 +222,6 @@
                     var modelName = g.modelName || 'Standalone';
                     var modelVer = g.modelVersion || '-';
                     var levelClass = levelClasses[g.level] || 'badge-free';
-                    var fileUrl = g.fileUrl || '';
 
                     var actions =
                         '<div class="actions-cell">' +
@@ -233,10 +231,6 @@
                         '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="Delete">Delete</button>' +
                         '</div>';
 
-                    var fileLinkHtml = fileUrl ?
-                        '<span class="file-link" onclick="exportGeneration(' + g.id + ')" title="Click to download from cloud">' + fileUrl.substring(0, 30) + '...</span>' :
-                        '<span style="color:#999;font-size:0.75rem;">Not available</span>';
-
                     return '<tr>' +
                         '<td><span class="model-badge">' + modelName + '</span></td>' +
                         '<td><span class="version-badge">v' + modelVer + '</span></td>' +
@@ -244,7 +238,6 @@
                         '<td><strong>' + (g.rows || 0).toLocaleString() + '</strong></td>' +
                         '<td>' + dateStr + '</td>' +
                         '<td>' + timeStr + '</td>' +
-                        '<td>' + fileLinkHtml + '</td>' +
                         '<td>' + actions + '</td></tr>';
                 }).join('');
 

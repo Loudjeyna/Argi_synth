@@ -114,7 +114,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
@@ -141,6 +141,7 @@
                 </div>
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
                     <button id="import-dataset-btn" class="btn btn-primary">Upload</button>
+                    <button id="change-dataset-btn" class="btn btn-outline" style="display: none;">Change Dataset</button>
                 </div>
                 <div id="dataset-table-container" style="display: none; margin-top: 1rem;">
                     <div class="table-container"><table id="dataset-table"></table></div>
@@ -310,6 +311,7 @@
 
             initUploadZone();
             initUploadButton();
+            initChangeDatasetButton();
             initCleanButton();
             initAddTraining();
             initFileInputChange();
@@ -328,6 +330,7 @@
         function initFileInputChange() {
             document.getElementById('csv-file-input').addEventListener('change', function() {
                 if (this.files && this.files.length > 0) {
+                    if (_uploadedData) resetUploadUI();
                     var zone = document.getElementById('upload-zone');
                     zone.classList.add('has-file');
                     document.getElementById('upload-primary-text').textContent = this.files[0].name;
@@ -358,6 +361,7 @@
             btn.textContent = 'Upload';
             btn.style.background = '';
             btn.disabled = false;
+            document.getElementById('change-dataset-btn').style.display = 'none';
         }
 
         function resetCleaningSteps() {
@@ -384,6 +388,13 @@
                 var input = document.getElementById('csv-file-input');
                 if (!input.files || input.files.length === 0) { input.click(); return; }
                 processUploadedFile();
+            });
+        }
+
+        function initChangeDatasetButton() {
+            document.getElementById('change-dataset-btn').addEventListener('click', function() {
+                document.getElementById('csv-file-input').value = '';
+                document.getElementById('csv-file-input').click();
             });
         }
 
@@ -427,6 +438,8 @@
 
                 btn.innerHTML = '<span class="ico ico-check"></span> Uploaded';
                 btn.style.background = '#4CAF50';
+                btn.disabled = true;
+                document.getElementById('change-dataset-btn').style.display = 'inline-block';
                 document.getElementById('cleaning-section').style.display = 'block';
             };
 

@@ -61,13 +61,13 @@ const App = (function() {
             links.push({ href: PAGES.admin.comparison, icon: 'chart', label: 'Model Comparison' });
             links.push({ href: PAGES.farmer.predict, icon: 'brain', label: 'Crop Prediction' });
             links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'Crop Requirements' });
-            links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscriptions' });
             links.push({ href: PAGES.admin.users, icon: 'users', label: 'Users' });
         } else if (user.role === 'company') {
             links.push({ href: PAGES.company.home, icon: 'home', label: 'Dashboard' });
             links.push({ href: PAGES.company.generate, icon: 'database', label: 'Generate Data' });
             links.push({ href: PAGES.company.datasets, icon: 'file', label: 'Datasets' });
             links.push({ href: PAGES.company.comparison, icon: 'chart', label: 'Model Comparison' });
+            links.push({ href: p('company_augment.html'), icon: 'database', label: 'Data Augmentation' });
             links.push({ href: p('subscription.html'), icon: 'star', label: 'Subscription' });
         } else {
             links.push({ href: PAGES.farmer.home, icon: 'home', label: 'Dashboard' });

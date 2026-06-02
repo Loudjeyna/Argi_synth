@@ -22,9 +22,13 @@
         .gen-progress.active { display: block; }
         .gen-result { margin-top: 1.5rem; display: none; }
         .gen-result.active { display: block; }
-        .result-url { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: #F5F7F5; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 0.85rem; word-break: break-all; }
+        .result-url { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: #F5F7F5; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 0.85rem; word-break: break-all; display: none; }
         .result-url .url-label { color: #999; flex-shrink: 0; }
         .result-url .url-value { color: #2E7D32; font-family: 'Courier New', monospace; font-size: 0.82rem; }
+        .info-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #F0F0F0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 0.82rem; color: #888; min-width: 120px; font-weight: 500; }
+        .info-value { font-size: 0.92rem; color: #333; font-weight: 500; }
         .result-actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
         .step-indicator { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .step-indicator .step { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.78rem; background: #F5F7F5; color: #999; }
@@ -46,7 +50,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
@@ -105,13 +109,9 @@
                 <!-- Result -->
                 <div class="gen-result" id="gen-result">
                     <div class="status-message status-success" style="margin-bottom:0.75rem;">
-                        <strong>Data generation complete!</strong> Your synthetic dataset has been generated and stored in the cloud.
+                        <strong>Data generation complete!</strong> Your synthetic dataset is ready for download.
                     </div>
                     <div id="result-details"></div>
-                    <div class="result-url" id="result-url-container">
-                        <span class="url-label">Cloud URL:</span>
-                        <span class="url-value" id="result-url-value"></span>
-                    </div>
                     <div class="result-actions">
                         <button id="download-btn" class="btn btn-primary">Download CSV</button>
                         <button id="preview-btn" class="btn btn-outline">Preview Data</button>
@@ -120,11 +120,6 @@
                 </div>
             </div>
 
-            <!-- Model info footer -->
-            <div class="card" style="margin-top:1.5rem;font-size:0.85rem;color:#666;">
-                <strong>Note:</strong> Generated data is stored in cloud storage. A download URL is provided after generation.
-                No CSV files are stored on the local server.
-            </div>
         </main>
     </div>
 
@@ -328,7 +323,7 @@
                     } else if (pct < 60) {
                         document.getElementById('gen-progress-detail').textContent = 'Generating ' + selectedLevel + ' dataset...';
                     } else if (pct < 90) {
-                        document.getElementById('gen-progress-detail').textContent = 'Validating and uploading to cloud storage...';
+                        document.getElementById('gen-progress-detail').textContent = 'Finalizing...';
                     } else {
                         document.getElementById('gen-progress-detail').textContent = 'Finalizing...';
                     }
@@ -371,9 +366,6 @@
                         '<div class="info-row"><span class="info-label">Dataset Size</span><span class="info-value"><span class="size-tag" style="display:inline-block;padding:0.2rem 0.6rem;border-radius:10px;font-size:0.82rem;font-weight:600;background:#E3F2FD;color:#1565C0;">' + selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1) + '</span></span></div>' +
                         '<div class="info-row"><span class="info-label">Rows Generated</span><span class="info-value" style="font-size:1.05rem;font-weight:700;color:#1B5E20;">' + rows + '</span></div>';
 
-                    var fileUrl = entry.fileUrl || '';
-                    document.getElementById('result-url-value').textContent = fileUrl || 'synthai://cloud/' + entry.id;
-
                     progress.classList.remove('active');
                     result.classList.add('active');
                     document.getElementById('step-4').classList.remove('active');
@@ -384,7 +376,7 @@
                         HistoryService.addEntry({
                             type: 'data_generation',
                             action: 'Generated ' + selectedLevel + ' data from model "' + modelName + '"',
-                            details: rows + ' rows, quality: ' + quality + '%, stored in cloud',
+                            details: rows + ' rows, quality: ' + quality + '%',
                             userId: AuthService.getCurrentUser().id,
                             userName: AuthService.getCurrentUser().username
                         });

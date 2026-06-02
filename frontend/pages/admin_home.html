@@ -5,31 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SynthAI - Admin Dashboard</title>
     <link rel="stylesheet" href="../styles/global.css">
+    <style>
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem; }
+        .kpi-card { background: white; border-radius: 12px; padding: 1.1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-left: 4px solid #2E7D32; }
+        .kpi-card .kpi-value { font-size: 1.7rem; font-weight: 700; color: #1B5E20; line-height: 1.2; }
+        .kpi-card .kpi-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.1rem; }
+        .kpi-card .kpi-sub { font-size: 0.7rem; color: #aaa; margin-top: 0.05rem; }
+        .kpi-card.orange { border-left-color: #FF9800; }
+        .kpi-card.blue { border-left-color: #1565C0; }
+        .kpi-card.purple { border-left-color: #7B1FA2; }
+        .kpi-card.red { border-left-color: #E53935; }
+        .kpi-card.teal { border-left-color: #00897B; }
+        .kpi-card.brown { border-left-color: #6D4C41; }
+        .kpi-card.pink { border-left-color: #C2185B; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .chart-body { display: flex; align-items: center; justify-content: center; gap: 1.5rem; padding: 0.5rem 0; flex-wrap: wrap; }
+        .chart-legend { display: flex; flex-direction: column; gap: 0.4rem; }
+        .chart-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+        .chart-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+        .table-wrap { overflow-x: auto; margin: 0 -0.25rem; }
+        .table-wrap table { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+        .table-wrap th { text-align: left; padding: 0.5rem 0.5rem; background: #F5F7FA; color: #555; font-weight: 600; border-bottom: 2px solid #E5E7EB; white-space: nowrap; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; }
+        .table-wrap td { padding: 0.45rem 0.5rem; border-bottom: 1px solid #F0F0F0; color: #333; white-space: nowrap; }
+        .table-wrap tr:hover td { background: #F9FAFB; }
+        .table-wrap .empty-msg { padding: 1.5rem; text-align: center; color: #bbb; font-size: 0.82rem; }
+        .table-footer { display: flex; justify-content: flex-end; padding: 0.5rem 0 0 0; }
+
+        .actions-bar { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .actions-bar .btn { font-size: 0.82rem; padding: 0.5rem 1rem; }
+
+        .role-badge { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 20px; font-size: 0.68rem; font-weight: 600; }
+        .role-badge.admin { background: #F3E5F5; color: #7B1FA2; }
+        .role-badge.farmer { background: #E8F5E9; color: #2E7D32; }
+        .role-badge.company { background: #E3F2FD; color: #1565C0; }
+        .plan-badge { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 20px; font-size: 0.68rem; font-weight: 600; }
+        .plan-badge.premium { background: #FFF8E1; color: #E65100; }
+        .plan-badge.pro { background: #E3F2FD; color: #1565C0; }
+        .plan-badge.free { background: #F5F5F5; color: #888; }
+
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } .tables-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>Dashboard</h2><p>System overview and quick actions</p></div>
+            <div class="page-header"><h2>Dashboard</h2><p>System overview and platform analytics</p></div>
+
             <div class="kpi-grid" id="kpi-grid"></div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem;">
-                <div class="card"><h3 class="card-title">Generate Data</h3><p style="color: #666; margin-bottom: 1rem;">Generate synthetic data from trained models.</p><a href="generate_data.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">New Training</h3><p style="color: #666; margin-bottom: 1rem;">Create a new model with your dataset.</p><a href="admin_training.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Models</h3><p style="color: #666; margin-bottom: 1rem;">View all trained CTGAN models.</p><a href="admin_models.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Data Augmentation</h3><p style="color: #666; margin-bottom: 1rem;">Perform dataset augmentation and view analytics.</p><a href="admin_augmentation.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Datasets</h3><p style="color: #666; margin-bottom: 1rem;">Browse and manage all generated datasets.</p><a href="datasets.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">View</a></div>
-                <div class="card"><h3 class="card-title">Model Comparison</h3><p style="color: #666; margin-bottom: 1rem;">Benchmark and compare models side by side.</p><a href="model_comparison.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Compare</a></div>
-                <div class="card"><h3 class="card-title">Crop Prediction</h3><p style="color: #666; margin-bottom: 1rem;">Predict the most suitable crop for your soil.</p><a href="farmer_predict.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Crop Requirements</h3><p style="color: #666; margin-bottom: 1rem;">View ideal growing conditions for any crop.</p><a href="crop_conditions.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Soil vs Crop</h3><p style="color: #666; margin-bottom: 1rem;">Compare soil against crop requirements.</p><a href="conditions_crop.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Subscriptions</h3><p style="color: #666; margin-bottom: 1rem;">Monitor and manage user subscriptions.</p><a href="subscription.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
-                <div class="card"><h3 class="card-title">Manage Users</h3><p style="color: #666; margin-bottom: 1rem;">View and manage all platform users.</p><a href="admin_users.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Go</a></div>
+
+            <div class="charts-grid">
+                <div class="card">
+                    <h3 class="card-title">User Roles Distribution</h3>
+                    <div class="chart-body" id="roles-chart"></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Subscription Distribution</h3>
+                    <div class="chart-body" id="subscription-chart"></div>
+                </div>
+            </div>
+
+            <div class="tables-grid">
+                <div class="card">
+                    <h3 class="card-title">Recent Users</h3>
+                    <div class="table-wrap" id="recent-users-table"><div class="empty-msg">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_users.html" class="btn btn-outline btn-sm">View All Users</a></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Recent Models</h3>
+                    <div class="table-wrap" id="recent-models-table"><div class="empty-msg">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_models.html" class="btn btn-outline btn-sm">View All Models</a></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Recent Datasets</h3>
+                    <div class="table-wrap" id="recent-datasets-table"><div class="empty-msg">Loading...</div></div>
+                    <div class="table-footer"><a href="datasets.html" class="btn btn-outline btn-sm">View All Datasets</a></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Recent Augmentations</h3>
+                    <div class="table-wrap" id="recent-augs-table"><div class="empty-msg">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_augmentation.html" class="btn btn-outline btn-sm">View All Augmentations</a></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="actions-bar">
+                    <a href="admin_training.html" class="btn btn-primary">+ New Training</a>
+                    <a href="generate_data.html" class="btn btn-primary">+ Generate Data</a>
+                    <a href="model_comparison.html" class="btn btn-outline">Compare Models</a>
+                </div>
             </div>
         </main>
     </div>
@@ -49,6 +123,37 @@
             }
         })();
 
+        function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+        function fmtDate(d) {
+            if (!d) return 'N/A';
+            try { var dt = new Date(d); return dt.toLocaleDateString(); } catch(e) { return d; }
+        }
+
+        function renderDonutChart(containerId, slices) {
+            var container = document.getElementById(containerId);
+            var total = slices.reduce(function(s, sl) { return s + sl.value; }, 0);
+            if (total === 0) { container.innerHTML = '<div style="color:#bbb;padding:1.5rem;">No data</div>'; return; }
+
+            var cx = 21, cy = 21, r = 15.9155;
+            var circ = 2 * Math.PI * r;
+            var svg = '<svg viewBox="0 0 42 42" width="130" height="130" style="transform:rotate(-90deg)"><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#eee" stroke-width="2.5"/>';
+            var offset = 0;
+            slices.forEach(function(sl) {
+                var dash = (sl.value / total) * circ;
+                svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + sl.color + '" stroke-width="2.5" stroke-dasharray="' + dash + ' ' + (circ - dash) + '" stroke-dashoffset="' + (-offset) + '"/>';
+                offset += dash;
+            });
+            svg += '<circle cx="21" cy="21" r="8" fill="white"/></svg>';
+
+            var legend = '<div class="chart-legend">';
+            slices.forEach(function(sl) {
+                legend += '<div class="chart-legend-item"><span class="chart-legend-dot" style="background:' + sl.color + '"></span>' + sl.label + ' <strong>' + sl.value + '</strong> (' + Math.round(sl.value / total * 100) + '%)</div>';
+            });
+            legend += '</div>';
+            container.innerHTML = svg + legend;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 var user = AuthService.getCurrentUser();
@@ -58,26 +163,140 @@
             try { App.setupSidebar(); } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
-            var users = [], stats = { total: 0, total_rows: 0 }, totalPreds = 0, modelStats = { total: 0, trained: 0 };
-            try { users = AuthService.getUsers() || []; } catch (e) { users = []; }
-            try { stats = DataService.getGenerationStats() || { total: 0, total_rows: 0 }; } catch (e) {}
-            try { modelStats = ModelService.getStats() || { total: 0, trained: 0 }; } catch (e) {}
+            var users = [];
+            var models = [];
+            var generations = [];
+            var augmentations = [];
+            var history = [];
 
-            if (users.length > 0) {
-                try {
-                    totalPreds = users.reduce(function(s, u) {
-                        try { return s + (HistoryService.getStats(u.id).totalPredictions || 0); } catch (e) { return s; }
-                    }, 0);
-                } catch (e) {}
+            try { users = AuthService.getUsers() || []; } catch (e) {}
+            try { models = ModelService.getModels() || []; } catch (e) {}
+            try { generations = DataService.getGenerations() || []; } catch (e) {}
+            try { augmentations = DataService.getAugmentations() || []; } catch (e) {}
+            try { history = HistoryService.getHistory() || []; } catch (e) {}
+
+            var activeUsers = users.filter(function(u) { return u.isActive !== false; });
+            var paidUsers = users.filter(function(u) { return u.plan === 'premium' || u.plan === 'pro'; });
+            var freeUsers = users.filter(function(u) { return u.plan === 'free' || !u.plan; });
+            var trainedModels = models.filter(function(m) { return m.status === 'trained'; });
+            var today = todayStr();
+            var todayHistory = history.filter(function(h) { return h.date && h.date.indexOf(today) === 0; });
+            var todayGenerations = generations.filter(function(g) { return g.date && g.date.indexOf(today) === 0; });
+            var todayRows = todayGenerations.reduce(function(s, g) { return s + (g.rows || 0); }, 0);
+
+            var bestModel = null;
+            for (var i = 0; i < models.length; i++) {
+                var m = models[i];
+                if (m.status !== 'trained') continue;
+                var versions = m.versions || [];
+                for (var j = 0; j < versions.length; j++) {
+                    var ev = versions[j].evaluation;
+                    if (ev && ev.trainingQuality && (!bestModel || (ev.trainingQuality === 'good' && bestModel._quality !== 'good'))) {
+                        bestModel = m;
+                        bestModel._quality = ev.trainingQuality;
+                        bestModel._qualityLabel = ev.trainingQuality === 'good' ? 'Good' : ev.trainingQuality === 'acceptable' ? 'Acceptable' : 'Needs Improvement';
+                        break;
+                    }
+                }
             }
+            if (!bestModel && trainedModels.length > 0) bestModel = trainedModels[0];
 
-            document.getElementById('kpi-grid').innerHTML =
-                '<div class="kpi-card"><div class="kpi-value">' + (users.length || 0) + '</div><div class="kpi-label">Users</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + (totalPreds || 0) + '</div><div class="kpi-label">Predictions</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + (stats.total || 0) + '</div><div class="kpi-label">Datasets</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + ((stats.total_rows || 0).toLocaleString()) + '</div><div class="kpi-label">Total Rows</div></div>' +
-                '<div class="kpi-card" style="border-left-color: #FF9800;"><div class="kpi-value">' + modelStats.total + '</div><div class="kpi-label">Models</div></div>' +
-                '<div class="kpi-card" style="border-left-color: #4CAF50;"><div class="kpi-value">' + modelStats.trained + '</div><div class="kpi-label">Trained</div></div>';
+            var lastTraining = models.length > 0 ? models.reduce(function(latest, m) {
+                return (!latest || new Date(m.createdAt) > new Date(latest.createdAt)) ? m : latest;
+            }, models[0]) : null;
+
+            var kpiGrid = document.getElementById('kpi-grid');
+            kpiGrid.innerHTML =
+                '<div class="kpi-card"><div class="kpi-value">' + users.length + '</div><div class="kpi-label">Total Users</div></div>' +
+                '<div class="kpi-card blue"><div class="kpi-value">' + activeUsers.length + '</div><div class="kpi-label">Active Users</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(activeUsers.length / users.length * 100) + '% active' : '') + '</div></div>' +
+                '<div class="kpi-card orange"><div class="kpi-value">' + trainedModels.length + '</div><div class="kpi-label">Trained Models</div><div class="kpi-sub">of ' + models.length + ' total</div></div>' +
+                '<div class="kpi-card purple"><div class="kpi-value">' + generations.length + '</div><div class="kpi-label">Generated Datasets</div></div>' +
+                '<div class="kpi-card teal"><div class="kpi-value">' + todayHistory.length + '</div><div class="kpi-label">Today\'s Predictions</div></div>' +
+                '<div class="kpi-card red"><div class="kpi-value">' + todayRows.toLocaleString() + '</div><div class="kpi-label">Rows Generated Today</div></div>' +
+                '<div class="kpi-card brown"><div class="kpi-value">' + paidUsers.length + '</div><div class="kpi-label">Paid Subscribers</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(paidUsers.length / users.length * 100) + '% of users' : '') + '</div></div>' +
+                '<div class="kpi-card pink"><div class="kpi-value">' + (bestModel ? bestModel.name : 'N/A') + '</div><div class="kpi-label">Best Model</div><div class="kpi-sub">' + (bestModel && bestModel._qualityLabel ? 'Quality: ' + bestModel._qualityLabel : '') + '</div></div>' +
+                '<div class="kpi-card" style="border-left-color:#455A64;"><div class="kpi-value">' + (lastTraining ? fmtDate(lastTraining.createdAt) : 'N/A') + '</div><div class="kpi-label">Last Training Activity</div></div>';
+
+            // Roles chart
+            var roles = { admin: 0, farmer: 0, company: 0 };
+            users.forEach(function(u) { if (roles[u.role] !== undefined) roles[u.role]++; });
+            renderDonutChart('roles-chart', [
+                { label: 'Farmers', value: roles.farmer, color: '#2E7D32' },
+                { label: 'Companies', value: roles.company, color: '#1565C0' },
+                { label: 'Admins', value: roles.admin, color: '#7B1FA2' }
+            ]);
+
+            // Subscription chart
+            renderDonutChart('subscription-chart', [
+                { label: 'Paid Users', value: paidUsers.length, color: '#FF9800' },
+                { label: 'Free Users', value: freeUsers.length, color: '#BDBDBD' }
+            ]);
+
+            // Recent Users
+            var userRows = '';
+            var recentUsers = users.slice(0, 5);
+            if (recentUsers.length === 0) {
+                userRows = '<div class="empty-msg">No users registered yet.</div>';
+            } else {
+                userRows = '<table><thead><tr><th>Username</th><th>Role</th><th>Plan</th><th>Registered</th></tr></thead><tbody>';
+                recentUsers.forEach(function(u) {
+                    userRows += '<tr><td><strong>' + u.username + '</strong></td><td><span class="role-badge ' + u.role + '">' + u.role + '</span></td><td><span class="plan-badge ' + (u.plan || 'free') + '">' + (u.plan || 'free') + '</span></td><td>' + fmtDate(u.createdAt) + '</td></tr>';
+                });
+                userRows += '</tbody></table>';
+            }
+            document.getElementById('recent-users-table').innerHTML = userRows;
+
+            // Recent Models
+            var modelRows = '';
+            var recentModels = models.slice(0, 5);
+            if (recentModels.length === 0) {
+                modelRows = '<div class="empty-msg">No models trained yet.</div>';
+            } else {
+                modelRows = '<table><thead><tr><th>Model Name</th><th>Status</th><th>Quality</th><th>Created</th></tr></thead><tbody>';
+                recentModels.forEach(function(m) {
+                    var qual = '-';
+                    if (m.versions && m.versions.length > 0) {
+                        var ev = m.versions[0].evaluation;
+                        if (ev && ev.trainingQuality) qual = ev.trainingQuality === 'good' ? 'Good' : ev.trainingQuality === 'acceptable' ? 'Acceptable' : 'Needs Improv.';
+                    }
+                    modelRows += '<tr><td><strong>' + (m.name || 'Unnamed') + '</strong></td><td><span class="status-badge ' + m.status + '">' + m.status.replace('_', ' ') + '</span></td><td><span class="status-badge ' + (qual === 'Good' ? 'good' : qual === 'Acceptable' ? 'acceptable' : '') + '">' + qual + '</span></td><td>' + fmtDate(m.createdAt) + '</td></tr>';
+                });
+                modelRows += '</tbody></table>';
+            }
+            document.getElementById('recent-models-table').innerHTML = modelRows;
+
+            // Recent Datasets
+            var dsRows = '';
+            var recentDs = generations.slice(0, 5);
+            if (recentDs.length === 0) {
+                dsRows = '<div class="empty-msg">No datasets generated yet.</div>';
+            } else {
+                dsRows = '<table><thead><tr><th>Dataset Name</th><th>Created By</th><th>Rows</th><th>Date</th></tr></thead><tbody>';
+                recentDs.forEach(function(g) {
+                    var name = (g.modelName || g.type || 'Dataset') + ' (' + (g.level || 'N/A') + ')';
+                    var by = g.modelName || 'System';
+                    dsRows += '<tr><td><strong>' + name + '</strong></td><td>' + by + '</td><td>' + (g.rows || 0).toLocaleString() + '</td><td>' + fmtDate(g.date) + '</td></tr>';
+                });
+                dsRows += '</tbody></table>';
+            }
+            document.getElementById('recent-datasets-table').innerHTML = dsRows;
+
+            // Recent Augmentations
+            var augRows = '';
+            var recentAugs = augmentations.slice(0, 5);
+            if (recentAugs.length === 0) {
+                augRows = '<div class="empty-msg">No augmentation operations yet.</div>';
+            } else {
+                augRows = '<table><thead><tr><th>User</th><th>Original</th><th>Generated</th><th>Quality</th><th>Date</th></tr></thead><tbody>';
+                recentAugs.forEach(function(a) {
+                    var userName = 'User #' + a.userId;
+                    var u = users.find(function(x) { return x.id === a.userId; });
+                    if (u) userName = u.username;
+                    augRows += '<tr><td>' + userName + '</td><td>' + (a.originalRows || 0).toLocaleString() + '</td><td>' + (a.augmentedRows || 0).toLocaleString() + '</td><td>' + (a.qualityLabel || a.qualityScore || '-') + '</td><td>' + fmtDate(a.dateStr || a.createdAt) + '</td></tr>';
+                });
+                augRows += '</tbody></table>';
+            }
+            document.getElementById('recent-augs-table').innerHTML = augRows;
         });
     </script>
 </body>
