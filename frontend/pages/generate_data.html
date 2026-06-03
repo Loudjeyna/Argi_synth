@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Generate Data</title>
+    <title data-i18n="generate.title">SynthAI - Generate Data</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .gen-form { max-width: 720px; }
@@ -50,49 +50,49 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>Generate Synthetic Data</h2><p>Select a trained model and dataset size to generate synthetic agricultural data</p></div>
+            <div class="page-header"><h2 data-i18n="generate.title">Generate Synthetic Data</h2><p data-i18n="generate.subtitle">Select a trained model and dataset size to generate synthetic agricultural data</p></div>
 
             <div id="status-msg"></div>
 
             <div class="card gen-form">
                 <div class="step-indicator">
-                    <span class="step active" id="step-1">1. Select Model</span>
-                    <span class="step" id="step-2">2. Choose Version</span>
-                    <span class="step" id="step-3">3. Choose Size</span>
-                    <span class="step" id="step-4">4. Generate</span>
+                    <span class="step active" id="step-1" data-i18n="generate.step_model">1. Select Model</span>
+                    <span class="step" id="step-2" data-i18n="generate.step_version">2. Choose Version</span>
+                    <span class="step" id="step-3" data-i18n="generate.step_size">3. Choose Size</span>
+                    <span class="step" id="step-4" data-i18n="generate.step_gen">4. Generate</span>
                 </div>
 
                 <!-- Step 1: Model Selection -->
                 <div class="model-select-card" id="model-selection-section">
-                    <label style="font-weight:600;font-size:0.9rem;color:#333;display:block;margin-bottom:0.5rem;">Trained Model</label>
+                    <label style="font-weight:600;font-size:0.9rem;color:#333;display:block;margin-bottom:0.5rem;" data-i18n="generate.select_model">Trained Model</label>
                     <select id="model-select">
-                        <option value="">-- Select a trained model --</option>
+                        <option value="" data-i18n="generate.choose_model">-- Select a trained model --</option>
                     </select>
                     <div id="model-info-display" class="model-info"></div>
                 </div>
 
                 <!-- Version Selection (shown after model is selected) -->
                 <div class="model-select-card" id="version-selection-section" style="display:none;">
-                    <label style="font-weight:600;font-size:0.9rem;color:#333;display:block;margin-bottom:0.5rem;">Model Version</label>
+                    <label style="font-weight:600;font-size:0.9rem;color:#333;display:block;margin-bottom:0.5rem;" data-i18n="generate.version">Model Version</label>
                     <select id="version-select">
-                        <option value="">-- Select a version --</option>
+                        <option value="" data-i18n="generate.choose_version">-- Select a version --</option>
                     </select>
                     <div id="version-info-display" class="model-info"></div>
                 </div>
 
                 <!-- Step 3: Size Selection -->
-                <h3 class="card-title" style="margin-top:1.5rem;">Dataset Size</h3>
+                <h3 class="card-title" style="margin-top:1.5rem;" data-i18n="generate.size">Dataset Size</h3>
                 <div class="size-cards" id="size-cards"></div>
 
                 <!-- Step 3: Generate Button -->
-                <button id="generate-btn" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1.05rem;" disabled>Generate Dataset</button>
+                <button id="generate-btn" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1.05rem;" disabled data-i18n="generate.generate_btn">Generate Dataset</button>
 
                 <!-- Progress -->
                 <div class="gen-progress" id="gen-progress">
@@ -109,13 +109,13 @@
                 <!-- Result -->
                 <div class="gen-result" id="gen-result">
                     <div class="status-message status-success" style="margin-bottom:0.75rem;">
-                        <strong>Data generation complete!</strong> Your synthetic dataset is ready for download.
+                        <strong data-i18n="generate.complete">Data generation complete!</strong> <span data-i18n="generate.ready">Your synthetic dataset is ready for download.</span>
                     </div>
                     <div id="result-details"></div>
                     <div class="result-actions">
-                        <button id="download-btn" class="btn btn-primary">Download CSV</button>
-                        <button id="preview-btn" class="btn btn-outline">Preview Data</button>
-                        <a href="datasets.html" class="btn btn-outline" style="text-decoration:none;">View All Generations</a>
+                        <button id="download-btn" class="btn btn-primary" data-i18n="generate.download">Download CSV</button>
+                        <button id="preview-btn" class="btn btn-outline" data-i18n="generate.preview">Preview Data</button>
+                        <a href="datasets.html" class="btn btn-outline" style="text-decoration:none;" data-i18n="generate.view_all">View All Generations</a>
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
             <p id="preview-footer" style="font-size:0.78rem;color:#999;margin-top:0.75rem;"></p>
         </div>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/model.js"></script>
     <script src="../js/services/data.js"></script>
@@ -163,8 +163,11 @@
                 if (!user) { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
+
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
             var selectedModelId = null;
             var selectedVersion = null;
@@ -176,9 +179,9 @@
                 var models = [];
                 try { models = DataService.getAvailableModels(); } catch (e) {}
 
-                var options = '<option value="">-- Select a trained model --</option>';
+                var options = '<option value="">' + _t('generate.choose_model') + '</option>';
                 if (models.length === 0) {
-                    options = '<option value="">-- No trained models available --</option>';
+                    options = '<option value="">' + _t('generate.no_model_option') + '</option>';
                 }
                 models.forEach(function(m) {
                     options += '<option value="' + m.id + '">' + m.name + '</option>';
@@ -187,10 +190,10 @@
 
                 var info = document.getElementById('model-info-display');
                 if (models.length === 0) {
-                    info.innerHTML = '<div class="no-models">No trained models available. <a href="admin_training.html">Create one first</a></div>';
+                    info.innerHTML = '<div class="no-models">' + _t('generate.no_models') + '</div>';
                     document.getElementById('generate-btn').disabled = true;
                 } else {
-                    info.innerHTML = '<span>' + models.length + ' trained model(s) available</span>';
+                    info.innerHTML = '<span>' + models.length + ' ' + _t('generate.models_available') + '</span>';
                 }
                 return models;
             }
@@ -214,24 +217,24 @@
                         var lastVer = versions[versions.length - 1];
                         var lastDate = lastVer ? new Date(lastVer.createdAt).toLocaleString() : new Date(model.createdAt).toLocaleString();
                         info.innerHTML =
-                            '<span>Versions: ' + versions.length + '</span>' +
-                            '<span>Last Training: ' + lastDate + '</span>' +
-                            '<span>Status: ' + (model.status === 'trained' ? 'Trained' : model.status) + '</span>';
+                            '<span>' + _t('model.versions') + ': ' + versions.length + '</span>' +
+                            '<span>' + _t('dashboard.last_training') + ': ' + lastDate + '</span>' +
+                            '<span>' + _t('model.status') + ': ' + (model.status === 'trained' ? _t('status.trained') : model.status) + '</span>';
 
                         // Populate versions
                         versionSection.style.display = 'block';
-                        var verOptions = '<option value="">-- Select a version --</option>';
+                        var verOptions = '<option value="">' + _t('generate.choose_version') + '</option>';
                         versions.slice().reverse().forEach(function(v) {
                             var vDate = new Date(v.createdAt);
                             var vDateStr = vDate.toLocaleDateString() + ' ' + vDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                             var config = v.config || {};
                             var ev = v.evaluation;
                             var lossStr = ev ? ' | G:' + ev.generatorLoss.toFixed(2) + ' D:' + ev.discriminatorLoss.toFixed(2) : '';
-                            var label = (v.type === 'initial' ? 'Initial' : 'Retrain') + ' v' + v.version + ' — ' + vDateStr + ' — ' + (config.epochs || '?') + ' ep' + lossStr;
+                            var label = (v.type === 'initial' ? _t('model.initial_training') : _t('action.retrain')) + ' v' + v.version + ' — ' + vDateStr + ' — ' + (config.epochs || '?') + ' ep' + lossStr;
                             verOptions += '<option value="' + v.version + '">' + label + '</option>';
                         });
                         versionSelect.innerHTML = verOptions;
-                        document.getElementById('version-info-display').innerHTML = '<span>' + versions.length + ' version(s) — select one to generate from</span>';
+                        document.getElementById('version-info-display').innerHTML = '<span>' + versions.length + ' ' + _t('model.versions').toLowerCase() + ' — select one to generate from</span>';
                     }
                 } else {
                     info.innerHTML = '<span>' + allModels.length + ' trained model(s) available</span>';
@@ -260,7 +263,7 @@
                         }
                     }
                 } else {
-                    info.innerHTML = '<span>' + ((ModelService.getModel(selectedModelId) || {}).versions || []).length + ' version(s) — select one to generate from</span>';
+                    info.innerHTML = '<span>' + ((ModelService.getModel(selectedModelId) || {}).versions || []).length + ' ' + _t('model.versions').toLowerCase() + ' — select one to generate from</span>';
                 }
                 updateGenerateBtn();
             });
@@ -303,7 +306,7 @@
                 if (!selectedModelId) return;
                 var btn = this;
                 btn.disabled = true;
-                btn.textContent = 'Generating...';
+                btn.textContent = _t('generate.generating');
 
                 var progress = document.getElementById('gen-progress');
                 var result = document.getElementById('gen-result');
@@ -342,16 +345,16 @@
                     try {
                         entry = DataService.generateFromModel(selectedModelId, selectedVersion, selectedLevel);
                     } catch (e) {
-                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Generation failed: ' + (e.message || 'Unknown error') + '</div>';
+                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">' + _t('generate.generating') + ' ' + _t('status.failed') + ': ' + (e.message || 'Unknown') + '</div>';
                         btn.disabled = false;
-                        btn.textContent = 'Generate Dataset';
+                        btn.textContent = _t('generate.generate_btn');
                         return;
                     }
 
                     if (!entry) {
-                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Generation failed: could not create dataset.</div>';
+                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">' + _t('generate.generating') + ' ' + _t('status.failed') + ': ' + _t('empty.no_data') + '</div>';
                         btn.disabled = false;
-                        btn.textContent = 'Generate Dataset';
+                        btn.textContent = _t('generate.generate_btn');
                         return;
                     }
 
@@ -362,9 +365,9 @@
                     var rows = (entry.rows || 0).toLocaleString();
 
                     document.getElementById('result-details').innerHTML =
-                        '<div class="info-row"><span class="info-label">Model</span><span class="info-value"><span class="model-badge" style="background:#E8F5E9;color:#2E7D32;padding:0.2rem 0.6rem;border-radius:4px;font-weight:600;">' + modelName + ' <span style="color:#E65100;background:#FFF8E1;padding:0.1rem 0.4rem;border-radius:3px;font-size:0.75rem;">v' + modelVer + '</span></span></span></div>' +
-                        '<div class="info-row"><span class="info-label">Dataset Size</span><span class="info-value"><span class="size-tag" style="display:inline-block;padding:0.2rem 0.6rem;border-radius:10px;font-size:0.82rem;font-weight:600;background:#E3F2FD;color:#1565C0;">' + selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1) + '</span></span></div>' +
-                        '<div class="info-row"><span class="info-label">Rows Generated</span><span class="info-value" style="font-size:1.05rem;font-weight:700;color:#1B5E20;">' + rows + '</span></div>';
+                        '<div class="info-row"><span class="info-label">' + _t('generate.model') + '</span><span class="info-value"><span class="model-badge" style="background:#E8F5E9;color:#2E7D32;padding:0.2rem 0.6rem;border-radius:4px;font-weight:600;">' + modelName + ' <span style="color:#E65100;background:#FFF8E1;padding:0.1rem 0.4rem;border-radius:3px;font-size:0.75rem;">v' + modelVer + '</span></span></span></div>' +
+                        '<div class="info-row"><span class="info-label">' + _t('generate.dataset_size') + '</span><span class="info-value"><span class="size-tag" style="display:inline-block;padding:0.2rem 0.6rem;border-radius:10px;font-size:0.82rem;font-weight:600;background:#E3F2FD;color:#1565C0;">' + selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1) + '</span></span></div>' +
+                        '<div class="info-row"><span class="info-label">' + _t('generate.rows_gen') + '</span><span class="info-value" style="font-size:1.05rem;font-weight:700;color:#1B5E20;">' + rows + '</span></div>';
 
                     progress.classList.remove('active');
                     result.classList.add('active');
@@ -383,7 +386,7 @@
                     } catch (e) {}
 
                     btn.disabled = false;
-                    btn.textContent = 'Generate Dataset';
+                    btn.textContent = _t('generate.generate_btn');
                 }
             });
 
@@ -391,7 +394,7 @@
             document.getElementById('download-btn').addEventListener('click', function() {
                 if (_lastGenId) {
                     var ok = DataService.exportGeneration(_lastGenId);
-                    if (!ok) alert('Download failed. The cloud URL may have expired. Please regenerate.');
+                    if (!ok) alert(_t('generate.download_failed'));
                 }
             });
 
@@ -400,7 +403,7 @@
                 if (!_lastGenId) return;
                 var rows = DataService.getGenerationPreviewRows(_lastGenId, 10);
                 var gen = DataService.getGenerationById(_lastGenId);
-                if (!rows || !gen) { alert('No preview data available.'); return; }
+                if (!rows || !gen) { alert(_t('empty.no_data')); return; }
 
                 var preview = gen.preview;
                 var headers = preview ? preview.headers : Object.keys(rows[0]);
@@ -428,5 +431,6 @@
             });
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

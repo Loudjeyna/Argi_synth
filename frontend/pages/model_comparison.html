@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Model Benchmarking & Comparison</title>
+    <title data-i18n="compare.title">SynthAI - Model Benchmarking & Comparison</title>
     <link rel="stylesheet" href="../styles/global.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
@@ -110,18 +110,18 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <a class="back-link" href="#" id="back-link" style="margin-bottom:0.5rem;display:inline-flex;align-items:center;gap:0.3rem;color:#2E7D32;text-decoration:none;font-size:0.85rem;">&larr; Back</a>
+            <a class="back-link" href="#" id="back-link" style="margin-bottom:0.5rem;display:inline-flex;align-items:center;gap:0.3rem;color:#2E7D32;text-decoration:none;font-size:0.85rem;" data-i18n="common.back">&larr; Back</a>
             <div class="cmp-header">
                 <div>
-                    <h2 style="margin:0;">Model Benchmarking & Comparison</h2>
-                    <p style="color:#666;font-size:0.85rem;margin-top:0.25rem;" id="page-subtitle">Compare multiple CTGAN models side by side</p>
+                    <h2 style="margin:0;" data-i18n="sidebar.model_comparison">Model Benchmarking & Comparison</h2>
+                    <p style="color:#666;font-size:0.85rem;margin-top:0.25rem;" id="page-subtitle" data-i18n="comparison.subtitle">Compare multiple CTGAN models side by side</p>
                 </div>
                 <div id="role-badge-container"></div>
             </div>
@@ -130,24 +130,24 @@
 
             <!-- Configuration -->
             <div class="card" id="config-card">
-                <h3 class="section-title">1. Select Models & Settings</h3>
+                <h3 class="section-title" data-i18n="compare.select_models">1. Select Models & Settings</h3>
                 <div class="config-grid">
                     <div>
-                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;">Choose Models to Compare</label>
+                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;" data-i18n="generate.select_model">Choose Models to Compare</label>
                         <div id="model-select-grid" class="model-select-grid">
-                            <div class="loading"><div class="spinner"></div><p>Loading models...</p></div>
+                            <div class="loading"><div class="spinner"></div><p data-i18n="common.loading">Loading models...</p></div>
                         </div>
-                        <div class="sel-count" id="sel-count">0 models selected</div>
+                        <div class="sel-count" id="sel-count" data-i18n="compare.models_selected">0 models selected</div>
                     </div>
                     <div>
-                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;">Generation Size</label>
+                        <label style="font-weight:600;font-size:0.85rem;color:#555;display:block;margin-bottom:0.4rem;" data-i18n="compare.generation_size">Generation Size</label>
                         <select id="size-select" class="size-select">
-                            <option value="medium">Medium (1,000 rows)</option>
-                            <option value="large">Large (10,000 rows)</option>
-                            <option value="bigdata">Big Data (100,000 rows)</option>
+                            <option value="medium" data-i18n="size.medium_rows">Medium (1,000 rows)</option>
+                            <option value="large" data-i18n="size.large_rows">Large (10,000 rows)</option>
+                            <option value="bigdata" data-i18n="size.big_data_rows">Big Data (100,000 rows)</option>
                         </select>
                         <div style="margin-top:1rem;">
-                            <button id="btn-compare" class="btn-compare" disabled>Run Benchmark</button>
+                            <button id="btn-compare" class="btn-compare" disabled data-i18n="dashboard.compare">Run Benchmark</button>
                         </div>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
             <!-- Progress -->
             <div class="progress-wrap" id="progress-wrap">
                 <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar"></div></div>
-                <div class="progress-text" id="progress-text">Generating and evaluating...</div>
+                <div class="progress-text" id="progress-text" data-i18n="compare.generating">Generating and evaluating...</div>
             </div>
 
             <!-- Results -->
@@ -165,32 +165,32 @@
                 <div id="recommendation-box" style="display:none;"></div>
 
                 <div class="card" style="margin-bottom:1.5rem;">
-                    <h3 class="section-title">2. Ranking Results</h3>
+                    <h3 class="section-title" data-i18n="compare.ranking">2. Ranking Results</h3>
                     <div style="overflow-x:auto;">
                         <table class="rank-table">
-                            <thead><tr><th>Rank</th><th>Model</th><th>Version</th><th>Quality Score</th><th>Status</th><th id="action-col-header">Action</th></tr></thead>
+                            <thead><tr><th data-i18n="compare.rank">Rank</th><th data-i18n="table.model_name">Model</th><th data-i18n="model.version">Version</th><th data-i18n="viewer.quality_score">Quality Score</th><th data-i18n="table.status">Status</th><th id="action-col-header" data-i18n="table.actions">Action</th></tr></thead>
                             <tbody id="rank-tbody"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="chart-row" id="score-chart-row">
-                    <div class="chart-box chart-wide"><h4>Quality Score Comparison</h4><canvas id="score-chart"></canvas></div>
+                    <div class="chart-box chart-wide"><h4 data-i18n="compare.quality_score_comparison">Quality Score Comparison</h4><canvas id="score-chart"></canvas></div>
                 </div>
 
                 <div class="card" style="margin-bottom:1.5rem;">
-                    <h3 class="section-title">3. Per-Model Details</h3>
+                    <h3 class="section-title" data-i18n="compare.per_model_details">3. Per-Model Details</h3>
                     <div id="per-model-details"></div>
                 </div>
             </div>
 
             <div class="empty-state" id="no-models-msg" style="display:none;">
-                <p>No trained models available for comparison.</p>
-                <p style="margin-top:0.5rem;font-size:0.85rem;">Models must be in "trained" status to appear here.</p>
+                <p data-i18n="common.no_data">No trained models available for comparison.</p>
+                <p style="margin-top:0.5rem;font-size:0.85rem;" data-i18n="compare.no_trained_models">Models must be in "trained" status to appear here.</p>
             </div>
         </main>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/model.js"></script>
     <script src="../js/services/data.js"></script>
@@ -208,6 +208,7 @@
         })();
 
         document.addEventListener('DOMContentLoaded', function() {
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
             var user, userRole;
             try {
                 user = AuthService.getCurrentUser();
@@ -217,7 +218,8 @@
                 userRole = user.role;
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             var isAdmin = userRole === 'admin';
@@ -230,9 +232,9 @@
 
             var note = document.getElementById('role-note-container');
             if (isAdmin) {
-                note.innerHTML = '<div class="role-note"><strong>Admin:</strong> Full control — view, compare, delete models, and analyze detailed results.</div>';
+                note.innerHTML = '<div class="role-note"><strong>' + _t('common.admin') + ':</strong> ' + _t('compare.admin_note') + '</div>';
             } else {
-                note.innerHTML = '<div class="role-note"><strong>Company:</strong> Comparison only — select models and view results. Models cannot be modified.</div>';
+                note.innerHTML = '<div class="role-note"><strong>' + _t('common.company') + ':</strong> ' + _t('compare.company_note') + '</div>';
             }
 
             // Back link
@@ -252,7 +254,7 @@
                 var configCard = document.getElementById('config-card');
 
                 if (models.length === 0) {
-                    grid.innerHTML = '<div class="empty-state"><p>No trained models available.</p></div>';
+                    grid.innerHTML = '<div class="empty-state"><p>' + _t('compare.no_trained_models') + '</p></div>';
                     document.getElementById('btn-compare').disabled = true;
                     configCard.style.display = 'none';
                     msg.style.display = 'block';
@@ -286,7 +288,7 @@
 
             function updateCount() {
                 var checks = document.querySelectorAll('#model-select-grid input:checked');
-                document.getElementById('sel-count').textContent = checks.length + ' model(s) selected';
+                document.getElementById('sel-count').textContent = checks.length + ' ' + _t('compare.models_selected');
                 document.getElementById('btn-compare').disabled = checks.length === 0;
             }
 
@@ -302,12 +304,15 @@
             // ============================================
             document.getElementById('btn-compare').addEventListener('click', function() {
                 var checks = document.querySelectorAll('#model-select-grid input:checked');
-                if (checks.length === 0) { alert('Please select at least one model.'); return; }
+                if (checks.length === 0) { alert(_t('compare.select_at_least_one')); return; }
 
                 var sizeEl = document.getElementById('size-select');
                 var level = sizeEl.value;
-                var sizeLabels = { medium: 'Medium', large: 'Large', bigdata: 'Big Data' };
-                var sizeLabel = sizeLabels[level] || 'Medium';
+                function getSizeLabel(l) {
+                    var labels = { medium: _t('size.medium'), large: _t('size.large'), bigdata: _t('size.big_data') };
+                    return labels[l] || _t('size.medium');
+                }
+                var sizeLabel = getSizeLabel(level);
 
                 results = [];
                 var promiseChain = Promise.resolve();
@@ -317,7 +322,7 @@
                 var progressText = document.getElementById('progress-text');
                 progressWrap.classList.add('active');
                 progressBar.style.width = '0%';
-                progressText.textContent = 'Starting benchmark...';
+                progressText.textContent = _t('compare.starting');
 
                 var totalModels = checks.length;
                 var completed = 0;
@@ -336,7 +341,7 @@
 
                             var verNum = latestVersion ? latestVersion.version : 1;
 
-                            progressText.textContent = 'Generating from ' + model.name + '...';
+                            progressText.textContent = _t('compare.generating_from') + ' ' + model.name + '...';
 
                             setTimeout(function() {
                                 // Load original dataset
@@ -396,7 +401,7 @@
                                 completed++;
                                 var pct = Math.round((completed / totalModels) * 100);
                                 progressBar.style.width = pct + '%';
-                                progressText.textContent = 'Evaluated ' + completed + '/' + totalModels + ' models (' + pct + '%)';
+                                progressText.textContent = _t('compare.evaluated_progress').replace('{n}', completed).replace('{total}', totalModels).replace('{pct}', pct);
                                 resolve();
                             }, 100);
                         });
@@ -533,19 +538,19 @@
                 window.scrollTo({ top: section.offsetTop - 20, behavior: 'smooth' });
 
                 // Summary
-                var sizeLabels = { medium: 'Medium', large: 'Large', bigdata: 'Big Data' };
+                var sizeLabels = { medium: _t('size.medium'), large: _t('size.large'), bigdata: _t('size.big_data') };
                 document.getElementById('summary-bar').innerHTML =
-                    '<span><strong>Models Compared:</strong> ' + results.length + '</span>' +
-                    '<span><strong>Size:</strong> ' + sizeLabels[results[0].level] + '</span>' +
-                    '<span><strong>Best Model:</strong> ' + results[0].modelName + ' <span style="color:#2E7D32;">(' + (results[0].score.overall * 100).toFixed(1) + '%)</span></span>';
+                    '<span><strong>' + _t('compare.models_compared') + ':</strong> ' + results.length + '</span>' +
+                    '<span><strong>' + _t('compare.size') + ':</strong> ' + sizeLabels[results[0].level] + '</span>' +
+                    '<span><strong>' + _t('compare.best_model') + ':</strong> ' + results[0].modelName + ' <span style="color:#2E7D32;">(' + (results[0].score.overall * 100).toFixed(1) + '%)</span></span>';
 
                 // Ranking table
                 var tbody = document.getElementById('rank-tbody');
                 var actionHeader = document.getElementById('action-col-header');
                 if (!isAdmin) {
-                    actionHeader.textContent = 'Download';
+                    actionHeader.textContent = _t('action.download');
                 } else {
-                    actionHeader.textContent = 'Action';
+                    actionHeader.textContent = _t('table.actions');
                 }
 
                 tbody.innerHTML = results.map(function(r, idx) {
@@ -553,16 +558,16 @@
                     var rankBadgeClass = idx === 0 ? 'r1' : idx === 1 ? 'r2' : idx === 2 ? 'r3' : 'other';
                     var scorePct = (r.score.overall * 100).toFixed(1);
                     var scoreClass = r.score.overall >= 0.8 ? 'score-high' : r.score.overall >= 0.5 ? 'score-mid' : 'score-low';
-                    var statusText = r.score.overall >= 0.8 ? 'Excellent' : r.score.overall >= 0.5 ? 'Good' : 'Needs Improvement';
+                    var statusText = r.score.overall >= 0.8 ? _t('status.excellent') : r.score.overall >= 0.5 ? _t('status.good') : _t('status.needs_improvement');
 
                     var actionHtml;
                     if (isAdmin) {
                         actionHtml = '<div style="display:flex;gap:0.35rem;">' +
-                            '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">Download</button>' +
-                            '<button class="btn-dlt" onclick="deleteModel(' + r.modelId + ')">Delete</button>' +
+                            '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">' + _t('action.download') + '</button>' +
+                            '<button class="btn-dlt" onclick="deleteModel(' + r.modelId + ')">' + _t('action.delete') + '</button>' +
                             '</div>';
                     } else {
-                        actionHtml = '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">Download</button>';
+                        actionHtml = '<button class="btn-dload" onclick="downloadModelData(' + idx + ')">' + _t('action.download') + '</button>';
                     }
 
                     return '<tr class="' + rankClass + '">' +
@@ -580,9 +585,9 @@
                 recBox.style.display = 'block';
                 recBox.innerHTML =
                     '<div class="recommend-box">' +
-                    '<div><span class="rec-label">Recommended Model</span></div>' +
-                    '<div><span class="rec-model">' + best.modelName + '</span> <span class="rec-score">(Score: ' + (best.score.overall * 100).toFixed(1) + '%)</span></div>' +
-                    '<div class="rec-dload"><button class="btn-dload" onclick="downloadModelData(0)">Download Best Data</button></div>' +
+                    '<div><span class="rec-label">' + _t('compare.recommended_model') + '</span></div>' +
+                    '<div><span class="rec-model">' + best.modelName + '</span> <span class="rec-score">(' + _t('compare.score') + ': ' + (best.score.overall * 100).toFixed(1) + '%)</span></div>' +
+                    '<div class="rec-dload"><button class="btn-dload" onclick="downloadModelData(0)">' + _t('compare.download_best') + '</button></div>' +
                     '</div>';
 
                 // Bar chart
@@ -610,10 +615,10 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: 'Statistical', data: statScores, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
-                            { label: 'Distribution', data: distScores, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 },
-                            { label: 'Correlation', data: corrScores, backgroundColor: 'rgba(46,125,50,0.5)', borderColor: '#2E7D32', borderWidth: 1 },
-                            { label: 'Overall', data: scores, backgroundColor: 'rgba(106,27,154,0.5)', borderColor: '#6A1B9A', borderWidth: 2, type: 'line', pointRadius: 4 }
+                            { label: _t('evaluation.statistical_similarity'), data: statScores, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                            { label: _t('evaluation.distribution_similarity'), data: distScores, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 },
+                            { label: _t('evaluation.correlation_similarity'), data: corrScores, backgroundColor: 'rgba(46,125,50,0.5)', borderColor: '#2E7D32', borderWidth: 1 },
+                            { label: _t('compare.overall'), data: scores, backgroundColor: 'rgba(106,27,154,0.5)', borderColor: '#6A1B9A', borderWidth: 2, type: 'line', pointRadius: 4 }
                         ]
                     },
                     options: {
@@ -625,7 +630,7 @@
                         },
                         scales: {
                             x: { ticks: { font: { size: 9 } } },
-                            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score (%)', font: { size: 10 } } }
+                            y: { beginAtZero: true, max: 100, title: { display: true, text: _t('compare.score_pct'), font: { size: 10 } } }
                         }
                     }
                 });
@@ -641,7 +646,7 @@
                     var numericCols = Object.keys(r.stats);
                     numericCols.forEach(function(col) {
                         var s = r.stats[col];
-                        statsHtml += '<div class="stat-item"><span class="label">' + col + '</span><br><span class="value">Mean: ' + s.mean + ' | Std: ' + s.std + '</span></div>';
+                        statsHtml += '<div class="stat-item"><span class="label">' + col + '</span><br><span class="value">' + _t('viewer.mean') + ': ' + s.mean + ' | ' + _t('compare.std_dev') + ': ' + s.std + '</span></div>';
                     });
                     statsHtml += '</div>';
 
@@ -650,14 +655,14 @@
 
                     return '<div class="model-detail-panel">' +
                         '<div class="model-detail-header" onclick="toggleDetail(' + idx + ')">' +
-                        '<span>#' + (idx + 1) + ' ' + r.modelName + ' (v' + r.version + ') — Score: ' + (r.score.overall * 100).toFixed(1) + '%</span>' +
+                        '<span>#' + (idx + 1) + ' ' + r.modelName + ' (v' + r.version + ') — ' + _t('compare.score') + ': ' + (r.score.overall * 100).toFixed(1) + '%</span>' +
                         '<span class="toggle-icon">&gt;</span></div>' +
                         '<div class="model-detail-body" id="' + panelId + '">' +
                         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">' +
-                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Statistics</h5>' + statsHtml + '</div>' +
-                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Distribution</h5><canvas id="' + distChartId + '" style="max-height:180px;"></canvas></div>' +
+                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">' + _t('compare.statistics') + '</h5>' + statsHtml + '</div>' +
+                        '<div><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">' + _t('compare.distribution') + '</h5><canvas id="' + distChartId + '" style="max-height:180px;"></canvas></div>' +
                         '</div>' +
-                        '<div class="sub-chart"><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">Correlation Heatmap</h5><div id="' + heatmapId + '"></div></div>' +
+                        '<div class="sub-chart"><h5 style="font-size:0.85rem;color:#555;margin-bottom:0.5rem;">' + _t('compare.correlation_heatmap') + '</h5><div id="' + heatmapId + '"></div></div>' +
                         '</div></div>';
                 }).join('');
 
@@ -686,8 +691,8 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: 'Mean', data: means, backgroundColor: 'rgba(21,101,192,0.6)', borderColor: '#1565C0', borderWidth: 1 },
-                            { label: 'Std Dev', data: stds, backgroundColor: 'rgba(230,81,0,0.6)', borderColor: '#E65100', borderWidth: 1 }
+                            { label: _t('viewer.mean'), data: means, backgroundColor: 'rgba(21,101,192,0.6)', borderColor: '#1565C0', borderWidth: 1 },
+                            { label: _t('compare.std_dev'), data: stds, backgroundColor: 'rgba(230,81,0,0.6)', borderColor: '#E65100', borderWidth: 1 }
                         ]
                     },
                     options: {
@@ -705,7 +710,7 @@
 
                 var numericCols = Object.keys(r.stats);
                 if (numericCols.length < 2) {
-                    container.innerHTML = '<p style="color:#999;font-size:0.78rem;">Need at least 2 numeric columns.</p>';
+                    container.innerHTML = '<p style="color:#999;font-size:0.78rem;">' + _t('evaluation.need_2_columns') + '</p>';
                     return;
                 }
 
@@ -785,7 +790,7 @@
                 if (!r) return;
                 var headers = r.headers;
                 var data = r.data;
-                if (!data || data.length === 0) { alert('No data available.'); return; }
+                if (!data || data.length === 0) { alert(_t('compare.no_data')); return; }
                 var csv = [headers.join(','), ...data.map(function(row) {
                     return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
                 })].join('\n');
@@ -800,7 +805,7 @@
 
             window.deleteModel = function(modelId) {
                 if (!isAdmin) return;
-                if (!confirm('Delete this model permanently?')) return;
+                if (!confirm(_t('confirm.delete_model'))) return;
                 ModelService.deleteModel(modelId);
                 // Refresh the page
                 location.reload();
@@ -809,5 +814,6 @@
             loadModels();
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

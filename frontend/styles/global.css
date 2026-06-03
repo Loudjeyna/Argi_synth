@@ -444,6 +444,83 @@ table td {
 /* Button Small */
 .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
 
+/* RTL Support */
+[dir="rtl"] .sidebar {
+    left: auto;
+    right: 0;
+}
+
+[dir="rtl"] .main-content {
+    margin-left: 0;
+    margin-right: 260px;
+}
+
+[dir="rtl"] table th {
+    text-align: right;
+}
+
+[dir="rtl"] table td {
+    text-align: right;
+}
+
+[dir="rtl"] .kpi-card,
+[dir="rtl"] .rec-card,
+[dir="rtl"] .status-success,
+[dir="rtl"] .status-warning,
+[dir="rtl"] .status-error {
+    border-left: none;
+}
+
+[dir="rtl"] .kpi-card {
+    border-right: 4px solid var(--primary);
+}
+
+[dir="rtl"] .rec-card {
+    border-right: 4px solid var(--primary);
+}
+
+[dir="rtl"] .status-success {
+    border-right: 4px solid var(--success);
+}
+
+[dir="rtl"] .status-warning {
+    border-right: 4px solid var(--warning);
+}
+
+[dir="rtl"] .status-error {
+    border-right: 4px solid var(--danger);
+}
+
+[dir="rtl"] .sidebar-nav a {
+    flex-direction: row;
+}
+
+[dir="rtl"] .search-bar input,
+[dir="rtl"] .search-bar select {
+    text-align: right;
+}
+
+[dir="rtl"] .pagination {
+    direction: ltr;
+}
+
+[dir="rtl"] .page-header h2,
+[dir="rtl"] .page-header p {
+    text-align: right;
+}
+
+[dir="rtl"] .form-group label {
+    text-align: right;
+}
+
+[dir="rtl"] .auth-container {
+    direction: rtl;
+}
+
+[dir="rtl"] .lang-btn-group {
+    direction: ltr;
+}
+
 /* Model row hover */
 .model-row { cursor: pointer; transition: background 0.15s; }
 .model-row:hover { background: #F0F9F0; }

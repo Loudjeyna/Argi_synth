@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Admin Users</title>
+    <title data-i18n="users.title">SynthAI - Admin Users</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .plan-select { padding: 0.3rem; border-radius: 4px; border: 1px solid #E0E0E0; font-size: 0.85rem; }
@@ -14,27 +14,27 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
         <main class="main-content">
-            <div class="page-header"><h2>User Management</h2><p>Manage users, subscriptions, payments, and platform access</p></div>
+            <div class="page-header"><h2 data-i18n="users.title">User Management</h2><p data-i18n="users.subtitle">Manage users, subscriptions, payments, and platform access</p></div>
 
             <div class="kpi-grid" id="kpi-grid"></div>
 
             <div class="card">
                 <ul class="tabs" style="display: flex; border-bottom: 2px solid #E0E0E0; margin-bottom: 1rem; list-style: none; padding: 0;">
-                    <li class="tab active" data-tab="users" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; border-bottom: 2px solid #2E7D32; color: #2E7D32; font-weight: 600; margin-bottom: -2px;">Users</li>
+                    <li class="tab active" data-tab="users" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; border-bottom: 2px solid #2E7D32; color: #2E7D32; font-weight: 600; margin-bottom: -2px;" data-i18n="users.title">Users</li>
                     <li class="tab" data-tab="payments" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #666;">Payment History</li>
-                    <li class="tab" data-tab="subscriptions" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #666;">Subscriptions</li>
+                    <li class="tab" data-tab="subscriptions" style="flex: 1; padding: 0.75rem; text-align: center; cursor: pointer; color: #666;" data-i18n="sub.title">Subscriptions</li>
                 </ul>
 
                 <div id="tab-users" class="tab-panel active">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Plan</th><th>Predictions</th><th>Status</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>ID</th><th data-i18n="table.username">Username</th><th>Email</th><th data-i18n="table.role">Role</th><th data-i18n="table.plan">Plan</th><th data-i18n="predict.title">Predictions</th><th data-i18n="table.status">Status</th><th data-i18n="table.actions">Actions</th></tr></thead>
                             <tbody id="users-tbody"></tbody>
                         </table>
                     </div>
@@ -43,7 +43,7 @@
                 <div id="tab-payments" class="tab-panel" style="display: none;">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>ID</th><th>User</th><th>Plan</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+                            <thead><tr><th>ID</th><th data-i18n="table.user">User</th><th data-i18n="table.plan">Plan</th><th>Amount</th><th data-i18n="table.date">Date</th><th data-i18n="table.status">Status</th></tr></thead>
                             <tbody id="payments-tbody"></tbody>
                         </table>
                     </div>
@@ -52,7 +52,7 @@
                 <div id="tab-subscriptions" class="tab-panel" style="display: none;">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>User</th><th>Plan</th><th>Start Date</th><th>Expires</th><th>Status</th></tr></thead>
+                            <thead><tr><th data-i18n="table.user">User</th><th data-i18n="table.plan">Plan</th><th>Start Date</th><th>Expires</th><th data-i18n="table.status">Status</th></tr></thead>
                             <tbody id="subscriptions-tbody"></tbody>
                         </table>
                     </div>
@@ -60,6 +60,7 @@
             </div>
         </main>
     </div>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/payment.js"></script>
     <script src="../js/services/history.js"></script>
@@ -69,28 +70,31 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = AuthService.getCurrentUser();
             if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+            App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} App.setupUserPanel(); App.setupLogout();
+
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
             const users = AuthService.getUsers();
             const totalPredictions = users.reduce((sum, u) => sum + HistoryService.getStats(u.id).totalPredictions, 0);
             const dataStats = DataService.getGenerationStats();
 
             document.getElementById('kpi-grid').innerHTML = `
-                <div class="kpi-card"><div class="kpi-value">${users.length}</div><div class="kpi-label">Total Users</div></div>
-                <div class="kpi-card"><div class="kpi-value">${totalPredictions}</div><div class="kpi-label">Predictions Made</div></div>
-                <div class="kpi-card"><div class="kpi-value">${dataStats.total}</div><div class="kpi-label">Datasets Generated</div></div>
-                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'premium').length}</div><div class="kpi-label">Premium Users</div></div>
-                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'pro').length}</div><div class="kpi-label">Pro Users</div></div>
-                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'free').length}</div><div class="kpi-label">Free Users</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.length}</div><div class="kpi-label">${_t('users.total_users')}</div></div>
+                <div class="kpi-card"><div class="kpi-value">${totalPredictions}</div><div class="kpi-label">${_t('users.predictions_made')}</div></div>
+                <div class="kpi-card"><div class="kpi-value">${dataStats.total}</div><div class="kpi-label">${_t('users.datasets_generated')}</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'premium').length}</div><div class="kpi-label">${_t('users.premium_users')}</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'pro').length}</div><div class="kpi-label">${_t('users.pro_users')}</div></div>
+                <div class="kpi-card"><div class="kpi-value">${users.filter(u => u.plan === 'free').length}</div><div class="kpi-label">${_t('users.free_users')}</div></div>
             `;
 
-            const plans = { free: 'Free', pro: 'Pro', premium: 'Premium' };
-            const planBadges = { free: '<span class="badge badge-free">FREE</span>', pro: '<span class="badge badge-warning">PRO</span>', premium: '<span class="badge badge-premium">PREMIUM</span>' };
+            const plans = { free: _t('sub.free'), pro: _t('sub.pro'), premium: _t('sub.premium') };
+            const planBadges = { free: '<span class="badge badge-free">' + _t('sub.free').toUpperCase() + '</span>', pro: '<span class="badge badge-warning">' + _t('sub.pro').toUpperCase() + '</span>', premium: '<span class="badge badge-premium">' + _t('sub.premium').toUpperCase() + '</span>' };
 
             const tbody = document.getElementById('users-tbody');
             tbody.innerHTML = users.filter(u => u.username !== 'admin').map(u => {
                 const preds = HistoryService.getStats(u.id).totalPredictions;
-                const statusBadge = u.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Disabled</span>';
+                const statusBadge = u.isActive ? '<span class="badge badge-success">' + _t('status.active') + '</span>' : '<span class="badge badge-danger">' + _t('status.disabled') + '</span>';
                 const planOptions = ['free', 'pro', 'premium'].map(p => '<option value="' + p + '" ' + (u.plan === p ? 'selected' : '') + '>' + plans[p] + '</option>').join('');
                 return '<tr>' +
                     '<td>' + u.id + '</td>' +
@@ -102,7 +106,7 @@
                     '<td>' + statusBadge + '</td>' +
                     '<td>' +
                         '<select class="plan-select" onchange="updatePlan(' + u.id + ', this.value)">' + planOptions + '</select> ' +
-                        '<button class="action-btn" onclick="toggleStatus(' + u.id + ')">' + (u.isActive ? 'Disable' : 'Enable') + '</button>' +
+                        '<button class="action-btn" onclick="toggleStatus(' + u.id + ')">' + (u.isActive ? _t('users.disable') : _t('users.enable')) + '</button>' +
                     '</td></tr>';
             }).join('');
 
@@ -129,11 +133,11 @@
             const payments = JSON.parse(localStorage.getItem('synthai_payments') || '[]');
             const payTbody = document.getElementById('payments-tbody');
             if (payments.length === 0) {
-                payTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No payments recorded</td></tr>';
+                payTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">' + _t('users.no_payments') + '</td></tr>';
             } else {
                 payTbody.innerHTML = payments.sort((a,b) => b.subscribedAt - a.subscribedAt).map(p => {
                     const user = users.find(u => u.id === p.userId);
-                    return '<tr><td>' + p.id + '</td><td>' + (user ? user.username : 'Unknown') + '</td><td>' + p.planName + '</td><td>$' + p.price.toFixed(2) + '</td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td><span class="badge badge-success">Completed</span></td></tr>';
+                    return '<tr><td>' + p.id + '</td><td>' + (user ? user.username : 'Unknown') + '</td><td>' + p.planName + '</td><td>$' + p.price.toFixed(2) + '</td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td><span class="badge badge-success">' + _t('status.completed') + '</span></td></tr>';
                 }).join('');
             }
 
@@ -141,11 +145,11 @@
             const subTbody = document.getElementById('subscriptions-tbody');
             const activeSubs = payments.filter(p => !p.expired);
             if (activeSubs.length === 0) {
-                subTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No active subscriptions</td></tr>';
+                subTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">' + _t('users.no_subscriptions') + '</td></tr>';
             } else {
                 subTbody.innerHTML = activeSubs.sort((a,b) => b.subscribedAt - a.subscribedAt).map(p => {
                     const user = users.find(u => u.id === p.userId);
-                    return '<tr><td>' + (user ? user.username : 'Unknown') + '</td><td><span class="badge badge-' + (p.planId === 'premium' ? 'premium' : p.planId === 'pro' ? 'warning' : 'free') + '">' + p.planName.toUpperCase() + '</span></td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td>' + new Date(p.expiresAt).toLocaleDateString() + '</td><td><span class="badge badge-success">Active</span></td></tr>';
+                    return '<tr><td>' + (user ? user.username : 'Unknown') + '</td><td><span class="badge badge-' + (p.planId === 'premium' ? 'premium' : p.planId === 'pro' ? 'warning' : 'free') + '">' + p.planName.toUpperCase() + '</span></td><td>' + new Date(p.subscribedAt).toLocaleDateString() + '</td><td>' + new Date(p.expiresAt).toLocaleDateString() + '</td><td><span class="badge badge-success">' + _t('status.active') + '</span></td></tr>';
                 }).join('');
             }
 
@@ -160,5 +164,6 @@
             });
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

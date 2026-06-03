@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Admin Dashboard</title>
+    <title data-i18n="dashboard.title">SynthAI - Admin Dashboard</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem; }
@@ -53,60 +53,61 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>Dashboard</h2><p>System overview and platform analytics</p></div>
+            <div class="page-header"><h2 data-i18n="dashboard.title">Dashboard</h2><p data-i18n="dashboard.subtitle">System overview and platform analytics</p></div>
 
             <div class="kpi-grid" id="kpi-grid"></div>
 
             <div class="charts-grid">
                 <div class="card">
-                    <h3 class="card-title">User Roles Distribution</h3>
+                    <h3 class="card-title" data-i18n="dashboard.roles_chart">User Roles Distribution</h3>
                     <div class="chart-body" id="roles-chart"></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Subscription Distribution</h3>
+                    <h3 class="card-title" data-i18n="dashboard.sub_chart">Subscription Distribution</h3>
                     <div class="chart-body" id="subscription-chart"></div>
                 </div>
             </div>
 
             <div class="tables-grid">
                 <div class="card">
-                    <h3 class="card-title">Recent Users</h3>
-                    <div class="table-wrap" id="recent-users-table"><div class="empty-msg">Loading...</div></div>
-                    <div class="table-footer"><a href="admin_users.html" class="btn btn-outline btn-sm">View All Users</a></div>
+                    <h3 class="card-title" data-i18n="dashboard.recent_users">Recent Users</h3>
+                    <div class="table-wrap" id="recent-users-table"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_users.html" class="btn btn-outline btn-sm" data-i18n="dashboard.view_all">View All Users</a></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Recent Models</h3>
-                    <div class="table-wrap" id="recent-models-table"><div class="empty-msg">Loading...</div></div>
-                    <div class="table-footer"><a href="admin_models.html" class="btn btn-outline btn-sm">View All Models</a></div>
+                    <h3 class="card-title" data-i18n="dashboard.recent_models">Recent Models</h3>
+                    <div class="table-wrap" id="recent-models-table"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_models.html" class="btn btn-outline btn-sm" data-i18n="dashboard.view_all">View All Models</a></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Recent Datasets</h3>
-                    <div class="table-wrap" id="recent-datasets-table"><div class="empty-msg">Loading...</div></div>
-                    <div class="table-footer"><a href="datasets.html" class="btn btn-outline btn-sm">View All Datasets</a></div>
+                    <h3 class="card-title" data-i18n="dashboard.recent_datasets">Recent Datasets</h3>
+                    <div class="table-wrap" id="recent-datasets-table"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                    <div class="table-footer"><a href="datasets.html" class="btn btn-outline btn-sm" data-i18n="dashboard.view_all">View All Datasets</a></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Recent Augmentations</h3>
-                    <div class="table-wrap" id="recent-augs-table"><div class="empty-msg">Loading...</div></div>
-                    <div class="table-footer"><a href="admin_augmentation.html" class="btn btn-outline btn-sm">View All Augmentations</a></div>
+                    <h3 class="card-title" data-i18n="dashboard.recent_augs">Recent Augmentations</h3>
+                    <div class="table-wrap" id="recent-augs-table"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                    <div class="table-footer"><a href="admin_augmentation.html" class="btn btn-outline btn-sm" data-i18n="dashboard.view_all">View All Augmentations</a></div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="actions-bar">
-                    <a href="admin_training.html" class="btn btn-primary">+ New Training</a>
-                    <a href="generate_data.html" class="btn btn-primary">+ Generate Data</a>
-                    <a href="model_comparison.html" class="btn btn-outline">Compare Models</a>
+                    <a href="admin_training.html" class="btn btn-primary" data-i18n="dashboard.new_training">+ New Training</a>
+                    <a href="generate_data.html" class="btn btn-primary" data-i18n="dashboard.generate">+ Generate Data</a>
+                    <a href="model_comparison.html" class="btn btn-outline" data-i18n="dashboard.compare">Compare Models</a>
                 </div>
             </div>
         </main>
     </div>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/history.js"></script>
     <script src="../js/services/data.js"></script>
@@ -133,7 +134,7 @@
         function renderDonutChart(containerId, slices) {
             var container = document.getElementById(containerId);
             var total = slices.reduce(function(s, sl) { return s + sl.value; }, 0);
-            if (total === 0) { container.innerHTML = '<div style="color:#bbb;padding:1.5rem;">No data</div>'; return; }
+            if (total === 0) { container.innerHTML = '<div style="color:#bbb;padding:1.5rem;">' + _t('common.no_data') + '</div>'; return; }
 
             var cx = 21, cy = 21, r = 15.9155;
             var circ = 2 * Math.PI * r;
@@ -154,6 +155,8 @@
             container.innerHTML = svg + legend;
         }
 
+        function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
+
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 var user = AuthService.getCurrentUser();
@@ -162,6 +165,7 @@
 
             try { App.setupSidebar(); } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
+            try { App.setupLanguageSwitcher(); } catch (e) {}
 
             var users = [];
             var models = [];
@@ -194,7 +198,7 @@
                     if (ev && ev.trainingQuality && (!bestModel || (ev.trainingQuality === 'good' && bestModel._quality !== 'good'))) {
                         bestModel = m;
                         bestModel._quality = ev.trainingQuality;
-                        bestModel._qualityLabel = ev.trainingQuality === 'good' ? 'Good' : ev.trainingQuality === 'acceptable' ? 'Acceptable' : 'Needs Improvement';
+                        bestModel._qualityLabel = ev.trainingQuality === 'good' ? _t('status.good') : ev.trainingQuality === 'acceptable' ? _t('status.acceptable') : _t('status.needs_improvement');
                         break;
                     }
                 }
@@ -207,38 +211,38 @@
 
             var kpiGrid = document.getElementById('kpi-grid');
             kpiGrid.innerHTML =
-                '<div class="kpi-card"><div class="kpi-value">' + users.length + '</div><div class="kpi-label">Total Users</div></div>' +
-                '<div class="kpi-card blue"><div class="kpi-value">' + activeUsers.length + '</div><div class="kpi-label">Active Users</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(activeUsers.length / users.length * 100) + '% active' : '') + '</div></div>' +
-                '<div class="kpi-card orange"><div class="kpi-value">' + trainedModels.length + '</div><div class="kpi-label">Trained Models</div><div class="kpi-sub">of ' + models.length + ' total</div></div>' +
-                '<div class="kpi-card purple"><div class="kpi-value">' + generations.length + '</div><div class="kpi-label">Generated Datasets</div></div>' +
-                '<div class="kpi-card teal"><div class="kpi-value">' + todayHistory.length + '</div><div class="kpi-label">Today\'s Predictions</div></div>' +
-                '<div class="kpi-card red"><div class="kpi-value">' + todayRows.toLocaleString() + '</div><div class="kpi-label">Rows Generated Today</div></div>' +
-                '<div class="kpi-card brown"><div class="kpi-value">' + paidUsers.length + '</div><div class="kpi-label">Paid Subscribers</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(paidUsers.length / users.length * 100) + '% of users' : '') + '</div></div>' +
-                '<div class="kpi-card pink"><div class="kpi-value">' + (bestModel ? bestModel.name : 'N/A') + '</div><div class="kpi-label">Best Model</div><div class="kpi-sub">' + (bestModel && bestModel._qualityLabel ? 'Quality: ' + bestModel._qualityLabel : '') + '</div></div>' +
-                '<div class="kpi-card" style="border-left-color:#455A64;"><div class="kpi-value">' + (lastTraining ? fmtDate(lastTraining.createdAt) : 'N/A') + '</div><div class="kpi-label">Last Training Activity</div></div>';
+                '<div class="kpi-card"><div class="kpi-value">' + users.length + '</div><div class="kpi-label">' + _t('dashboard.total_users') + '</div></div>' +
+                '<div class="kpi-card blue"><div class="kpi-value">' + activeUsers.length + '</div><div class="kpi-label">' + _t('dashboard.active_users') + '</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(activeUsers.length / users.length * 100) + '%' : '') + '</div></div>' +
+                '<div class="kpi-card orange"><div class="kpi-value">' + trainedModels.length + '</div><div class="kpi-label">' + _t('dashboard.trained_models') + '</div><div class="kpi-sub">' + models.length + ' ' + _t('dashboard.total') + '</div></div>' +
+                '<div class="kpi-card purple"><div class="kpi-value">' + generations.length + '</div><div class="kpi-label">' + _t('dashboard.generated_datasets') + '</div></div>' +
+                '<div class="kpi-card teal"><div class="kpi-value">' + todayHistory.length + '</div><div class="kpi-label">' + _t('dashboard.today_predictions') + '</div></div>' +
+                '<div class="kpi-card red"><div class="kpi-value">' + todayRows.toLocaleString() + '</div><div class="kpi-label">' + _t('dashboard.rows_today') + '</div></div>' +
+                '<div class="kpi-card brown"><div class="kpi-value">' + paidUsers.length + '</div><div class="kpi-label">' + _t('dashboard.paid_subs') + '</div><div class="kpi-sub">' + (users.length > 0 ? Math.round(paidUsers.length / users.length * 100) + '%' : '') + '</div></div>' +
+                '<div class="kpi-card pink"><div class="kpi-value">' + (bestModel ? bestModel.name : 'N/A') + '</div><div class="kpi-label">' + _t('dashboard.best_model') + '</div><div class="kpi-sub">' + (bestModel && bestModel._qualityLabel ? _t('dashboard.quality') + ': ' + bestModel._qualityLabel : '') + '</div></div>' +
+                '<div class="kpi-card" style="border-left-color:#455A64;"><div class="kpi-value">' + (lastTraining ? fmtDate(lastTraining.createdAt) : 'N/A') + '</div><div class="kpi-label">' + _t('dashboard.last_training') + '</div></div>';
 
             // Roles chart
             var roles = { admin: 0, farmer: 0, company: 0 };
             users.forEach(function(u) { if (roles[u.role] !== undefined) roles[u.role]++; });
             renderDonutChart('roles-chart', [
-                { label: 'Farmers', value: roles.farmer, color: '#2E7D32' },
-                { label: 'Companies', value: roles.company, color: '#1565C0' },
-                { label: 'Admins', value: roles.admin, color: '#7B1FA2' }
+                { label: _t('dashboard.farmers'), value: roles.farmer, color: '#2E7D32' },
+                { label: _t('dashboard.companies'), value: roles.company, color: '#1565C0' },
+                { label: _t('dashboard.admins'), value: roles.admin, color: '#7B1FA2' }
             ]);
 
             // Subscription chart
             renderDonutChart('subscription-chart', [
-                { label: 'Paid Users', value: paidUsers.length, color: '#FF9800' },
-                { label: 'Free Users', value: freeUsers.length, color: '#BDBDBD' }
+                { label: _t('dashboard.paid_users'), value: paidUsers.length, color: '#FF9800' },
+                { label: _t('dashboard.free_users'), value: freeUsers.length, color: '#BDBDBD' }
             ]);
 
             // Recent Users
             var userRows = '';
             var recentUsers = users.slice(0, 5);
             if (recentUsers.length === 0) {
-                userRows = '<div class="empty-msg">No users registered yet.</div>';
+                userRows = '<div class="empty-msg">' + _t('empty.no_users') + '</div>';
             } else {
-                userRows = '<table><thead><tr><th>Username</th><th>Role</th><th>Plan</th><th>Registered</th></tr></thead><tbody>';
+                userRows = '<table><thead><tr><th>' + _t('table.username') + '</th><th>' + _t('table.role') + '</th><th>' + _t('table.plan') + '</th><th>' + _t('table.registered') + '</th></tr></thead><tbody>';
                 recentUsers.forEach(function(u) {
                     userRows += '<tr><td><strong>' + u.username + '</strong></td><td><span class="role-badge ' + u.role + '">' + u.role + '</span></td><td><span class="plan-badge ' + (u.plan || 'free') + '">' + (u.plan || 'free') + '</span></td><td>' + fmtDate(u.createdAt) + '</td></tr>';
                 });
@@ -250,16 +254,16 @@
             var modelRows = '';
             var recentModels = models.slice(0, 5);
             if (recentModels.length === 0) {
-                modelRows = '<div class="empty-msg">No models trained yet.</div>';
+                modelRows = '<div class="empty-msg">' + _t('empty.no_models') + '</div>';
             } else {
-                modelRows = '<table><thead><tr><th>Model Name</th><th>Status</th><th>Quality</th><th>Created</th></tr></thead><tbody>';
+                modelRows = '<table><thead><tr><th>' + _t('table.model_name') + '</th><th>' + _t('table.status') + '</th><th>' + _t('table.quality') + '</th><th>' + _t('table.created') + '</th></tr></thead><tbody>';
                 recentModels.forEach(function(m) {
                     var qual = '-';
                     if (m.versions && m.versions.length > 0) {
                         var ev = m.versions[0].evaluation;
-                        if (ev && ev.trainingQuality) qual = ev.trainingQuality === 'good' ? 'Good' : ev.trainingQuality === 'acceptable' ? 'Acceptable' : 'Needs Improv.';
+                        if (ev && ev.trainingQuality) qual = ev.trainingQuality === 'good' ? _t('status.good') : ev.trainingQuality === 'acceptable' ? _t('status.acceptable') : _t('status.needs_improvement');
                     }
-                    modelRows += '<tr><td><strong>' + (m.name || 'Unnamed') + '</strong></td><td><span class="status-badge ' + m.status + '">' + m.status.replace('_', ' ') + '</span></td><td><span class="status-badge ' + (qual === 'Good' ? 'good' : qual === 'Acceptable' ? 'acceptable' : '') + '">' + qual + '</span></td><td>' + fmtDate(m.createdAt) + '</td></tr>';
+                    modelRows += '<tr><td><strong>' + (m.name || 'Unnamed') + '</strong></td><td><span class="status-badge ' + m.status + '">' + _t('status.' + m.status) + '</span></td><td><span class="status-badge ' + (qual === 'Good' ? 'good' : qual === 'Acceptable' ? 'acceptable' : '') + '">' + qual + '</span></td><td>' + fmtDate(m.createdAt) + '</td></tr>';
                 });
                 modelRows += '</tbody></table>';
             }
@@ -269,11 +273,11 @@
             var dsRows = '';
             var recentDs = generations.slice(0, 5);
             if (recentDs.length === 0) {
-                dsRows = '<div class="empty-msg">No datasets generated yet.</div>';
+                dsRows = '<div class="empty-msg">' + _t('empty.no_datasets') + '</div>';
             } else {
-                dsRows = '<table><thead><tr><th>Dataset Name</th><th>Created By</th><th>Rows</th><th>Date</th></tr></thead><tbody>';
+                dsRows = '<table><thead><tr><th>' + _t('table.dataset_name') + '</th><th>' + _t('table.created_by') + '</th><th>' + _t('table.rows') + '</th><th>' + _t('table.date') + '</th></tr></thead><tbody>';
                 recentDs.forEach(function(g) {
-                    var name = (g.modelName || g.type || 'Dataset') + ' (' + (g.level || 'N/A') + ')';
+                    var name = (g.modelName || g.type || _t('table.dataset_name')) + ' (' + (g.level || 'N/A') + ')';
                     var by = g.modelName || 'System';
                     dsRows += '<tr><td><strong>' + name + '</strong></td><td>' + by + '</td><td>' + (g.rows || 0).toLocaleString() + '</td><td>' + fmtDate(g.date) + '</td></tr>';
                 });
@@ -285,11 +289,11 @@
             var augRows = '';
             var recentAugs = augmentations.slice(0, 5);
             if (recentAugs.length === 0) {
-                augRows = '<div class="empty-msg">No augmentation operations yet.</div>';
+                augRows = '<div class="empty-msg">' + _t('empty.no_augmentations') + '</div>';
             } else {
-                augRows = '<table><thead><tr><th>User</th><th>Original</th><th>Generated</th><th>Quality</th><th>Date</th></tr></thead><tbody>';
+                augRows = '<table><thead><tr><th>' + _t('table.user') + '</th><th>' + _t('table.original') + '</th><th>' + _t('table.generated') + '</th><th>' + _t('table.quality') + '</th><th>' + _t('table.date') + '</th></tr></thead><tbody>';
                 recentAugs.forEach(function(a) {
-                    var userName = 'User #' + a.userId;
+                    var userName = _t('table.user') + ' #' + a.userId;
                     var u = users.find(function(x) { return x.id === a.userId; });
                     if (u) userName = u.username;
                     augRows += '<tr><td>' + userName + '</td><td>' + (a.originalRows || 0).toLocaleString() + '</td><td>' + (a.augmentedRows || 0).toLocaleString() + '</td><td>' + (a.qualityLabel || a.qualityScore || '-') + '</td><td>' + fmtDate(a.dateStr || a.createdAt) + '</td></tr>';
@@ -299,5 +303,6 @@
             document.getElementById('recent-augs-table').innerHTML = augRows;
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

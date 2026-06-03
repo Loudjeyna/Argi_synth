@@ -38,60 +38,95 @@
             <div class="logo">
                 <img src="logo.png" alt="SynthAI" style="width:64px;height:64px;border-radius:12px;">
                 <h2>SynthAI</h2>
-                <p class="subtitle">Smart Agricultural Intelligence Platform</p>
+                <p class="subtitle" data-i18n="app.tagline">Smart Agricultural Intelligence Platform</p>
             </div>
+
+            <div style="display:flex;gap:0.35rem;justify-content:center;margin-bottom:1rem;" id="login-lang-switcher"></div>
 
             <div id="status-msg" class="status-message"></div>
 
             <div class="tabs">
-                <div class="tab active" data-tab="login">Sign In</div>
-                <div class="tab" data-tab="register">Register</div>
+                <div class="tab active" data-tab="login" data-i18n="login.btn">Sign In</div>
+                <div class="tab" data-tab="register" data-i18n="login.register">Register</div>
             </div>
 
             <div class="tab-content active" id="tab-login">
                 <form id="login-form">
                     <div class="form-group">
-                        <label for="login-username">Username</label>
+                        <label for="login-username" data-i18n="login.username">Username</label>
                         <input type="text" id="login-username" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="login-password">Password</label>
+                        <label for="login-password" data-i18n="login.password">Password</label>
                         <input type="password" id="login-password" class="form-control" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="login.btn">Sign In</button>
                 </form>
             </div>
 
             <div class="tab-content" id="tab-register">
                 <form id="register-form">
                     <div class="form-group">
-                        <label for="reg-username">Username</label>
+                        <label for="reg-username" data-i18n="login.username">Username</label>
                         <input type="text" id="reg-username" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="reg-email">Email</label>
+                        <label for="reg-email" data-i18n="login.email">Email</label>
                         <input type="email" id="reg-email" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="reg-password">Password</label>
+                        <label for="reg-password" data-i18n="login.password">Password</label>
                         <input type="password" id="reg-password" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="reg-role">Role</label>
+                        <label for="reg-role" data-i18n="login.role">Role</label>
                         <select id="reg-role" class="form-control">
-                            <option value="farmer">Farmer</option>
-                            <option value="company">Company</option>
+                            <option value="farmer" data-i18n="login.farmer">Farmer</option>
+                            <option value="company" data-i18n="login.company">Company</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Register</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="login.register_btn">Register</button>
                 </form>
             </div>
 
         </div>
     </div>
 
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script>
+        // Language switcher on login page
+        (function() {
+            var sw = document.getElementById('login-lang-switcher');
+            if (sw && typeof I18nService !== 'undefined') {
+                var current = I18nService.getLang();
+                var langs = [
+                    { code: 'en', label: 'English' },
+                    { code: 'fr', label: 'Fran\u00e7ais' },
+                    { code: 'ar', label: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629' }
+                ];
+                sw.innerHTML = langs.map(function(l) {
+                    var active = l.code === current ? ' background:rgba(46,125,50,0.15);border-color:#2E7D32;color:#2E7D32;font-weight:600;' : '';
+                    return '<button class="lang-btn" data-lang="' + l.code + '" style="flex:1;padding:0.35rem 0.5rem;border:1px solid #ddd;border-radius:6px;background:transparent;font-size:0.8rem;cursor:pointer;transition:all 0.2s;' + active + '">' + l.label + '</button>';
+                }).join('');
+                sw.querySelectorAll('.lang-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        I18nService.setLang(this.dataset.lang);
+                        sw.querySelectorAll('.lang-btn').forEach(function(b) {
+                            b.style.background = 'transparent';
+                            b.style.borderColor = '#ddd';
+                            b.style.color = '';
+                            b.style.fontWeight = '';
+                        });
+                        this.style.background = 'rgba(46,125,50,0.15)';
+                        this.style.borderColor = '#2E7D32';
+                        this.style.color = '#2E7D32';
+                        this.style.fontWeight = '600';
+                    });
+                });
+            }
+        })();
+
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -102,6 +137,8 @@
             });
         });
 
+        var _t = function(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; };
+
         // Login
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -111,7 +148,7 @@
             const msg = document.getElementById('status-msg');
             if (result.success) {
                 msg.className = 'status-message status-success';
-                msg.textContent = 'Login successful!';
+                msg.textContent = _t('common.loading');
                 setTimeout(function() {
                     var routes = { admin: '/pages/admin_home.html', company: '/pages/company_home.html', farmer: '/pages/farmer_home.html' };
                     window.location.href = routes[result.user.role] || '/pages/farmer_home.html';
@@ -133,7 +170,7 @@
             const msg = document.getElementById('status-msg');
             if (result.success) {
                 msg.className = 'status-message status-success';
-                msg.textContent = 'Registration successful! You can now sign in.';
+                msg.textContent = _t('login.no_account');
                 document.getElementById('register-form').reset();
             } else {
                 msg.className = 'status-message status-error';
@@ -146,6 +183,11 @@
         if (_user) {
             var _routes = { admin: '/pages/admin_home.html', company: '/pages/company_home.html', farmer: '/pages/farmer_home.html' };
             window.location.href = _routes[_user.role] || '/pages/farmer_home.html';
+        }
+
+        // Translate page
+        if (typeof I18nService !== 'undefined') {
+            I18nService.translatePage();
         }
     </script>
 </body>

@@ -1,0 +1,283 @@
+===========================================================
+  تصميم قواعد البيانات - SynthAI
+===========================================================
+
+يحتوي المشروع على 3 أنواع من تخزين البيانات:
+1. قاعدة بيانات SQLite (الخادم)
+2. التخزين المحلي في المتصفح (localStorage)
+3. ملف CSV للبيانات التدريبية
+
+
+===========================================================
+أولاً: قاعدة بيانات SQLite - data/agroai.db
+===========================================================
+
+-------------------
+1. جدول users (المستخدمون)
+-------------------
+الاسم          | النوع          | القيد               | الوصف
+---------------|----------------|---------------------|----------------------
+id             | INTEGER        | PRIMARY KEY AUTOINCREMENT | المعرف الفريد
+username       | TEXT           | UNIQUE NOT NULL     | اسم المستخدم
+email          | TEXT           | UNIQUE NOT NULL     | البريد الإلكتروني
+password_hash  | TEXT           | NOT NULL            | كلمة المرور (SHA-256)
+role           | TEXT           | DEFAULT 'farmer'    | الدور: admin, farmer, company
+plan           | TEXT           | DEFAULT 'free'      | الخطة: free, pro, premium
+created_at     | TEXT           | DEFAULT CURRENT_TIMESTAMP | تاريخ الإنشاء
+
+-------------------
+2. جدول usage_logs (سجل الاستخدام)
+-------------------
+الاسم          | النوع          | القيد               | الوصف
+---------------|----------------|---------------------|----------------------
+id             | INTEGER        | PRIMARY KEY AUTOINCREMENT | المعرف الفريد
+user_id        | INTEGER        | NOT NULL            | معرف المستخدم
+rows_generated | INTEGER        | DEFAULT 0          | عدد الصفوف المولدة
+generation_date| TEXT           | DEFAULT CURRENT_TIMESTAMP | تاريخ التوليد
+
+المفاتيح الخارجية:
+  FOREIGN KEY (user_id) REFERENCES users(id)
+
+-------------------
+3. جدول model_status (حالة النموذج)
+-------------------
+الاسم          | النوع          | القيد               | الوصف
+---------------|----------------|---------------------|----------------------
+id             | INTEGER        | PRIMARY KEY         | المعرف (1)
+is_trained     | INTEGER        | DEFAULT 0          | هل تم التدريب (0/1)
+model_type     | TEXT           | DEFAULT 'CTGAN'    | نوع النموذج
+last_trained   | TEXT           | -                   | تاريخ آخر تدريب
+
+-------------------
+4. جدول predictions (التوقعات)
+-------------------
+الاسم             | النوع          | القيد               | الوصف
+------------------|----------------|---------------------|----------------------
+id                | INTEGER        | PRIMARY KEY AUTOINCREMENT | المعرف الفريد
+user_id           | INTEGER        | NOT NULL            | معرف المستخدم
+prediction_type   | TEXT           | NOT NULL            | نوع التوقع
+input_data        | TEXT           | NOT NULL            | بيانات الإدخال (JSON)
+output_result     | TEXT           | NOT NULL            | نتيجة التوقع (JSON)
+created_at        | TEXT           | DEFAULT CURRENT_TIMESTAMP | تاريخ الإنشاء
+
+المفاتيح الخارجية:
+  FOREIGN KEY (user_id) REFERENCES users(id)
+
+-------------------
+5. جدول synthetic_datasets (مجموعات البيانات الاصطناعية)
+-------------------
+الاسم             | النوع          | القيد               | الوصف
+------------------|----------------|---------------------|----------------------
+id                | INTEGER        | PRIMARY KEY AUTOINCREMENT | المعرف الفريد
+admin_id          | INTEGER        | NOT NULL            | معرف المسؤول
+rows_generated    | INTEGER        | NOT NULL            | عدد الصفوف المولدة
+file_path         | TEXT           | -                   | مسار الملف
+created_at        | TEXT           | DEFAULT CURRENT_TIMESTAMP | تاريخ الإنشاء
+
+المفاتيح الخارجية:
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+
+
+===========================================================
+ثانياً: التخزين المحلي في المتصفح (localStorage)
+===========================================================
+
+-------------------
+1. synthai_users - بيانات المستخدمين (JSON)
+-------------------
+الحقل          | النوع    | الوصف
+---------------|----------|----------------------
+id             | Number   | المعرف الفريد
+username       | String   | اسم المستخدم
+email          | String   | البريد الإلكتروني
+password       | String   | كلمة المرور (نص عادي)
+role           | String   | admin / farmer / company
+plan           | String   | free / pro / premium
+attempts       | Number   | عدد محاولات التوقع اليومية
+lastReset      | ISO String| تاريخ آخر إعادة تعيين للمحاولات
+isActive       | Boolean  | هل الحساب نشط
+createdAt      | ISO String| تاريخ الإنشاء
+subscriptionExpires | Number/null | تاريخ انتهاء الاشتراك (milliseconds)
+
+-------------------
+2. synthai_session - جلسة المستخدم النشطة (sessionStorage)
+-------------------
+نفس بنية synthai_users ولكن لمستخدم واحد فقط (المستخدم الحالي)
+
+-------------------
+3. synthai_models - النماذج المدربة (JSON Array)
+-------------------
+الحقل                | النوع    | الوصف
+---------------------|----------|----------------------
+id                   | Number   | المعرف الفريد (Date.now())
+name                 | String   | اسم النموذج
+createdAt            | ISO String| تاريخ الإنشاء
+status               | String   | in_progress / trained / failed
+config               | Object   | إعدادات التدريب
+  ├─ epochs          | Number   | عدد الحقب (default: 10)
+  ├─ batchSize       | Number   | حجم الدفعة (default: 32)
+  └─ learningRate    | Number   | معدل التعلم (default: 0.0002)
+datasetInfo          | Object   | معلومات مجموعة البيانات
+  ├─ fileName        | String   | اسم الملف المرفوع
+  ├─ originalRows    | Number   | عدد الصفوف الأصلية
+  ├─ originalCols    | Number   | عدد الأعمدة الأصلية
+  └─ headers         | [String] | أسماء الأعمدة
+cleaningReport       | Object/نull | تقرير تنظيف البيانات
+trainedModelPath     | String/نull | مسار النموذج المدرب
+generatedIds         | [Number] | معرفات البيانات المولدة من هذا النموذج
+versions             | [Object] | إصدارات النموذج
+  └─ كل إصدار:
+      version        | Number   | رقم الإصدار
+      type           | String   | initial / retrain
+      createdAt      | ISO String| تاريخ الإنشاء
+      status         | String   | in_progress / trained / failed
+      config         | Object   | نفس بنية config أعلاه
+      datasetInfo    | Object   | نفس بنية datasetInfo أعلاه
+      cleaningReport | Object/نull | تقرير التنظيف
+      evaluation     | Object/نull | تقييم النموذج
+
+-------------------
+4. synthai_model_data_{id} - بيانات النموذج النظيفة (JSON)
+-------------------
+الحقل    | النوع     | الوصف
+---------|-----------|----------------------
+headers  | [String]  | أسماء الأعمدة
+rows     | [Object]  | صفوف البيانات النظيفة
+
+-------------------
+5. synthai_production_model - معرف النموذج الإنتاجي (JSON)
+-------------------
+قيمة: معرف النموذج (Number) أو null
+
+-------------------
+6. synthai_generations - سجل توليد البيانات (JSON Array)
+-------------------
+الحقل              | النوع       | الوصف
+-------------------|-------------|----------------------
+id                 | Number      | المعرف الفريد (Date.now())
+timestamp          | Number      | طابع زمني
+date               | ISO String  | التاريخ
+status             | String      | completed
+type               | String      | crop / soil / weather
+rows               | Number      | عدد الصفوف المولدة
+level              | String      | Medium / Large / Big Data
+modelId            | Number/undefined | معرف النموذج (إن وُجد)
+modelName          | String/undefined | اسم النموذج
+modelVersion       | Number/undefined | إصدار النموذج
+fileUrl            | String/undefined | رابط الملف المحلي (synthai://cloud/...)
+cloudinaryUrl      | String/undefined | رابط Cloudinary
+preview            | Object      | معاينة البيانات
+  ├─ headers       | [String]    | أسماء الأعمدة
+  ├─ data          | [Object]    | أول 50 صف فقط في localStorage
+  ├─ totalRows     | Number      | إجمالي عدد الصفوف
+  ├─ type          | String      | crop / soil / weather
+  ├─ level         | String      | Medium / Large / Big Data
+  ├─ validation    | Object      | نتائج التحقق من الصحة
+  ├─ correlationSimilarity | Number/null | تشابه الارتباط
+  └─ generatedAt   | ISO String  | تاريخ التوليد
+
+-------------------
+7. synthai_augmentations - سجل زيادة البيانات (JSON Array)
+-------------------
+الحقل               | النوع    | الوصف
+--------------------|----------|----------------------
+id                  | Number   | المعرف الفريد (Date.now())
+userId              | Number   | معرف المستخدم
+fileName            | String   | اسم الملف الأصلي
+originalRows        | Number   | عدد الصفوف الأصلية
+augmentedRows       | Number   | عدد الصفوف بعد الزيادة
+multiplier          | Number   | عامل الزيادة (2/5/10)
+qualityScore        | Number   | درجة الجودة (0-100)
+qualityLabel        | String   | Excellent / Good / Fair / Poor
+correlationSimilarity| Number  | تشابه الارتباط (%)
+originalStats       | Object   | إحصائيات البيانات الأصلية
+augmentedStats      | Object   | إحصائيات البيانات بعد الزيادة
+headers             | [String] | أسماء الأعمدة
+preview             | Object   | معاينة البيانات (نفس بنية preview أعلاه)
+type                | String   | crop / soil / weather / generic
+createdAt           | Number   | طابع زمني للإنشاء
+dateStr             | ISO String| تاريخ الإنشاء
+
+-------------------
+8. synthai_history - سجل التوقعات (JSON Array)
+-------------------
+الحقل      | النوع    | الوصف
+-----------|----------|----------------------
+id         | Number   | المعرف الفريد (Date.now())
+userId     | Number   | معرف المستخدم
+timestamp  | Number   | طابع زمني
+date       | ISO String| التاريخ
+type       | String   | crop_conditions / conditions_crop / data_generation
+crop       | String   | اسم المحصول (للبحث)
+input      | String   | بيانات الإدخال
+result     | String   | نتيجة التوقع
+
+-------------------
+9. synthai_payments - سجل المدفوعات (JSON Array)
+-------------------
+الحقل         | النوع    | الوصف
+--------------|----------|----------------------
+id            | Number   | المعرف الفريد (Date.now())
+userId        | Number   | معرف المستخدم
+planId        | String   | free / pro / premium
+planName      | String   | اسم الخطة
+price         | Number   | السعر
+subscribedAt  | Number   | طابع زمني للاشتراك
+expiresAt     | Number   | طابع زمني للانتهاء
+expired       | Boolean  | هل انتهت صلاحية الاشتراك
+status        | String   | active
+
+-------------------
+10. synthai_lang - اللغة المختارة (localStorage)
+-------------------
+قيمة: String: "ar" / "fr" / "en"
+
+-------------------
+11. synthai_api_available - حالة توفر API (sessionStorage)
+-------------------
+قيمة: String: "true" / "false"
+
+
+===========================================================
+ثالثاً: ملف CSV للبيانات التدريبية
+===========================================================
+
+-------------------
+data/Crop_recommendation.csv
+-------------------
+عدد الصفوف: 2,200 صف
+عدد الأعمدة: 8 أعمدة
+
+العمود         | النوع        | الوصف
+---------------|--------------|----------------------
+N              | رقمي        | نسبة النيتروجين في التربة
+P              | رقمي        | نسبة الفوسفور في التربة
+K              | رقمي        | نسبة البوتاسيوم في التربة
+temperature    | رقمي        | درجة الحرارة (مئوية)
+humidity       | رقمي        | الرطوبة (%)
+ph             | رقمي        | درجة الحموضة
+rainfall       | رقمي        | كمية الأمطار (مم)
+label          | نصي (تصنيف) | اسم المحصول (22 محصولاً)
+
+المحاصيل الـ 22: rice, maize, cotton, jute, coffee, banana, mango,
+grapes, apple, coconut, chickpea, lentil, blackgram, kidneybeans,
+pigeonpeas, muskmelon, watermelon, orange, papaya, pomegranate,
+mungbean, mothbeans
+
+
+===========================================================
+رابعاً: ملخص العلاقات (المفاتيح الخارجية)
+===========================================================
+
+SQLite:
+  usage_logs.user_id          → users.id
+  predictions.user_id         → users.id
+  synthetic_datasets.admin_id → users.id
+
+localStorage:
+  synthai_history.userId          → synthai_users[].id
+  synthai_payments.userId         → synthai_users[].id
+  synthai_augmentations.userId    → synthai_users[].id
+  synthai_models[].generatedIds[] → synthai_generations[].id
+
+===========================================================

@@ -894,8 +894,8 @@ const DataService = (function() {
         var validation = validatePreview(preview);
         var qualityScore = validation.qualityScore;
         var qualityLabel = 'Poor';
-        if (qualityScore >= 90) qualityLabel = 'Excellent';
-        else if (qualityScore >= 75) qualityLabel = 'Good';
+        if (qualityScore >= 90) qualityLabel = (typeof I18nService !== 'undefined' ? I18nService.t('status.excellent') : 'Excellent');
+        else if (qualityScore >= 75) qualityLabel = (typeof I18nService !== 'undefined' ? I18nService.t('status.good') : 'Good');
         else if (qualityScore >= 50) qualityLabel = 'Fair';
 
         // Compute correlation similarity

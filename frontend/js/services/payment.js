@@ -6,34 +6,27 @@ const PaymentService = (function() {
             id: 'free', name: 'Free', price: 0, period: '',
             badge: '', color: 'badge-free',
             features: [
-                '5 predictions/day (Farmer)',
-                'Medium dataset only (1,000 rows)',
-                '10 history entries',
-                'Basic recommendations',
-                'Standard support'
+                'plan.feature.free_1', 'plan.feature.free_2',
+                'plan.feature.free_3', 'plan.feature.free_4',
+                'plan.feature.free_5'
             ]
         },
         pro: {
             id: 'pro', name: 'Pro', price: 9.99, period: '/month',
             badge: '', color: 'badge-warning',
             features: [
-                '50 predictions/day (Farmer)',
-                'Large datasets (10,000 rows)',
-                '100 history entries',
-                'Advanced recommendations',
-                'Priority support'
+                'plan.feature.pro_1', 'plan.feature.pro_2',
+                'plan.feature.pro_3', 'plan.feature.pro_4',
+                'plan.feature.pro_5'
             ]
         },
         premium: {
             id: 'premium', name: 'Premium', price: 29.99, period: '/month',
-            badge: 'Most Popular', color: 'badge-premium',
+            badge: 'plan.most_popular', color: 'badge-premium',
             features: [
-                'Unlimited predictions',
-                'Big Data generation (100,000 rows)',
-                'Unlimited history',
-                'Full analytics dashboard',
-                '24/7 priority support',
-                'Custom dataset types'
+                'plan.feature.premium_1', 'plan.feature.premium_2',
+                'plan.feature.premium_3', 'plan.feature.premium_4',
+                'plan.feature.premium_5', 'plan.feature.premium_6'
             ]
         }
     };
@@ -61,7 +54,7 @@ const PaymentService = (function() {
     }
 
     function subscribe(userId, planId) {
-        if (!PLANS[planId]) return { success: false, message: 'Invalid plan' };
+        if (!PLANS[planId]) return { success: false, message: (typeof I18nService !== 'undefined' ? I18nService.t('payment.invalid_plan') : 'Invalid plan') };
         if (planId === 'free') {
             const users = AuthService.getUsers();
             const idx = users.findIndex(u => u.id === userId);

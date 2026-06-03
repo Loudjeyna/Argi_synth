@@ -27,7 +27,7 @@ const AuthService = (function() {
         initUsers();
         const users = getUsers();
         if (users.find(u => u.username === username || u.email === email)) {
-            return { success: false, message: 'Username or email already exists' };
+            return { success: false, message: (typeof I18nService !== 'undefined' ? I18nService.t('login.exists') : 'Username or email already exists') };
         }
         const newUser = {
             id: users.length + 1, username, email, password, role,
@@ -43,8 +43,8 @@ const AuthService = (function() {
         initUsers();
         const users = getUsers();
         const user = users.find(u => u.username === username && u.password === password);
-        if (!user) return { success: false, message: 'Invalid credentials' };
-        if (!user.isActive) return { success: false, message: 'Account is disabled' };
+        if (!user) return { success: false, message: (typeof I18nService !== 'undefined' ? I18nService.t('login.invalid') : 'Invalid credentials') };
+        if (!user.isActive) return { success: false, message: (typeof I18nService !== 'undefined' ? I18nService.t('login.disabled') : 'Account is disabled') };
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
         return { success: true, user };
     }

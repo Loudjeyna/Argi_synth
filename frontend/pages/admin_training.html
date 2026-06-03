@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - New Training</title>
+    <title data-i18n="training.title">SynthAI - New Training</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .gan-grid { display: inline-grid; grid-template-columns: auto 30px auto 30px auto 30px auto; align-items: center; justify-items: center; gap: 0.5rem; margin: 1rem auto; }
@@ -114,34 +114,34 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>New Training</h2><p>Create a new CTGAN model with your dataset</p></div>
+            <div class="page-header"><h2 data-i18n="training.title">New Training</h2><p data-i18n="training.subtitle">Create a new CTGAN model with your dataset</p></div>
 
 
 
             <!-- Section 2: Dataset Import -->
             <div class="card">
-                <h3 class="card-title">Dataset Import</h3>
-                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Upload a CSV or Excel file to use as training data for the CTGAN model.</p>
+                <h3 class="card-title" data-i18n="training.dataset_import">Dataset Import</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;" data-i18n="training.upload_desc">Upload a CSV or Excel file to use as training data for the CTGAN model.</p>
                 <div class="upload-zone" id="upload-zone">
                     <div class="upload-icon">
                         <svg viewBox="0 0 24 24"><path d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
                     </div>
                     <div class="upload-text">
-                        <span class="primary" id="upload-primary-text">Click to select CSV or Excel file</span>
-                        <span class="secondary">Supports .csv, .xlsx, .xls</span>
+                        <span class="primary" id="upload-primary-text" data-i18n="training.click_select">Click to select CSV or Excel file</span>
+                        <span class="secondary" data-i18n="training.supports">Supports .csv, .xlsx, .xls</span>
                     </div>
                     <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls">
                 </div>
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button id="import-dataset-btn" class="btn btn-primary">Upload</button>
-                    <button id="change-dataset-btn" class="btn btn-outline" style="display: none;">Change Dataset</button>
+                    <button id="import-dataset-btn" class="btn btn-primary" data-i18n="action.upload">Upload</button>
+                    <button id="change-dataset-btn" class="btn btn-outline" style="display: none;" data-i18n="training.change_dataset">Change Dataset</button>
                 </div>
                 <div id="dataset-table-container" style="display: none; margin-top: 1rem;">
                     <div class="table-container"><table id="dataset-table"></table></div>
@@ -151,70 +151,70 @@
 
             <!-- Section 3: Data Cleaning Pipeline -->
             <div class="card" id="cleaning-section" style="display: none;">
-                <h3 class="card-title">Data Cleaning Pipeline</h3>
-                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">5-step automated pipeline to prepare your dataset for CTGAN training.</p>
+                <h3 class="card-title" data-i18n="training.cleaning">Data Cleaning Pipeline</h3>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;" data-i18n="training.cleaning_desc">5-step automated pipeline to prepare your dataset for CTGAN training.</p>
                 <div class="cleaning-pipeline" id="cleaning-pipeline">
                     <div class="cleaning-step" id="cleaning-step-a" data-status="pending">
                         <div class="cleaning-step-header">
                             <div class="step-badge default">A</div>
-                            <div class="step-title">Missing Values</div>
-                            <div class="step-status pending">Pending</div>
+                            <div class="step-title" data-i18n="training.missing">Missing Values</div>
+                            <div class="step-status pending" data-i18n="status.pending">Pending</div>
                         </div>
                         <div class="cleaning-step-details" id="cleaning-details-a"></div>
                     </div>
                     <div class="cleaning-step" id="cleaning-step-b" data-status="pending">
                         <div class="cleaning-step-header">
                             <div class="step-badge default">B</div>
-                            <div class="step-title">Duplicate Values</div>
-                            <div class="step-status pending">Pending</div>
+                            <div class="step-title" data-i18n="training.duplicates">Duplicate Values</div>
+                            <div class="step-status pending" data-i18n="status.pending">Pending</div>
                         </div>
                         <div class="cleaning-step-details" id="cleaning-details-b"></div>
                     </div>
                     <div class="cleaning-step" id="cleaning-step-c" data-status="pending">
                         <div class="cleaning-step-header">
                             <div class="step-badge default">C</div>
-                            <div class="step-title">Data Type Detection</div>
-                            <div class="step-status pending">Pending</div>
+                            <div class="step-title" data-i18n="training.types">Data Type Detection</div>
+                            <div class="step-status pending" data-i18n="status.pending">Pending</div>
                         </div>
                         <div class="cleaning-step-details" id="cleaning-details-c"></div>
                     </div>
                     <div class="cleaning-step" id="cleaning-step-d" data-status="pending">
                         <div class="cleaning-step-header">
                             <div class="step-badge default">D</div>
-                            <div class="step-title">Outliers Detection (IQR)</div>
-                            <div class="step-status pending">Pending</div>
+                            <div class="step-title" data-i18n="training.outliers">Outliers Detection (IQR)</div>
+                            <div class="step-status pending" data-i18n="status.pending">Pending</div>
                         </div>
                         <div class="cleaning-step-details" id="cleaning-details-d"></div>
                     </div>
                     <div class="cleaning-step" id="cleaning-step-e" data-status="pending">
                         <div class="cleaning-step-header">
                             <div class="step-badge default">E</div>
-                            <div class="step-title">Constant Columns Removal</div>
-                            <div class="step-status pending">Pending</div>
+                            <div class="step-title" data-i18n="training.constants">Constant Columns Removal</div>
+                            <div class="step-status pending" data-i18n="status.pending">Pending</div>
                         </div>
                         <div class="cleaning-step-details" id="cleaning-details-e"></div>
                     </div>
                 </div>
-                <button id="start-cleaning-btn" class="btn btn-primary" style="margin-top: 1rem;">Start Data Cleaning</button>
+                <button id="start-cleaning-btn" class="btn btn-primary" style="margin-top: 1rem;" data-i18n="training.start_cleaning">Start Data Cleaning</button>
             </div>
 
             <!-- Section 4: Data Cleaning Report -->
             <div class="card" id="cleaning-report-section" style="display: none;">
-                <h3 class="card-title">Data Cleaning Report</h3>
+                <h3 class="card-title" data-i18n="training.report">Data Cleaning Report</h3>
                 <div id="cleaning-report-content"></div>
             </div>
 
             <!-- Section 5: Training Configuration -->
             <div class="card" id="training-config-section" style="display: none;">
-                <h3 class="card-title">Training Configuration</h3>
+                <h3 class="card-title" data-i18n="training.config">Training Configuration</h3>
                 <div class="form-card">
                     <div class="form-group">
-                        <label for="model-name">Model Name</label>
-                        <input type="text" id="model-name" class="form-control" placeholder="e.g., Crop CTGAN v1">
+                        <label for="model-name" data-i18n="training.model_name">Model Name</label>
+                        <input type="text" id="model-name" class="form-control" placeholder="e.g., Crop CTGAN v1" data-i18n-placeholder="training.placeholder_name">
                     </div>
                     <div class="training-params">
                         <div class="form-group">
-                            <label for="train-epochs">Epochs</label>
+                            <label for="train-epochs" data-i18n="training.epochs">Epochs</label>
                             <select id="train-epochs" class="form-control">
                                 <option value="100">100</option>
                                 <option value="300">300</option>
@@ -223,7 +223,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="train-batch-size">Batch Size</label>
+                            <label for="train-batch-size" data-i18n="training.batch_size">Batch Size</label>
                             <select id="train-batch-size" class="form-control">
                                 <option value="128" selected>128</option>
                                 <option value="256">256</option>
@@ -231,7 +231,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="train-lr">Learning Rate</label>
+                            <label for="train-lr" data-i18n="training.lr">Learning Rate</label>
                             <select id="train-lr" class="form-control">
                                 <option value="0.0001">0.0001</option>
                                 <option value="0.0002" selected>0.0002</option>
@@ -240,19 +240,19 @@
                         </div>
                     </div>
                     <button id="add-training-btn" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">
-                        <span class="ico ico-gear"></span> Add Training
+                        <span class="ico ico-gear"></span> <span data-i18n="training.add_training">Add Training</span>
                     </button>
                 </div>
             </div>
 
             <!-- Section 6: Training Progress -->
             <div class="card" id="training-progress-section" style="display: none;">
-                <h3 class="card-title">Training Progress</h3>
+                    <h3 class="card-title" data-i18n="training.progress">Training Progress</h3>
                 <div id="training-progress-content">
                     <p style="color: #666; font-size: 0.9rem;">Creating model and simulating training...</p>
                     <div style="margin: 1rem 0;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem;">
-                            <span>Training epochs</span>
+                            <span data-i18n="training.epochs_progress">Training epochs</span>
                             <span id="progress-text">0%</span>
                         </div>
                         <div style="height: 8px; background: #E0E0E0; border-radius: 4px; overflow: hidden;">
@@ -265,25 +265,27 @@
 
             <!-- Section 7: Result -->
             <div class="card" id="training-result-section" style="display: none;">
-                <h3 class="card-title">Training Complete</h3>
+                <h3 class="card-title" data-i18n="training.complete">Training Complete</h3>
                 <div id="training-result-content" style="margin-bottom: 1rem;">
                     <div class="status-message status-success">
-                        <strong>Model created successfully!</strong> You can now view and manage it from the Models page.
+                        <strong data-i18n="training.success">Model created successfully!</strong> You can now view and manage it from the Models page.
                     </div>
                     <div id="result-details"></div>
                 </div>
-                <a href="admin_models.html" class="btn btn-primary">View All Models</a>
-                <a href="admin_training.html" class="btn btn-outline" style="margin-left: 0.5rem;">Create Another Model</a>
+                <a href="admin_models.html" class="btn btn-primary" data-i18n="training.view_models">View All Models</a>
+                <a href="admin_training.html" class="btn btn-outline" style="margin-left: 0.5rem;" data-i18n="training.create_another">Create Another Model</a>
             </div>
         </main>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/services/history.js"></script>
     <script src="../js/services/model.js"></script>
     <script src="../js/app.js"></script>
+    <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
     <script>
         (function() {
             var logoutBtn = document.getElementById('logout-btn');
@@ -306,7 +308,8 @@
                 if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             initUploadZone();
@@ -316,6 +319,8 @@
             initAddTraining();
             initFileInputChange();
         });
+
+        function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
         // ================================================================
         // Upload Zone (click to browse)
@@ -346,8 +351,8 @@
             _cleaningReport = null;
             var zone = document.getElementById('upload-zone');
             zone.classList.remove('has-file');
-            document.getElementById('upload-primary-text').textContent = 'Click to select CSV or Excel file';
-            zone.querySelector('.secondary').textContent = 'Supports .csv, .xlsx, .xls';
+            document.getElementById('upload-primary-text').textContent = _t('training.click_select');
+            zone.querySelector('.secondary').textContent = _t('training.supports');
             document.getElementById('dataset-table-container').style.display = 'none';
             document.getElementById('dataset-table').innerHTML = '';
             document.getElementById('dataset-stats').innerHTML = '';
@@ -355,10 +360,10 @@
             document.getElementById('cleaning-report-section').style.display = 'none';
             document.getElementById('training-config-section').style.display = 'none';
             document.getElementById('start-cleaning-btn').disabled = false;
-            document.getElementById('start-cleaning-btn').textContent = 'Start Data Cleaning';
+            document.getElementById('start-cleaning-btn').textContent = _t('training.start_cleaning');
             resetCleaningSteps();
             var btn = document.getElementById('import-dataset-btn');
-            btn.textContent = 'Upload';
+            btn.textContent = _t('action.upload');
             btn.style.background = '';
             btn.disabled = false;
             document.getElementById('change-dataset-btn').style.display = 'none';
@@ -372,7 +377,7 @@
                     var badge = el.querySelector('.step-badge');
                     if (badge) { badge.className = 'step-badge default'; badge.textContent = s.toUpperCase(); }
                     var st = el.querySelector('.step-status');
-                    if (st) { st.textContent = 'Pending'; st.className = 'step-status pending'; }
+                    if (st) { st.textContent = _t('status.pending'); st.className = 'step-status pending'; }
                     var det = el.querySelector('.cleaning-step-details');
                     if (det) { det.classList.remove('open'); det.innerHTML = ''; }
                 }
@@ -406,7 +411,7 @@
             if (_uploadedData) resetUploadUI();
 
             var btn = document.getElementById('import-dataset-btn');
-            btn.textContent = 'Uploading...';
+            btn.textContent = _t('training.uploading');
             btn.disabled = true;
 
             var fileName = file.name;
@@ -415,7 +420,7 @@
             var showFileResult = function(parsed) {
                 if (!parsed || !parsed.rows || parsed.rows.length === 0) {
                     alert('Could not parse file. Please check the format.');
-                    btn.textContent = 'Upload';
+                    btn.textContent = _t('action.upload');
                     btn.disabled = false;
                     input.value = '';
                     return;
@@ -432,11 +437,11 @@
                 document.getElementById('dataset-table-container').style.display = 'block';
                 document.getElementById('dataset-table').innerHTML = tableHtml;
                 document.getElementById('dataset-stats').innerHTML =
-                    '<span>Rows: <strong>' + parsed.rows.length + '</strong></span> &middot; ' +
-                    '<span>Columns: <strong>' + parsed.headers.length + '</strong></span> &middot; ' +
-                    '<span>Column names: <strong>' + parsed.headers.join(', ') + '</strong></span>';
+                    '<span>' + _t('training.stats_rows') + ' <strong>' + parsed.rows.length + '</strong></span> &middot; ' +
+                    '<span>' + _t('training.stats_cols') + ' <strong>' + parsed.headers.length + '</strong></span> &middot; ' +
+                    '<span>' + _t('training.stats_col_names') + ' <strong>' + parsed.headers.join(', ') + '</strong></span>';
 
-                btn.innerHTML = '<span class="ico ico-check"></span> Uploaded';
+                btn.innerHTML = '<span class="ico ico-check"></span> ' + _t('training.uploaded');
                 btn.style.background = '#4CAF50';
                 btn.disabled = true;
                 document.getElementById('change-dataset-btn').style.display = 'inline-block';
@@ -451,7 +456,7 @@
                 };
                 fileReader.onerror = function() {
                     alert('Error reading Excel file.');
-                    btn.textContent = 'Upload'; btn.disabled = false;
+                    btn.textContent = _t('action.upload'); btn.disabled = false;
                 };
                 fileReader.readAsArrayBuffer(file);
             } else {
@@ -462,7 +467,7 @@
                 };
                 textReader.onerror = function() {
                     alert('Error reading CSV file.');
-                    btn.textContent = 'Upload'; btn.disabled = false;
+                    btn.textContent = _t('action.upload'); btn.disabled = false;
                 };
                 textReader.readAsText(file);
             }
@@ -549,81 +554,81 @@
                 if (!_uploadedData) return;
                 var btn = this;
                 btn.disabled = true;
-                btn.textContent = 'Cleaning...';
+                btn.textContent = _t('training.cleaning_in_progress');
                 resetCleaningSteps();
                 runCleaningPipeline();
             });
         }
 
+        var _pipelineReport = {};
+
         function runCleaningPipeline() {
             var data = JSON.parse(JSON.stringify(_uploadedData));
             var headers = data.headers;
             var rows = data.rows;
-            var report = {};
+            _pipelineReport = {};
 
-            // Step A: Missing Values
-            setStepUI('a', 'running', 'running', 'Running...');
+            setStepUI('a', 'running', 'running', _t('training.running'));
             setTimeout(function() {
                 var resultA = stepMissingValues(headers, rows);
                 _cleanedData = { headers: resultA.headers, rows: resultA.rows };
-                report.missing = resultA.report;
+                _pipelineReport.missing = resultA.report;
                 setStepDetails('a', resultA.detailsHtml);
-                setStepUI('a', 'completed', 'completed', 'Completed');
+                setStepUI('a', 'completed', 'completed', _t('status.completed'));
                 runStepB();
+            }, 300);
+        }
+
+        function runStepB() {
+            setStepUI('b', 'running', 'running', _t('training.running'));
+            setTimeout(function() {
+                var resultB = stepDuplicates(_cleanedData.headers, _cleanedData.rows);
+                _cleanedData = { headers: resultB.headers, rows: resultB.rows };
+                _pipelineReport.duplicates = resultB.report;
+                setStepDetails('b', resultB.detailsHtml);
+                setStepUI('b', 'completed', 'completed', _t('status.completed'));
+                runStepC();
+            }, 300);
+        }
+
+        function runStepC() {
+            setStepUI('c', 'running', 'running', _t('training.running'));
+            setTimeout(function() {
+                var resultC = stepTypeDetection(_cleanedData.headers, _cleanedData.rows);
+                _pipelineReport.types = resultC.report;
+                setStepDetails('c', resultC.detailsHtml);
+                setStepUI('c', 'completed', 'completed', _t('status.completed'));
+                runStepD();
+            }, 300);
+        }
+
+        function runStepD() {
+            setStepUI('d', 'running', 'running', _t('training.running'));
+            setTimeout(function() {
+                _outlierState.preRows = JSON.parse(JSON.stringify(_cleanedData.rows));
+                _outlierState.preHeaders = _cleanedData.headers.slice();
+                var resultD = stepOutliers(_cleanedData.headers, _cleanedData.rows);
+                _cleanedData = { headers: resultD.headers, rows: resultD.rows };
+                _pipelineReport.outliers = resultD.report;
+                _pipelineReport.outlierAdvancedHtml = resultD.advancedHtml;
+                setStepDetails('d', resultD.detailsHtml);
+                setStepUI('d', 'completed', 'completed', _t('status.completed'));
+                runStepE();
+            }, 300);
+        }
+
+        function runStepE() {
+            setStepUI('e', 'running', 'running', _t('training.running'));
+            setTimeout(function() {
+                var resultE = stepConstantColumns(_cleanedData.headers, _cleanedData.rows);
+                _cleanedData = { headers: resultE.headers, rows: resultE.rows };
+                _pipelineReport.constants = resultE.report;
+                setStepDetails('e', resultE.detailsHtml);
+                setStepUI('e', 'completed', 'completed', _t('status.completed'));
+                _cleaningReport = _pipelineReport;
+                showCleaningReport(_pipelineReport);
+                document.getElementById('start-cleaning-btn').textContent = _t('training.cleaning_complete');
             }, 400);
-
-            function runStepB() {
-                setStepUI('b', 'running', 'running', 'Running...');
-                setTimeout(function() {
-                    var resultB = stepDuplicates(_cleanedData.headers, _cleanedData.rows);
-                    _cleanedData = { headers: resultB.headers, rows: resultB.rows };
-                    report.duplicates = resultB.report;
-                    setStepDetails('b', resultB.detailsHtml);
-                    setStepUI('b', 'completed', 'completed', 'Completed');
-                    runStepC();
-                }, 400);
-            }
-
-            function runStepC() {
-                setStepUI('c', 'running', 'running', 'Running...');
-                setTimeout(function() {
-                    var resultC = stepTypeDetection(_cleanedData.headers, _cleanedData.rows);
-                    report.types = resultC.report;
-                    setStepDetails('c', resultC.detailsHtml);
-                    setStepUI('c', 'completed', 'completed', 'Completed');
-                    runStepD();
-                }, 400);
-            }
-
-            function runStepD() {
-                setStepUI('d', 'running', 'running', 'Running...');
-                setTimeout(function() {
-                    _outlierState.preRows = JSON.parse(JSON.stringify(_cleanedData.rows));
-                    _outlierState.preHeaders = _cleanedData.headers.slice();
-                    var resultD = stepOutliers(_cleanedData.headers, _cleanedData.rows);
-                    _cleanedData = { headers: resultD.headers, rows: resultD.rows };
-                    report.outliers = resultD.report;
-                    report.outlierAdvancedHtml = resultD.advancedHtml;
-                    setStepDetails('d', resultD.detailsHtml);
-                    setStepUI('d', 'completed', 'completed', 'Completed');
-                    runStepE();
-                }, 400);
-            }
-
-            function runStepE() {
-                setStepUI('e', 'running', 'running', 'Running...');
-                setTimeout(function() {
-                    var resultE = stepConstantColumns(_cleanedData.headers, _cleanedData.rows);
-                    _cleanedData = { headers: resultE.headers, rows: resultE.rows };
-                    report.constants = resultE.report;
-                    setStepDetails('e', resultE.detailsHtml);
-                    setStepUI('e', 'completed', 'completed', 'Completed');
-
-                    _cleaningReport = report;
-                    showCleaningReport(report);
-                    document.getElementById('start-cleaning-btn').textContent = 'Cleaning Complete';
-                }, 400);
-            }
         }
 
         // ================================================================
@@ -678,7 +683,7 @@
             var pct = ((missingCount / Math.max(1, totalCells)) * 100).toFixed(1);
             var detailsHtml = '';
             if (missingCount === 0) {
-                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> No missing values found.</div>';
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> ' + _t('training.no_missing') + '</div>';
             } else {
                 detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> Found <strong>' + missingCount + '</strong> missing values (' + pct + '% of cells). Filled <strong>' + fillCount + '</strong> values.</div>';
                 headers.forEach(function(h) {
@@ -713,7 +718,7 @@
                 report: { before: before, after: unique.length, removed: removed },
                 detailsHtml: '<div class="cleaning-check ' + (removed > 0 ? 'pass' : 'pass') + '"><span class="ico ico-check"></span> ' +
                     'Before: <strong>' + before + '</strong> rows, After: <strong>' + unique.length + '</strong> rows' +
-                    (removed > 0 ? '. Removed <strong>' + removed + '</strong> duplicate(s).' : '. No duplicates found.') + '</div>'
+                    (removed > 0 ? '. Removed <strong>' + removed + '</strong> duplicate(s).' : '. ' + _t('training.no_duplicates')) + '</div>'
             };
         }
 
@@ -736,7 +741,7 @@
                 else types[col] = 'categorical';
             });
 
-            var detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> Types detected (no data conversion performed).</div>';
+            var detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> ' + _t('training.types_detected') + '</div>';
             detailsHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; margin-top: 0.5rem;">';
             headers.forEach(function(h) {
                 detailsHtml += '<div class="step-detail-row"><span class="' + (types[h] === 'numeric' ? 'success' : types[h] === 'datetime' ? 'warning' : '') + '">' + types[h] + '</span> ' + h + '</div>';
@@ -828,28 +833,28 @@
                 }
             });
             if (totalOutliers === 0) {
-                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> No outliers detected.</div>';
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-check"></span> ' + _t('training.no_outliers') + '</div>';
             } else {
-                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-warning"></span> Outliers detected and handled automatically.</div>' + detailsHtml;
+                detailsHtml = '<div class="cleaning-check pass"><span class="ico ico-warning"></span> ' + _t('training.outliers_handled') + '</div>' + detailsHtml;
             }
 
             // Advanced HTML
-            var advHtml = '<p style="font-size:0.85rem;color:#666;margin-bottom:0.5rem;">Override auto-strategy per column:</p>';
+            var advHtml = '<p style="font-size:0.85rem;color:#666;margin-bottom:0.5rem;">' + _t('training.outlier_strategy') + '</p>';
             advHtml += '<div class="outlier-advanced">';
-            advHtml += '<table><thead><tr><th>Column</th><th>Outliers</th><th>Range</th><th>Strategy</th></tr></thead><tbody>';
+            advHtml += '<table><thead><tr><th>' + _t('training.column') + '</th><th>' + _t('training.outliers') + '</th><th>' + _t('training.range') + '</th><th>' + _t('training.strategy') + '</th></tr></thead><tbody>';
             numericCols.forEach(function(col) {
                 if (!bounds[col]) return;
                 var b = bounds[col];
                 advHtml += '<tr><td>' + col + '</td><td>' + (outliers[col] || 0) + '</td>' +
                     '<td>' + b.lower.toFixed(1) + ' - ' + b.upper.toFixed(1) + '</td>' +
                     '<td><select class="strategy-select" data-col="' + col + '">' +
-                    '<option value="keep"' + (autoStrategy[col] === 'keep' ? ' selected' : '') + '>Keep</option>' +
-                    '<option value="cap"' + (autoStrategy[col] === 'cap' ? ' selected' : '') + '>Cap</option>' +
-                    '<option value="remove"' + (autoStrategy[col] === 'remove' ? ' selected' : '') + '>Remove</option>' +
+                    '<option value="keep"' + (autoStrategy[col] === 'keep' ? ' selected' : '') + '>' + _t('training.keep') + '</option>' +
+                    '<option value="cap"' + (autoStrategy[col] === 'cap' ? ' selected' : '') + '>' + _t('training.cap') + '</option>' +
+                    '<option value="remove"' + (autoStrategy[col] === 'remove' ? ' selected' : '') + '>' + _t('training.remove') + '</option>' +
                     '</select></td></tr>';
             });
             advHtml += '</tbody></table>';
-            advHtml += '<button class="btn btn-outline" style="margin-top:0.5rem;font-size:0.82rem;" onclick="applyAdvancedOutlierStrategy()">Apply Advanced Strategy</button></div>';
+            advHtml += '<button class="btn btn-outline" style="margin-top:0.5rem;font-size:0.82rem;" onclick="applyAdvancedOutlierStrategy()">' + _t('training.apply_advanced') + '</button></div>';
 
             return {
                 headers: headers,
@@ -1028,7 +1033,7 @@
                 _cleaningReport.outliers.rowsAfterRemoval = rows.length;
             }
 
-            alert('Advanced strategy applied. Rows after removal: ' + rows.length + '. The changes are reflected in the model.');
+            alert(_t('training.advanced_applied') + ' ' + rows.length + '. ' + _t('training.changes_reflected'));
         };
 
         // ================================================================
@@ -1047,9 +1052,9 @@
 
                 var btn = this;
                 btn.disabled = true;
-                btn.textContent = 'Creating model...';
+                btn.textContent = _t('training.creating_model');
 
-                // Create model
+                // Create model (local first)
                 var model = ModelService.addModel({
                     name: modelName,
                     epochs: epochs,
@@ -1078,49 +1083,87 @@
                 document.getElementById('training-config-section').style.display = 'none';
                 document.getElementById('training-progress-section').style.display = 'block';
 
-                // Simulate training progress
-                var progress = 0;
-                var interval = setInterval(function() {
-                    progress += 5;
-                    document.getElementById('progress-bar').style.width = progress + '%';
-                    document.getElementById('progress-text').textContent = progress + '%';
-                    document.getElementById('progress-status').textContent = 'Training epoch ' + Math.ceil(progress / 10) + ' of ' + Math.ceil(epochs) + '...';
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        document.getElementById('progress-status').textContent = 'Training complete!';
-                        document.getElementById('progress-text').textContent = '100%';
-                        document.getElementById('progress-bar').style.width = '100%';
+                var useApi = typeof ApiService !== 'undefined' && ApiService.isAvailable();
 
-                        // Update model status to trained
-                        ModelService.updateModel(model.id, { status: 'trained' });
-                        var lossValues = ModelService.generateLossValues(epochs);
-                        var trainDuration = parseFloat((epochs * 0.3 + Math.random() * 1.5).toFixed(1));
-                        var quality = ModelService.classifyTrainingQuality(lossValues.generatorLoss, lossValues.discriminatorLoss);
-                        ModelService.updateVersion(model.id, 1, {
-                            status: 'trained',
-                            evaluation: {
-                                generatorLoss: lossValues.generatorLoss,
-                                discriminatorLoss: lossValues.discriminatorLoss,
-                                trainingDuration: trainDuration,
-                                trainingQuality: quality
-                            }
+                if (useApi) {
+                    // Real training via backend
+                    document.getElementById('progress-status').textContent = 'Starting real training on backend...';
+                    ApiService.trainModel(epochs, batchSize)
+                        .then(function(resp) {
+                            document.getElementById('progress-bar').style.width = '100%';
+                            document.getElementById('progress-text').textContent = '100%';
+                            document.getElementById('progress-status').textContent = 'Training complete!';
+                            ModelService.updateModel(model.id, { status: 'trained' });
+                            ModelService.updateVersion(model.id, 1, {
+                                status: 'trained',
+                                evaluation: {
+                                    generatorLoss: null,
+                                    discriminatorLoss: null,
+                                    trainingDuration: null,
+                                    trainingQuality: 'good',
+                                    backendResponse: resp
+                                }
+                            });
+                            setTimeout(function() {
+                                document.getElementById('training-progress-section').style.display = 'none';
+                                document.getElementById('training-result-section').style.display = 'block';
+                                document.getElementById('result-details').innerHTML =
+                                    '<div style="margin-top:0.5rem;font-size:0.9rem;">' +
+                                    '<p><strong>Model:</strong> ' + modelName + '</p>' +
+                                    '<p><strong>Dataset:</strong> ' + (_uploadedData ? _uploadedData.rows.length + ' rows' : 'N/A') + '</p>' +
+                                    '<p><strong>Epochs:</strong> ' + epochs + '</p>' +
+                                    '<p><strong>Batch Size:</strong> ' + batchSize + '</p>' +
+                                    '<p><strong>Learning Rate:</strong> ' + lr + '</p>' +
+                                    '<p><strong>Backend:</strong> Real CTGAN training</p>' +
+                                    '</div>';
+                            }, 500);
+                        })
+                        .catch(function(err) {
+                            document.getElementById('progress-status').textContent = 'Training failed: ' + err.message;
+                            ModelService.updateModel(model.id, { status: 'failed' });
                         });
-
-                        // Show result
-                        setTimeout(function() {
-                            document.getElementById('training-progress-section').style.display = 'none';
-                            document.getElementById('training-result-section').style.display = 'block';
-                            document.getElementById('result-details').innerHTML =
-                                '<div style="margin-top:0.5rem;font-size:0.9rem;">' +
-                                '<p><strong>Model:</strong> ' + modelName + '</p>' +
-                                '<p><strong>Dataset:</strong> ' + (_uploadedData ? _uploadedData.rows.length + ' rows' : 'N/A') + '</p>' +
-                                '<p><strong>Epochs:</strong> ' + epochs + '</p>' +
-                                '<p><strong>Batch Size:</strong> ' + batchSize + '</p>' +
-                                '<p><strong>Learning Rate:</strong> ' + lr + '</p>' +
-                                '</div>';
-                        }, 500);
-                    }
-                }, 200);
+                } else {
+                    // Fallback: simulate training progress
+                    var progress = 0;
+                    var interval = setInterval(function() {
+                        progress += 5;
+                        document.getElementById('progress-bar').style.width = progress + '%';
+                        document.getElementById('progress-text').textContent = progress + '%';
+                        document.getElementById('progress-status').textContent = 'Training epoch ' + Math.ceil(progress / 10) + ' of ' + Math.ceil(epochs) + '...';
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            document.getElementById('progress-status').textContent = 'Training complete!';
+                            document.getElementById('progress-text').textContent = '100%';
+                            document.getElementById('progress-bar').style.width = '100%';
+                            ModelService.updateModel(model.id, { status: 'trained' });
+                            var lossValues = ModelService.generateLossValues(epochs);
+                            var trainDuration = parseFloat((epochs * 0.3 + Math.random() * 1.5).toFixed(1));
+                            var quality = ModelService.classifyTrainingQuality(lossValues.generatorLoss, lossValues.discriminatorLoss);
+                            ModelService.updateVersion(model.id, 1, {
+                                status: 'trained',
+                                evaluation: {
+                                    generatorLoss: lossValues.generatorLoss,
+                                    discriminatorLoss: lossValues.discriminatorLoss,
+                                    trainingDuration: trainDuration,
+                                    trainingQuality: quality
+                                }
+                            });
+                            setTimeout(function() {
+                                document.getElementById('training-progress-section').style.display = 'none';
+                                document.getElementById('training-result-section').style.display = 'block';
+                                document.getElementById('result-details').innerHTML =
+                                    '<div style="margin-top:0.5rem;font-size:0.9rem;">' +
+                                    '<p><strong>Model:</strong> ' + modelName + '</p>' +
+                                    '<p><strong>Dataset:</strong> ' + (_uploadedData ? _uploadedData.rows.length + ' rows' : 'N/A') + '</p>' +
+                                    '<p><strong>Epochs:</strong> ' + epochs + '</p>' +
+                                    '<p><strong>Batch Size:</strong> ' + batchSize + '</p>' +
+                                    '<p><strong>Learning Rate:</strong> ' + lr + '</p>' +
+                                    '<p><strong>Backend:</strong> Simulation (offline)</p>' +
+                                    '</div>';
+                            }, 500);
+                        }
+                    }, 200);
+                }
             });
         }
     </script>

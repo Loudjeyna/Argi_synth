@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Subscription</title>
+    <title data-i18n="sub.title">SynthAI - Subscription</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
@@ -32,14 +32,14 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>Subscription Plans</h2><p>Choose the plan that fits your agricultural data needs</p></div>
+            <div class="page-header"><h2 data-i18n="sub.title">Subscription Plans</h2><p data-i18n="sub.subtitle">Choose the plan that fits your agricultural data needs</p></div>
 
             <div id="current-plan-bar"></div>
 
@@ -80,7 +80,7 @@
             </div>
         </div>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/payment.js"></script>
     <script src="../js/app.js"></script>
@@ -89,13 +89,16 @@
             const user = AuthService.getCurrentUser();
             if (!user) { window.location.href = '/pages/login.html'; return; }
             AuthService.syncSessionFromStorage();
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+            App.setupSidebar();
+            try { App.setupLanguageSwitcher(); } catch (e) {} App.setupUserPanel(); App.setupLogout();
+
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
             const currentPlan = PaymentService.getUserPlan(user.id);
             const currentBar = document.getElementById('current-plan-bar');
             if (currentPlan && currentPlan !== 'free') {
                 const plan = PaymentService.getPlanDetails(currentPlan);
-                currentBar.innerHTML = '<div class="current-plan"><div><strong>Current Plan: ' + plan.name + '</strong></div><span class="badge badge-premium">Active</span></div>';
+                currentBar.innerHTML = '<div class="current-plan"><div><strong>' + _t('plan.current_plan') + ': ' + plan.name + '</strong></div><span class="badge badge-premium">' + _t('status.active') + '</span></div>';
             }
 
             const plans = PaymentService.getAvailablePlans();
@@ -105,11 +108,11 @@
                 const isCurrent = p.id === currentPlan;
                 const isPopular = p.id === 'premium';
                 const btnClass = isCurrent ? 'btn-subscribe-outline' : (isPopular ? 'btn-subscribe-primary' : 'btn-subscribe-primary');
-                const btnText = isCurrent ? 'Current Plan' : (p.price === 0 ? 'Get Started' : 'Subscribe');
+                const btnText = isCurrent ? _t('plan.current_plan') : (p.price === 0 ? _t('plan.get_started') : _t('action.subscribe'));
                 const disabled = isCurrent ? 'disabled' : '';
 
                 return '<div class="plan-card' + (isPopular ? ' popular' : '') + '">' +
-                    (isPopular ? '<div class="plan-popular-badge">Most Popular</div>' : '') +
+                    (isPopular ? '<div class="plan-popular-badge">' + _t('plan.most_popular') + '</div>' : '') +
                     '<div class="plan-name">' + p.name + '</div>' +
                     '<div class="plan-price"><span class="currency">$</span>' + p.price + '<span class="period">' + p.period + '</span></div>' +
                     '<ul class="plan-features">' + p.features.map(f => '<li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>' + f + '</li>').join('') + '</ul>' +
@@ -136,21 +139,22 @@
             document.getElementById('confirm-pay').addEventListener('click', () => {
                 const btn = document.getElementById('confirm-pay');
                 btn.disabled = true;
-                btn.textContent = 'Processing...';
+                btn.textContent = _t('payment.processing');
 
                 setTimeout(() => {
                     const result = PaymentService.simulatePayment(user.id, selectedPlan);
                     if (result.success) {
-                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-success">Payment successful! Welcome to ' + result.plan.name + '.</div>';
+                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-success">' + _t('payment.success') + ' Welcome to ' + result.plan.name + '.</div>';
                         setTimeout(() => { location.reload(); }, 1000);
                     } else {
-                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-error">Payment failed. Please try again.</div>';
+                        document.getElementById('payment-status').innerHTML = '<div class="status-message status-error">' + _t('payment.failed') + '</div>';
                     }
                     btn.disabled = false;
-                    btn.textContent = 'Confirm Payment';
+                    btn.textContent = _t('payment.confirm');
                 }, 1500);
             });
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

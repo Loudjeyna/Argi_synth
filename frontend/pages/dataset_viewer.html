@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Dataset Viewer</title>
+    <title data-i18n="viewer.title">SynthAI - Dataset Viewer</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .viewer-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
@@ -35,10 +35,10 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
@@ -50,8 +50,8 @@
                 <div>
                     <div class="card">
                         <div class="viewer-controls">
-                            <input type="text" id="search-filter" placeholder="Filter rows across all columns...">
-                            <button id="export-btn" class="btn btn-primary">Download CSV</button>
+                            <input type="text" id="search-filter" placeholder="Filter rows across all columns..." data-i18n-placeholder="common.search">
+                            <button id="export-btn" class="btn btn-primary" data-i18n="generate.download">Download CSV</button>
                         </div>
                         <div class="table-container">
                             <table><thead id="viewer-thead"></thead><tbody id="viewer-tbody"></tbody></table>
@@ -64,24 +64,26 @@
             </div>
         </main>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/payment.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
             const user = AuthService.getCurrentUser();
             if (!user) { window.location.href = '/pages/login.html'; return; }
             AuthService.syncSessionFromStorage();
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+            App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} App.setupUserPanel(); App.setupLogout();
 
             const urlParams = new URLSearchParams(window.location.search);
             const generationId = parseInt(urlParams.get('id'));
             const generation = DataService.getGenerationById(generationId);
 
             if (!generation || !generation.preview) {
-                document.querySelector('.main-content').innerHTML = '<div class="card"><h3>Dataset not found</h3><a href="generate_data.html" class="btn btn-primary">Go back</a></div>';
+                document.querySelector('.main-content').innerHTML = '<div class="card"><h3>' + _t('empty.no_dataset') + '</h3><a href="generate_data.html" class="btn btn-primary">' + _t('model.go_back') + '</a></div>';
                 return;
             }
 
@@ -94,16 +96,17 @@
             const qualityColor = validation.qualityScore >= 90 ? '#2E7D32' : validation.qualityScore >= 70 ? '#FF9800' : '#F44336';
             const simColor = (corrSim !== null && corrSim !== undefined) ? (corrSim >= 80 ? '#2E7D32' : corrSim >= 60 ? '#FF9800' : '#F44336') : '#999';
 
+            var typeName = preview.type.charAt(0).toUpperCase() + preview.type.slice(1);
             document.getElementById('viewer-header').innerHTML = `
                 <div>
-                    <h2>${preview.type.charAt(0).toUpperCase() + preview.type.slice(1)} Dataset</h2>
-                    <p style="color: #666; margin-top: 0.25rem;">Generated: ${new Date(generation.date).toLocaleDateString()} | <span class="trust-badge" style="background:${qualityColor}15;color:${qualityColor};border:1px solid ${qualityColor}40;">Quality: ${validation.qualityScore}%</span> <span class="trust-badge" style="background:${simColor}15;color:${simColor};border:1px solid ${simColor}40;">Correlation: ${corrSim !== null && corrSim !== undefined ? corrSim + '%' : 'N/A'}</span></p>
+                    <h2>${typeName} ${_t('viewer.title')}</h2>
+                    <p style="color: #666; margin-top: 0.25rem;">${_t('viewer.generated')} ${new Date(generation.date).toLocaleDateString()} | <span class="trust-badge" style="background:${qualityColor}15;color:${qualityColor};border:1px solid ${qualityColor}40;">${_t('viewer.quality')}: ${validation.qualityScore}%</span> <span class="trust-badge" style="background:${simColor}15;color:${simColor};border:1px solid ${simColor}40;">${_t('viewer.correlation')}: ${corrSim !== null && corrSim !== undefined ? corrSim + '%' : 'N/A'}</span></p>
                 </div>
                 <div class="dataset-meta">
-                    <div class="meta-item"><div class="meta-value">${preview.totalRows.toLocaleString()}</div><div class="meta-label">Total Rows</div></div>
-                    <div class="meta-item"><div class="meta-value">${preview.headers.length}</div><div class="meta-label">Columns</div></div>
-                    <div class="meta-item"><div class="meta-value">${preview.level}</div><div class="meta-label">Level</div></div>
-                    <div class="meta-item"><div class="meta-value" style="color:${qualityColor};">${validation.qualityScore}%</div><div class="meta-label">Quality Score</div></div>
+                    <div class="meta-item"><div class="meta-value">${preview.totalRows.toLocaleString()}</div><div class="meta-label">${_t('viewer.total_rows')}</div></div>
+                    <div class="meta-item"><div class="meta-value">${preview.headers.length}</div><div class="meta-label">${_t('viewer.columns')}</div></div>
+                    <div class="meta-item"><div class="meta-value">${preview.level}</div><div class="meta-label">${_t('viewer.level')}</div></div>
+                    <div class="meta-item"><div class="meta-value" style="color:${qualityColor};">${validation.qualityScore}%</div><div class="meta-label">${_t('viewer.quality_score')}</div></div>
                 </div>
             `;
 
@@ -120,42 +123,42 @@
 
                 const start = (currentPage - 1) * perPage;
                 const pageData = filteredData.slice(start, start + perPage);
-                tbody.innerHTML = pageData.length ? pageData.map(row => '<tr>' + preview.headers.map(h => '<td>' + row[h] + '</td>').join('') + '</tr>').join('') : '<tr><td colspan="' + preview.headers.length + '" class="text-center text-muted">No matching rows found</td></tr>';
+                tbody.innerHTML = pageData.length ? pageData.map(row => '<tr>' + preview.headers.map(h => '<td>' + row[h] + '</td>').join('') + '</tr>').join('') : '<tr><td colspan="' + preview.headers.length + '" class="text-center text-muted">' + _t('viewer.no_matching_rows') + '</td></tr>';
 
                 const totalPages = Math.ceil(filteredData.length / perPage);
                 if (totalPages <= 1) {
-                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem; padding: 0.5rem;">' + filteredData.length + ' rows</span>';
+                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem; padding: 0.5rem;">' + filteredData.length + ' ' + _t('pagination.rows') + '</span>';
                     return;
                 }
-                let ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                let ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>' + _t('pagination.prev') + '</button>';
                 for (let i = 1; i <= totalPages; i++) {
                     ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
                 }
-                ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
-                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + ' (' + filteredData.length + ' rows)</span>';
+                ph += '<button data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>' + _t('pagination.next') + '</button>';
+                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">' + _t('pagination.page') + ' ' + currentPage + ' ' + _t('pagination.of') + ' ' + totalPages + ' (' + filteredData.length + ' ' + _t('pagination.rows') + ')</span>';
                 pagination.innerHTML = ph;
             }
 
             function renderStats() {
                 const sidebar = document.getElementById('stats-sidebar');
-                if (!stats) { sidebar.innerHTML = '<div class="card"><h4>No statistics available</h4></div>'; return; }
+                if (!stats) { sidebar.innerHTML = '<div class="card"><h4>' + _t('viewer.no_statistics') + '</h4></div>'; return; }
 
                 let html = '';
 
                 // Quality & Trust Panel
-                html += '<div class="card"><h3 class="card-title">Dataset Trust Score</h3>';
+                html += '<div class="card"><h3 class="card-title">' + _t('viewer.trust_score') + '</h3>';
                 html += '<div class="quality-ring" style="border: 6px solid ' + qualityColor + '; color: ' + qualityColor + ';">' + validation.qualityScore + '%</div>';
-                html += '<p style="text-align:center;font-size:0.8rem;color:#666;margin-top:0.5rem;">' + (validation.passed ? 'All validation checks passed' : validation.passedCount + '/' + validation.totalChecks + ' checks passed') + '</p>';
+                html += '<p style="text-align:center;font-size:0.8rem;color:#666;margin-top:0.5rem;">' + (validation.passed ? _t('viewer.all_checks_passed') : validation.passedCount + '/' + validation.totalChecks + ' ' + _t('viewer.checks_passed')) + '</p>';
                 if (corrSim !== null && corrSim !== undefined) {
-                    html += '<div class="stat-row"><span class="label">Correlation Match</span><span class="value" style="color:' + simColor + ';">' + corrSim + '%</span></div>';
+                    html += '<div class="stat-row"><span class="label">' + _t('viewer.correlation_match') + '</span><span class="value" style="color:' + simColor + ';">' + corrSim + '%</span></div>';
                 }
-                html += '<div class="stat-row"><span class="label">Statistical Similarity</span><span class="value" style="color:' + qualityColor + ';">' + validation.similarityPct + '%</span></div>';
-                html += '<div class="stat-row"><span class="label">Status</span><span class="value">' + (validation.passed ? '<span class="badge badge-success">TRUSTED</span>' : '<span class="badge badge-danger">REVIEW</span>') + '</span></div>';
+                html += '<div class="stat-row"><span class="label">' + _t('viewer.statistical_similarity') + '</span><span class="value" style="color:' + qualityColor + ';">' + validation.similarityPct + '%</span></div>';
+                html += '<div class="stat-row"><span class="label">' + _t('table.status') + '</span><span class="value">' + (validation.passed ? '<span class="badge badge-success">' + _t('status.trusted') + '</span>' : '<span class="badge badge-danger">' + _t('status.review') + '</span>') + '</span></div>';
                 html += '</div>';
 
                 // Validation Checks
                 if (validation.checks && validation.checks.length) {
-                    html += '<div class="card"><h3 class="card-title">Validation Checks</h3>';
+                    html += '<div class="card"><h3 class="card-title">' + _t('viewer.validation_checks') + '</h3>';
                     validation.checks.forEach(c => {
                         html += '<div class="check-item"><span class="badge badge-' + (c.status === 'valid' ? 'success' : 'danger') + '" style="flex-shrink:0;min-width:48px;text-align:center;">' + c.status.toUpperCase() + '</span><div><div style="font-weight:500;">' + c.name + '</div><div style="font-size:0.75rem;color:#999;">' + c.detail + '</div></div></div>';
                     });
@@ -163,24 +166,24 @@
                 }
 
                 // Column Statistics
-                html += '<div class="card"><h3 class="card-title">Column Statistics</h3>';
+                html += '<div class="card"><h3 class="card-title">' + _t('viewer.column_statistics') + '</h3>';
                 for (const [col, s] of Object.entries(stats)) {
                     html += '<div class="stat-group"><h4>' + col + '</h4>' +
-                        '<div class="stat-row"><span class="label">Mean</span><span class="value">' + s.mean + '</span></div>' +
-                        '<div class="stat-row"><span class="label">Std</span><span class="value">' + s.std + '</span></div>' +
-                        '<div class="stat-row"><span class="label">Min</span><span class="value">' + s.min + '</span></div>' +
-                        '<div class="stat-row"><span class="label">Median</span><span class="value">' + s.median + '</span></div>' +
-                        '<div class="stat-row"><span class="label">Max</span><span class="value">' + s.max + '</span></div></div>';
+                        '<div class="stat-row"><span class="label">' + _t('viewer.mean') + '</span><span class="value">' + s.mean + '</span></div>' +
+                        '<div class="stat-row"><span class="label">' + _t('viewer.std') + '</span><span class="value">' + s.std + '</span></div>' +
+                        '<div class="stat-row"><span class="label">' + _t('viewer.min') + '</span><span class="value">' + s.min + '</span></div>' +
+                        '<div class="stat-row"><span class="label">' + _t('viewer.median') + '</span><span class="value">' + s.median + '</span></div>' +
+                        '<div class="stat-row"><span class="label">' + _t('viewer.max') + '</span><span class="value">' + s.max + '</span></div></div>';
                 }
                 html += '</div>';
 
                 // Correlation Heatmap
                 if (correlation && correlation.columns.length > 1) {
-                    html += '<div class="card"><h3 class="card-title">Correlation Heatmap</h3><div class="correlation-grid" id="corr-grid"></div></div>';
+                    html += '<div class="card"><h3 class="card-title">' + _t('viewer.correlation_heatmap') + '</h3><div class="correlation-grid" id="corr-grid"></div></div>';
                 }
 
                 // Missing Values
-                html += '<div class="card"><h3 class="card-title">Data Completeness</h3><div class="stat-row"><span class="label">Missing Values</span><span class="value">0</span></div><div class="stat-row"><span class="label">Completeness</span><span class="value" style="color:#2E7D32;">100%</span></div></div>';
+                html += '<div class="card"><h3 class="card-title">' + _t('viewer.data_completeness') + '</h3><div class="stat-row"><span class="label">' + _t('viewer.missing_values') + '</span><span class="value">0</span></div><div class="stat-row"><span class="label">' + _t('viewer.completeness') + '</span><span class="value" style="color:#2E7D32;">100%</span></div></div>';
 
                 sidebar.innerHTML = html;
 
@@ -227,5 +230,6 @@
             renderStats();
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
