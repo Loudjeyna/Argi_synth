@@ -54,9 +54,9 @@ const App = (function() {
         'sidebar.data_augmentation': 'Data Augmentation',
         'sidebar.model_comparison': 'Model Comparison',
         'sidebar.crop_prediction': 'Crop Prediction',
-        'sidebar.crop_requirements': 'Crop Requirements',
+        'sidebar.crop_requirements': 'Crop → Conditions',
         'sidebar.users': 'Users',
-        'sidebar.soil_vs_crop': 'Soil vs Crop',
+        'sidebar.soil_vs_crop': 'Conditions → Crop',
         'sidebar.history': 'History',
         'sidebar.subscriptions': 'Subscriptions',
         'lang.en': 'Language'
@@ -84,7 +84,7 @@ const App = (function() {
             links.push({ href: PAGES.company.datasets, icon: 'file', label: 'sidebar.datasets' });
             links.push({ href: p('admin_augmentation.html'), icon: 'database', label: 'sidebar.data_augmentation' });
             links.push({ href: PAGES.admin.comparison, icon: 'chart', label: 'sidebar.model_comparison' });
-            links.push({ href: PAGES.farmer.predict, icon: 'brain', label: 'sidebar.crop_prediction' });
+            links.push({ href: PAGES.farmer.conditions_crop, icon: 'brain', label: 'sidebar.crop_prediction' });
             links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'sidebar.crop_requirements' });
             links.push({ href: PAGES.admin.users, icon: 'users', label: 'sidebar.users' });
         } else if (user.role === 'company') {
@@ -97,7 +97,7 @@ const App = (function() {
         } else {
             links.push({ href: PAGES.farmer.home, icon: 'home', label: 'sidebar.dashboard' });
             links.push({ href: PAGES.farmer.crop_conditions, icon: 'seedling', label: 'sidebar.crop_requirements' });
-            links.push({ href: PAGES.farmer.conditions_crop, icon: 'search', label: 'sidebar.soil_vs_crop' });
+            links.push({ href: PAGES.farmer.conditions_crop, icon: 'search', label: 'sidebar.crop_prediction' });
             links.push({ href: PAGES.farmer.history, icon: 'history', label: 'sidebar.history' });
             links.push({ href: p('subscription.html'), icon: 'star', label: 'sidebar.subscriptions' });
         }
