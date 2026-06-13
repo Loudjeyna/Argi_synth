@@ -1,7 +1,7 @@
 import http.server, socketserver, os, sys, socket
 
-os.chdir(r'I:\apps\Synth_AI\frontend')
-
+import os
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend'))
 def find_free_port(start=8080, end=8090):
     for port in range(start, end):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
