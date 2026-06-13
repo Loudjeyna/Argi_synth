@@ -40,13 +40,13 @@
 <body>
 <div class="app-container">
 <aside class="sidebar">
-<div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+<div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
 <div id="user-panel"></div>
 <nav class="sidebar-nav" id="sidebar-nav"></nav>
-<div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+<div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
 </aside>
 <main class="main-content">
-<div class="page-header"><h2>Data Augmentation</h2><p>Upload a CSV dataset and generate augmented variations</p></div>
+<div class="page-header"><h2 data-i18n="augment.title">Data Augmentation</h2><p data-i18n="augment.stats">Upload a CSV dataset and generate augmented variations</p></div>
 
 <div id="parse-error" class="status-message status-error" style="display:none;"></div>
 
@@ -59,7 +59,7 @@
 </div>
 
 <div class="card">
-<h3 class="card-title">Upload Dataset</h3>
+<h3 class="card-title" data-i18n="augment.upload_csv">Upload Dataset</h3>
 <div class="upload-zone" id="upload-zone">
 <svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:#999;margin-bottom:1rem;"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
 <p style="color:#999;">Drag & drop a CSV file here, or click to browse</p>
@@ -72,13 +72,13 @@
 <div id="base-info" style="display:none;">
 <div class="kpi-grid" id="base-stats"></div>
 <div style="margin-top:1rem;">
-<h3 class="card-title">Select Augmentation Multiplier</h3>
+<h3 class="card-title" data-i18n="augment.multiplier">Select Augmentation Multiplier</h3>
 <div class="multiplier-grid">
 <div class="multiplier-btn" data-multiplier="2"><div class="multiplier-value">x2</div><div class="multiplier-label">Double the data</div></div>
 <div class="multiplier-btn" data-multiplier="5"><div class="multiplier-value">x5</div><div class="multiplier-label">5x the data</div></div>
 <div class="multiplier-btn" data-multiplier="10"><div class="multiplier-value">x10</div><div class="multiplier-label">10x the data</div></div>
 </div>
-<button id="generate-aug-btn" class="btn btn-primary" disabled>Generate Augmented Data</button>
+<button id="generate-aug-btn" class="btn btn-primary" disabled data-i18n="augment.generate">Generate Augmented Data</button>
 <div id="aug-progress" style="display:none;margin-top:1rem;">
 <div class="progress-bar-outer"><div class="progress-bar-inner" id="aug-progress-bar" style="width:0%;"></div></div>
 <p id="aug-progress-text" style="font-size:0.85rem;color:#666;margin-top:0.5rem;">Processing...</p>
@@ -103,21 +103,21 @@
 <table><thead id="aug-preview-thead"></thead><tbody id="aug-preview-tbody"></tbody></table>
 </div>
 <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-<button id="download-aug-btn" class="btn btn-primary">Download CSV</button>
+<button id="download-aug-btn" class="btn btn-primary" data-i18n="augment.download">Download CSV</button>
 <button id="new-aug-btn" class="btn btn-outline">New Augmentation</button>
 </div>
 </div>
 
 <div class="card" style="margin-top:1.5rem;">
 <h3 class="card-title">Augmentation History</h3>
-<div id="no-history" style="text-align:center;padding:2rem;color:#999;">No augmentations yet.</div>
+<div id="no-history" style="text-align:center;padding:2rem;color:#999;" data-i18n="common.no_data">No augmentations yet.</div>
 <div id="history-container"></div>
 </div>
 </div>
 </main>
 </div>
-
-<script src="../js/services/auth.js"></script>
+    <script src="../js/services/i18n.js"></script>
+    <script src="../js/services/auth.js"></script>
 <script src="../js/services/payment.js"></script>
 <script src="../js/services/data.js"></script>
 <script src="../js/services/model.js"></script>
@@ -128,6 +128,7 @@ var user = AuthService.getCurrentUser();
 if (!user || (user.role !== 'company' && user.role !== 'admin')) { window.location.href = '/pages/login.html'; return; }
 AuthService.syncSessionFromStorage();
 App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {}
 App.setupUserPanel();
 App.setupLogout();
 var currentUser = AuthService.getCurrentUser();
@@ -327,5 +328,6 @@ btn.addEventListener('click', function() { var id = parseInt(this.dataset.id); D
 renderHistory();
 })();
 </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

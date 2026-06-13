@@ -17,26 +17,26 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
         <main class="main-content">
-            <div class="page-header"><h2>Conditions to Crop</h2><p>Enter your soil and climate conditions to find the best matching crops</p></div>
+            <div class="page-header"><h2 data-i18n="comparison.title">Conditions to Crop</h2><p data-i18n="comparison.subtitle">Enter your soil and climate conditions to find the best matching crops</p></div>
             <div id="status-msg"></div>
             <div class="card">
-                <h3 class="card-title">Enter Your Conditions</h3>
+                <h3 class="card-title" data-i18n="comparison.your_soil">Enter Your Conditions</h3>
                 <div class="form-row">
-                    <div class="form-group"><label for="n-val">Nitrogen (N)</label><input type="number" id="n-val" class="form-control" value="50" min="0" max="140"></div>
-                    <div class="form-group"><label for="p-val">Phosphorus (P)</label><input type="number" id="p-val" class="form-control" value="50" min="0" max="145"></div>
-                    <div class="form-group"><label for="k-val">Potassium (K)</label><input type="number" id="k-val" class="form-control" value="50" min="0" max="205"></div>
+                    <div class="form-group"><label for="n-val" data-i18n="predict.nitrogen">Nitrogen (N)</label><input type="number" id="n-val" class="form-control" value="50" min="0" max="140"></div>
+                    <div class="form-group"><label for="p-val" data-i18n="predict.phosphorus">Phosphorus (P)</label><input type="number" id="p-val" class="form-control" value="50" min="0" max="145"></div>
+                    <div class="form-group"><label for="k-val" data-i18n="predict.potassium">Potassium (K)</label><input type="number" id="k-val" class="form-control" value="50" min="0" max="205"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="temp-val">Temperature (&deg;C)</label><input type="number" id="temp-val" class="form-control" value="25" min="0" max="50"></div>
-                    <div class="form-group"><label for="humidity-val">Humidity (%)</label><input type="number" id="humidity-val" class="form-control" value="70" min="0" max="100"></div>
-                    <div class="form-group"><label for="ph-val">Soil pH</label><input type="number" id="ph-val" class="form-control" value="6.5" step="0.1" min="0" max="14"></div>
-                    <div class="form-group"><label for="rain-val">Rainfall (mm)</label><input type="number" id="rain-val" class="form-control" value="100" min="0" max="500"></div>
+                    <div class="form-group"><label for="temp-val" data-i18n="predict.temp">Temperature (&deg;C)</label><input type="number" id="temp-val" class="form-control" value="25" min="0" max="50"></div>
+                    <div class="form-group"><label for="humidity-val" data-i18n="predict.humidity">Humidity (%)</label><input type="number" id="humidity-val" class="form-control" value="70" min="0" max="100"></div>
+                    <div class="form-group"><label for="ph-val" data-i18n="predict.ph">Soil pH</label><input type="number" id="ph-val" class="form-control" value="6.5" step="0.1" min="0" max="14"></div>
+                    <div class="form-group"><label for="rain-val" data-i18n="predict.rainfall">Rainfall (mm)</label><input type="number" id="rain-val" class="form-control" value="100" min="0" max="500"></div>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <button id="predict-btn" class="btn btn-primary">Predict Best Crops</button>
@@ -59,6 +59,7 @@
             </div>
         </main>
     </div>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/history.js"></script>
     <script src="../js/services/recommendation.js"></script>
@@ -69,7 +70,8 @@
             if (!user) { window.location.href = '/pages/login.html'; return; }
             if (user.role !== 'farmer' && user.role !== 'admin') { document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>'; return; }
             AuthService.syncSessionFromStorage();
-            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+            App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} App.setupUserPanel(); App.setupLogout();
 
             document.getElementById('predict-btn').addEventListener('click', () => {
                 if (!AuthService.canAttempt()) {
@@ -137,5 +139,6 @@
             });
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

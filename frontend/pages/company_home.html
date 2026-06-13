@@ -3,45 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Company Dashboard</title>
+    <title data-i18n="company.title">SynthAI - Company Dashboard</title>
     <link rel="stylesheet" href="../styles/global.css">
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header"><h2>Company Dashboard</h2><p>Generate and manage synthetic agricultural datasets</p></div>
+            <div class="page-header"><h2 data-i18n="dashboard.title">Company Dashboard</h2><p data-i18n="company.subtitle">Generate and manage synthetic agricultural datasets</p></div>
             <div class="kpi-grid" id="kpi-grid"></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
                 <div class="card">
-                    <h3 class="card-title">Generate Data</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">Create synthetic datasets with CTGAN.</p>
-                    <a href="generate_data.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Generate</a>
+                    <h3 class="card-title" data-i18n="sidebar.generate_data">Generate Data</h3>
+                    <p style="color: #666; margin-bottom: 1rem;" data-i18n="company.generate_desc">Create synthetic datasets with CTGAN.</p>
+                    <a href="generate_data.html" class="btn btn-primary" style="text-decoration: none; text-align: center;" data-i18n="company.generate_action">Generate</a>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Data Augmentation</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">Perform dataset augmentation and view analytics.</p>
-                    <a href="company_augment.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">Augment</a>
+                    <h3 class="card-title" data-i18n="sidebar.datasets">View Datasets</h3>
+                    <p style="color: #666; margin-bottom: 1rem;" data-i18n="company.datasets_desc">Browse all generated datasets.</p>
+                    <a href="datasets.html" class="btn btn-outline" style="text-decoration: none; text-align: center;" data-i18n="company.view_action">View</a>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">View Datasets</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">Browse all generated datasets.</p>
-                    <a href="datasets.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">View</a>
+                    <h3 class="card-title" data-i18n="sidebar.model_comparison">Model Comparison</h3>
+                    <p style="color: #666; margin-bottom: 1rem;" data-i18n="company.compare_desc">Benchmark multiple models and find the best.</p>
+                    <a href="model_comparison.html" class="btn btn-outline" style="text-decoration: none; text-align: center;" data-i18n="company.compare_action">Compare</a>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">Subscription</h3>
-                    <p style="color: #666; margin-bottom: 1rem;">Upgrade for larger datasets.</p>
-                    <a href="subscription.html" class="btn btn-outline" style="text-decoration: none; text-align: center;">Upgrade</a>
+                    <h3 class="card-title" data-i18n="company.subscription_title">Subscription</h3>
+                    <p style="color: #666; margin-bottom: 1rem;" data-i18n="company.upgrade_desc">Upgrade for larger datasets.</p>
+                    <a href="subscription.html" class="btn btn-outline" style="text-decoration: none; text-align: center;" data-i18n="company.upgrade_action">Upgrade</a>
                 </div>
             </div>
         </main>
     </div>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/app.js"></script>
@@ -62,7 +63,8 @@
                 if (!user || user.role !== 'company') { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             var currentUser = null, stats = { total: 0, total_rows: 0, lastGenerated: 'N/A' };
@@ -78,12 +80,14 @@
             var lastGen = 'N/A';
             try { lastGen = stats.lastGenerated !== 'N/A' ? new Date(stats.lastGenerated).toLocaleDateString() : 'N/A'; } catch (e) {}
 
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
             document.getElementById('kpi-grid').innerHTML =
-                '<div class="kpi-card"><div class="kpi-value">' + (currentUser.plan || 'free').toUpperCase() + '</div><div class="kpi-label">Plan</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + (stats.total || 0) + '</div><div class="kpi-label">Datasets</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + ((stats.total_rows || 0).toLocaleString()) + '</div><div class="kpi-label">Total Rows</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + lastGen + '</div><div class="kpi-label">Last Generated</div></div>';
+                '<div class="kpi-card"><div class="kpi-value">' + (currentUser.plan || 'free').toUpperCase() + '</div><div class="kpi-label">' + _t('company.plan') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (stats.total || 0) + '</div><div class="kpi-label">' + _t('company.datasets') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + ((stats.total_rows || 0).toLocaleString()) + '</div><div class="kpi-label">' + _t('company.total_rows') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + lastGen + '</div><div class="kpi-label">' + _t('company.last_generated') + '</div></div>';
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

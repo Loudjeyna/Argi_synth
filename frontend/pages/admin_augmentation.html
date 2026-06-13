@@ -48,29 +48,29 @@
 <body>
 <div class="app-container">
 <aside class="sidebar">
-<div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+<div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
 <div id="user-panel"></div>
 <nav class="sidebar-nav" id="sidebar-nav"></nav>
-<div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+<div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
 </aside>
 <main class="main-content">
-<div class="page-header"><h2>Data Augmentation & Analytics</h2><p>Manage, monitor and perform data augmentation across the platform</p></div>
+<div class="page-header"><h2 data-i18n="augment.title">Data Augmentation & Analytics</h2><p data-i18n="augment.stats">Manage, monitor and perform data augmentation across the platform</p></div>
 
 <div class="actions-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
-<button id="show-create-btn" class="btn btn-primary">+ New Augmentation</button>
-<button id="refresh-btn" class="btn btn-outline">Refresh</button>
+<button id="show-create-btn" class="btn btn-primary" data-i18n="augment.title">+ New Augmentation</button>
+<button id="refresh-btn" class="btn btn-outline" data-i18n="common.filter">Refresh</button>
 </div>
 
 <div id="create-section" style="display:none;" class="card" style="margin-bottom:1.5rem;">
-<h3 class="card-title">Create Augmentation</h3>
+<h3 class="card-title" data-i18n="augment.title">Create Augmentation</h3>
 <div id="parse-error" class="status-message status-error" style="display:none;"></div>
 
 <div class="step-indicator">
-<div class="step active" id="step-1"><span>1</span> Upload</div>
+<div class="step active" id="step-1"><span>1</span> <span data-i18n="training.upload_btn">Upload</span></div>
 <div class="step-line" id="step-line-2"></div>
-<div class="step" id="step-2"><span>2</span> Configure</div>
+<div class="step" id="step-2"><span>2</span> <span data-i18n="training.config">Configure</span></div>
 <div class="step-line" id="step-line-3"></div>
-<div class="step" id="step-3"><span>3</span> Generate</div>
+<div class="step" id="step-3"><span>3</span> <span data-i18n="augment.generate">Generate</span></div>
 </div>
 
 <div class="upload-zone" id="upload-zone">
@@ -84,13 +84,13 @@
 <div id="base-info" style="display:none;">
 <div class="kpi-grid" id="base-stats" style="margin-top:1rem;"></div>
 <div style="margin-top:1rem;">
-<h4>Select Augmentation Multiplier</h4>
+<h4 data-i18n="augment.multiplier">Select Augmentation Multiplier</h4>
 <div class="multiplier-grid">
 <div class="multiplier-btn" data-multiplier="2"><div class="multiplier-value">x2</div><div class="multiplier-label">Double the data</div></div>
 <div class="multiplier-btn" data-multiplier="5"><div class="multiplier-value">x5</div><div class="multiplier-label">5x the data</div></div>
 <div class="multiplier-btn" data-multiplier="10"><div class="multiplier-value">x10</div><div class="multiplier-label">10x the data</div></div>
 </div>
-<button id="generate-aug-btn" class="btn btn-primary" disabled>Generate Augmented Data</button>
+<button id="generate-aug-btn" class="btn btn-primary" disabled data-i18n="augment.generate">Generate Augmented Data</button>
 <div id="aug-progress" style="display:none;margin-top:1rem;">
 <div class="progress-bar-outer"><div class="progress-bar-inner" id="aug-progress-bar" style="width:0%;"></div></div>
 <p id="aug-progress-text" style="font-size:0.85rem;color:#666;margin-top:0.5rem;">Processing...</p>
@@ -107,16 +107,16 @@
 <p id="correlation-info" style="font-size:0.85rem;color:#666;margin-top:0.5rem;"></p>
 </div>
 <div class="stats-grid">
-<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;">Original Statistics</h5><div id="original-stats-table"></div></div>
-<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;">Augmented Statistics</h5><div id="augmented-stats-table"></div></div>
+<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;" data-i18n="augment.original">Original Statistics</h5><div id="original-stats-table"></div></div>
+<div class="card"><h5 style="color:#1B5E20;margin-bottom:0.5rem;" data-i18n="augment.augmented">Augmented Statistics</h5><div id="augmented-stats-table"></div></div>
 </div>
-<h5 style="margin-top:1rem;">Data Preview</h5>
+<h5 style="margin-top:1rem;" data-i18n="generate.preview">Data Preview</h5>
 <div class="aug-preview-table">
 <table><thead id="aug-preview-thead"></thead><tbody id="aug-preview-tbody"></tbody></table>
 </div>
 <div style="display:flex;gap:0.75rem;margin-top:1rem;">
-<button id="download-aug-btn" class="btn btn-primary">Download CSV</button>
-<button id="reset-create-btn" class="btn btn-outline">New Augmentation</button>
+<button id="download-aug-btn" class="btn btn-primary" data-i18n="augment.download">Download CSV</button>
+<button id="reset-create-btn" class="btn btn-outline" data-i18n="augment.title">New Augmentation</button>
 </div>
 </div>
 </div>
@@ -126,9 +126,9 @@
 
 <div class="card">
 <div class="mini-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
-<h3 class="card-title" style="margin:0;">All Augmentations</h3>
+<h3 class="card-title" style="margin:0;" data-i18n="augment.title">All Augmentations</h3>
 </div>
-<div id="no-logs" style="text-align:center;padding:2rem;color:#999;">No augmentations found in the system.</div>
+<div id="no-logs" style="text-align:center;padding:2rem;color:#999;" data-i18n="common.no_data">No augmentations found in the system.</div>
 <div id="aug-logs-container"></div>
 </div>
 </main>
@@ -138,13 +138,13 @@
 <div class="modal-content">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
 <h3 style="margin:0;">Augmentation Details</h3>
-<button id="close-detail" class="btn btn-outline" style="padding:0.3rem 0.75rem;">Close</button>
+<button id="close-detail" class="btn btn-outline" style="padding:0.3rem 0.75rem;" data-i18n="common.cancel">Close</button>
 </div>
 <div id="detail-content"></div>
 </div>
 </div>
-
-<script src="../js/services/auth.js"></script>
+    <script src="../js/services/i18n.js"></script>
+    <script src="../js/services/auth.js"></script>
 <script src="../js/services/payment.js"></script>
 <script src="../js/services/data.js"></script>
 <script src="../js/services/model.js"></script>
@@ -155,6 +155,7 @@ var user = AuthService.getCurrentUser();
 if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
 AuthService.syncSessionFromStorage();
 App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {}
 App.setupUserPanel();
 App.setupLogout();
 var currentUser = AuthService.getCurrentUser();
@@ -435,5 +436,6 @@ renderSystemStats();
 renderLogs();
 })();
 </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

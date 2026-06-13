@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - History</title>
+    <title data-i18n="history.title">SynthAI - History</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .filter-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
@@ -19,13 +19,13 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
         <main class="main-content">
-            <div class="page-header"><h2>Prediction History</h2><p>View, search, filter, and export your prediction records</p></div>
+            <div class="page-header"><h2 data-i18n="sidebar.history">Prediction History</h2><p>View, search, filter, and export your prediction records</p></div>
 
             <div id="status-msg"></div>
 
@@ -35,7 +35,7 @@
                 <div class="d-flex justify-between align-center" style="margin-bottom: 1rem;">
                     <h3 class="card-title" style="margin: 0;">All Predictions</h3>
                     <div class="filter-bar">
-                        <input type="text" id="search-input" placeholder="Search crop..." style="width: 180px;">
+                        <input type="text" id="search-input" placeholder="Search crop..." style="width: 180px;" data-i18n="common.search">
                         <input type="date" id="date-input" style="width: 140px;">
                         <select id="type-filter" style="width: 160px;">
                             <option value="all">All Types</option>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="table-container">
                     <table>
-                        <thead><tr><th style="width: 40px;">#</th><th>Type</th><th>Input</th><th>Result</th><th>Date</th><th style="width: 50px;"></th></tr></thead>
+                        <thead><tr><th style="width: 40px;">#</th><th>Type</th><th>Input</th><th>Result</th><th data-i18n="table.date">Date</th><th style="width: 50px;"></th></tr></thead>
                         <tbody id="history-tbody"></tbody>
                     </table>
                 </div>
@@ -57,6 +57,7 @@
             </div>
         </main>
     </div>
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
@@ -77,9 +78,12 @@
                 if (!user) { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
             try { AuthService.syncSessionFromStorage(); } catch (e) {}
+
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
             var user = AuthService.getCurrentUser();
             if (!user) { window.location.href = '/pages/login.html'; return; }
@@ -92,14 +96,14 @@
             var stats = { totalPredictions: 0, cropRecommendations: 0, conditionPredictions: 0, dataGenerations: 0 };
             try { stats = HistoryService.getStats(user.id); } catch (e) {}
             document.getElementById('stats-grid').innerHTML =
-                '<div class="kpi-card"><div class="kpi-value">' + stats.totalPredictions + '</div><div class="kpi-label">Total Entries</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + stats.cropRecommendations + '</div><div class="kpi-label">Crop to Conditions</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + stats.conditionPredictions + '</div><div class="kpi-label">Conditions to Crop</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + (stats.dataGenerations || 0) + '</div><div class="kpi-label">Data Generations</div></div>' +
-                '<div class="kpi-card"><div class="kpi-value">' + (isPremium ? 'Unlimited' : limit) + '</div><div class="kpi-label">History Limit</div></div>';
+                '<div class="kpi-card"><div class="kpi-value">' + stats.totalPredictions + '</div><div class="kpi-label">' + _t('history.total_entries') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + stats.cropRecommendations + '</div><div class="kpi-label">' + _t('history.crop_to_conditions') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + stats.conditionPredictions + '</div><div class="kpi-label">' + _t('history.conditions_to_crop') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (stats.dataGenerations || 0) + '</div><div class="kpi-label">' + _t('history.data_generation') + '</div></div>' +
+                '<div class="kpi-card"><div class="kpi-value">' + (isPremium ? _t('plan.unlimited') : limit) + '</div><div class="kpi-label">' + _t('history.history_limit') + '</div></div>';
 
             if (!isPremium && stats.totalPredictions > limit) {
-                document.getElementById('status-msg').innerHTML = '<div class="status-message status-warning">Showing ' + limit + ' of ' + stats.totalPredictions + ' total entries. <a href="subscription.html">Upgrade</a> for unlimited history.</div>';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-warning">' + _t('history.showing') + ' ' + limit + ' ' + _t('pagination.of') + ' ' + stats.totalPredictions + ' ' + _t('history.total_entries') + '. <a href="subscription.html">' + _t('action.upgrade') + '</a> ' + _t('history.upgrade_for_unlimited') + '</div>';
             }
 
             var currentPage = 1;
@@ -134,7 +138,7 @@
                 var tbody = document.getElementById('history-tbody');
                 var pagination = document.getElementById('pagination-bar');
                 if (filteredData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No predictions found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">' + _t('empty.no_predictions') + '</td></tr>';
                     pagination.innerHTML = '';
                     return;
                 }
@@ -150,7 +154,7 @@
                     var result = h.result || '';
                     try { var obj = JSON.parse(result); result = obj.crop || obj.optimal_temperature ? (obj.crop || JSON.stringify(obj).substring(0, 60)) : result; } catch (e) {}
                     var badgeClass = h.type === 'crop_conditions' ? 'success' : h.type === 'conditions_crop' ? 'warning' : 'premium';
-                    var typeLabel = h.type === 'crop_conditions' ? 'Crop to Conditions' : h.type === 'conditions_crop' ? 'Conditions to Crop' : 'Data Generation';
+                    var typeLabel = h.type === 'crop_conditions' ? _t('history.crop_to_conditions') : h.type === 'conditions_crop' ? _t('history.conditions_to_crop') : _t('history.data_generation');
                     // For data_generation, show validation badges in result column
                     var resultDisplay = result;
                     if (h.type === 'data_generation') {
@@ -171,20 +175,20 @@
                         '<td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + (input || '').substring(0, 60) + '</td>' +
                         '<td>' + resultDisplay + '</td>' +
                         '<td style="white-space: nowrap;">' + new Date(h.date).toLocaleDateString() + ' ' + new Date(h.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + '</td>' +
-                        '<td><button class="delete-btn" onclick="deleteEntry(' + h.id + ')" title="Delete entry">&times;</button></td></tr>';
+                        '<td><button class="delete-btn" onclick="deleteEntry(' + h.id + ')" title="' + _t('history.delete_entry') + '">&times;</button></td></tr>';
                 }).join('');
 
                 var totalPages = Math.ceil(displayData.length / perPage);
                 if (totalPages <= 1) {
-                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem;">' + displayData.length + ' entry(s)</span>';
+                    pagination.innerHTML = '<span style="color: #999; font-size: 0.85rem;">' + displayData.length + ' ' + _t('pagination.entries') + '</span>';
                     return;
                 }
-                var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; Prev</button>';
+                var ph = '<button data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>&larr; ' + _t('pagination.prev') + '</button>';
                 for (var i = 1; i <= totalPages; i++) {
                     ph += '<button class="' + (i === currentPage ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
                 }
-                ph += '<button data-page="next" ' + (currentPage >= totalPages ? 'disabled' : '') + '>Next &rarr;</button>';
-                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">Page ' + currentPage + ' of ' + totalPages + ' (' + displayData.length + ' entries)</span>';
+                ph += '<button data-page="next" ' + (currentPage >= totalPages ? 'disabled' : '') + '>' + _t('pagination.next') + ' &rarr;</button>';
+                ph += '<span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">' + _t('pagination.page') + ' ' + currentPage + ' ' + _t('pagination.of') + ' ' + totalPages + ' (' + displayData.length + ' ' + _t('pagination.entries') + ')</span>';
                 pagination.innerHTML = ph;
             }
 
@@ -209,23 +213,24 @@
             document.getElementById('export-btn').addEventListener('click', function() { try { HistoryService.exportHistory(user.id); } catch (e) {} });
 
             window.deleteEntry = function(id) {
-                if (!confirm('Delete this prediction entry?')) return;
+                if (!confirm(_t('confirm.delete_entry'))) return;
                 HistoryService.deleteEntry(id);
                 try { history = HistoryService.getUserHistory(user.id) || []; } catch (e) { history = []; }
                 applyFiltering();
-                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Entry deleted successfully.</div>';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">' + _t('history.entry_deleted') + '</div>';
             };
 
             document.getElementById('clear-all-btn').addEventListener('click', function() {
-                if (!confirm('Clear ALL prediction history? This cannot be undone.')) return;
+                if (!confirm(_t('confirm.clear_history'))) return;
                 history.forEach(function(h) { HistoryService.deleteEntry(h.id); });
                 history = [];
                 applyFiltering();
-                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">All history cleared.</div>';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">' + _t('history.all_cleared') + '</div>';
             });
 
             applyFiltering();
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

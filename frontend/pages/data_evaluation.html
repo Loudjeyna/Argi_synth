@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Data Evaluation & Comparison</title>
+    <title data-i18n="evaluation.title">SynthAI - Data Evaluation & Comparison</title>
     <link rel="stylesheet" href="../styles/global.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
@@ -91,22 +91,22 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content">
-            <a class="back-link" id="back-link" href="datasets.html">&larr; Back to Datasets</a>
+            <a class="back-link" id="back-link" href="datasets.html" data-i18n="evaluation.back_to_datasets">&larr; Back to Datasets</a>
             <div class="page-header">
-                <h2>Data Evaluation & Comparison</h2>
-                <p id="page-subtitle">Loading generation data...</p>
+                <h2 data-i18n="datasets.evaluate">Data Evaluation & Comparison</h2>
+                <p id="page-subtitle" data-i18n="evaluation.loading">Loading generation data...</p>
             </div>
             <div id="status-msg"></div>
 
             <div id="eval-content">
-                <div class="loading"><div class="spinner"></div><p>Loading and comparing datasets...</p></div>
+                <div class="loading"><div class="spinner"></div><p data-i18n="common.loading">Loading and comparing datasets...</p></div>
             </div>
         </main>
     </div>
@@ -115,7 +115,7 @@
     <div class="preview-modal" id="preview-modal">
         <div class="preview-modal-content">
             <span class="close-modal" id="close-modal">&times;</span>
-            <h3>Data Preview</h3>
+            <h3 data-i18n="augment.data_preview">Data Preview</h3>
             <div id="preview-table-container" style="overflow-x:auto;">
                 <table class="preview-table" id="preview-table">
                     <thead id="preview-thead"></thead>
@@ -125,7 +125,7 @@
             <p id="preview-footer" style="font-size:0.78rem;color:#999;margin-top:0.75rem;"></p>
         </div>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/model.js"></script>
     <script src="../js/services/data.js"></script>
@@ -143,12 +143,14 @@
         })();
 
         document.addEventListener('DOMContentLoaded', function() {
+            function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
             try {
                 var user = AuthService.getCurrentUser();
                 if (!user) { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             var chartInstances = {};
@@ -160,8 +162,8 @@
 
             var genId = parseInt(getUrlParam('id'));
             if (!genId) {
-                document.getElementById('eval-content').innerHTML = '<div class="error-box">No dataset ID provided. <a href="datasets.html" style="color:#1565C0;">Go to Datasets</a></div>';
-                document.getElementById('page-subtitle').textContent = 'Error: missing dataset ID';
+                document.getElementById('eval-content').innerHTML = '<div class="error-box">' + _t('evaluation.no_dataset_id') + ' <a href="datasets.html" style="color:#1565C0;">' + _t('evaluation.go_to_datasets') + '</a></div>';
+                document.getElementById('page-subtitle').textContent = _t('evaluation.loading');
                 return;
             }
 
@@ -175,23 +177,23 @@
             function loadEvaluation() {
                 var gen = DataService.getGenerationById(genId);
                 if (!gen) {
-                    document.getElementById('eval-content').innerHTML = '<div class="error-box">Dataset not found (ID: ' + genId + '). It may have been deleted.</div>';
-                    document.getElementById('page-subtitle').textContent = 'Dataset not found';
+                    document.getElementById('eval-content').innerHTML = '<div class="error-box">' + _t('evaluation.dataset_not_found') + ' (ID: ' + genId + ').</div>';
+                    document.getElementById('page-subtitle').textContent = _t('evaluation.dataset_not_found');
                     return;
                 }
 
                 var modelName = gen.modelName || 'Standalone';
                 var modelVer = gen.modelVersion || '-';
-                var level = gen.level || 'Medium';
+                var level = gen.level || _t('size.medium');
                 var rows = gen.rows || 0;
 
                 document.getElementById('page-subtitle').innerHTML =
-                    'Comparing <strong>' + modelName + '</strong> (v' + modelVer + ') — ' + level + ' (' + rows.toLocaleString() + ' rows)';
+                    _t('evaluation.comparing') + ' <strong>' + modelName + '</strong> (v' + modelVer + ') — ' + level + ' (' + rows.toLocaleString() + ' ' + _t('pagination.rows') + ')';
 
                 // Load synthetic data
                 var synData = DataService.getFullDataset(genId);
                 if (!synData || synData.length === 0) {
-                    document.getElementById('eval-content').innerHTML = '<div class="error-box">Synthetic data not available for this generation. The in-memory cache may have been cleared.</div>';
+                    document.getElementById('eval-content').innerHTML = '<div class="error-box">' + _t('evaluation.data_not_available') + '</div>';
                     return;
                 }
 
@@ -255,10 +257,10 @@
 
                 // --- Section 1: Data Comparison Table ---
                 html += '<div class="card" style="margin-bottom:1.5rem;">';
-                html += '<h3 class="section-title"><span class="ico blue"></span>Statistical Comparison</h3>';
+                html += '<h3 class="section-title"><span class="ico blue"></span>' + _t('evaluation.statistical_comparison') + '</h3>';
                 html += '<div style="overflow-x:auto;">';
                 html += '<table class="cmp-table">';
-                html += '<thead><tr><th>Feature</th><th>Real Mean</th><th>Synth Mean</th><th>Diff</th><th>Real Std</th><th>Synth Std</th><th>Real Min</th><th>Synth Min</th><th>Real Max</th><th>Synth Max</th></tr></thead>';
+                html += '<thead><tr><th>' + _t('evaluation.feature') + '</th><th>' + _t('evaluation.real_mean') + '</th><th>' + _t('evaluation.synth_mean') + '</th><th>' + _t('evaluation.diff') + '</th><th>' + _t('evaluation.real_std') + '</th><th>' + _t('evaluation.synth_std') + '</th><th>' + _t('evaluation.real_min') + '</th><th>' + _t('evaluation.synth_min') + '</th><th>' + _t('evaluation.real_max') + '</th><th>' + _t('evaluation.synth_max') + '</th></tr></thead>';
                 html += '<tbody>';
 
                 commonNum.forEach(function(col) {
@@ -295,35 +297,35 @@
                 });
 
                 html += '</tbody></table></div>';
-                if (commonNum.length === 0) html += '<p style="color:#999;padding:0.5rem;">No common numeric features to compare.</p>';
+                if (commonNum.length === 0) html += '<p style="color:#999;padding:0.5rem;">' + _t('evaluation.no_common_features') + '</p>';
                 html += '</div>';
 
                 // --- Section 2: Visualization ---
                 html += '<div class="card" style="margin-bottom:1.5rem;">';
-                html += '<h3 class="section-title"><span class="ico blue"></span>Distribution Comparison</h3>';
+                html += '<h3 class="section-title"><span class="ico blue"></span>' + _t('evaluation.distribution_comparison') + '</h3>';
                 html += '<div class="chart-grid" id="dist-charts"></div>';
                 html += '</div>';
 
                 // Correlation heatmap
                 html += '<div class="card" style="margin-bottom:1.5rem;">';
-                html += '<h3 class="section-title"><span class="ico blue"></span>Correlation Comparison</h3>';
+                html += '<h3 class="section-title"><span class="ico blue"></span>' + _t('evaluation.correlation_comparison') + '</h3>';
                 html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">';
-                html += '<div><h4 style="font-size:0.9rem;color:#1565C0;margin-bottom:0.5rem;">Real Data</h4><div class="heatmap-wrapper" id="heatmap-real"></div></div>';
-                html += '<div><h4 style="font-size:0.9rem;color:#E65100;margin-bottom:0.5rem;">Synthetic Data</h4><div class="heatmap-wrapper" id="heatmap-synth"></div></div>';
+                html += '<div><h4 style="font-size:0.9rem;color:#1565C0;margin-bottom:0.5rem;">' + _t('evaluation.real_data') + '</h4><div class="heatmap-wrapper" id="heatmap-real"></div></div>';
+                html += '<div><h4 style="font-size:0.9rem;color:#E65100;margin-bottom:0.5rem;">' + _t('evaluation.synthetic_data') + '</h4><div class="heatmap-wrapper" id="heatmap-synth"></div></div>';
                 html += '</div>';
                 html += '</div>';
 
                 // Categorical comparison
                 if (commonCat.length > 0) {
                     html += '<div class="card" style="margin-bottom:1.5rem;">';
-                    html += '<h3 class="section-title"><span class="ico blue"></span>Categorical Comparison</h3>';
+                    html += '<h3 class="section-title"><span class="ico blue"></span>' + _t('evaluation.categorical_comparison') + '</h3>';
                     html += '<div class="cat-grid" id="cat-charts"></div>';
                     html += '</div>';
                 }
 
                 // --- Section 3: Quality Score ---
                 html += '<div class="card" style="margin-bottom:1.5rem;">';
-                html += '<h3 class="section-title"><span class="ico blue"></span>Data Quality Score</h3>';
+                html += '<h3 class="section-title"><span class="ico blue"></span>' + _t('evaluation.data_quality_score') + '</h3>';
                 html += '<div class="qs-container"><div class="qs-gauge" id="qs-gauge"></div><div class="qs-breakdown" id="qs-breakdown"></div></div>';
                 html += '</div>';
 
@@ -392,8 +394,8 @@
                         data: {
                             labels: labels,
                             datasets: [
-                                { label: 'Real', data: rCounts, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
-                                { label: 'Synthetic', data: sCounts, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
+                                { label: _t('evaluation.chart_real'), data: rCounts, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                                { label: _t('evaluation.chart_synthetic'), data: sCounts, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
                             ]
                         },
                         options: {
@@ -402,7 +404,7 @@
                             plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
                             scales: {
                                 x: { ticks: { font: { size: 8 }, maxRotation: 45 }, title: { display: true, text: col, font: { size: 10 } } },
-                                y: { beginAtZero: true, title: { display: true, text: 'Count', font: { size: 10 } } }
+                                y: { beginAtZero: true, title: { display: true, text: _t('evaluation.chart_count'), font: { size: 10 } } }
                             }
                         }
                     });
@@ -416,8 +418,8 @@
                 var realEl = document.getElementById('heatmap-real');
                 var synthEl = document.getElementById('heatmap-synth');
                 if (!realEl || !synthEl || cols.length < 2) {
-                    if (realEl) realEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">Need at least 2 numeric columns.</p>';
-                    if (synthEl) synthEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">Need at least 2 numeric columns.</p>';
+                    if (realEl) realEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">' + _t('evaluation.need_2_columns') + '</p>';
+                    if (synthEl) synthEl.innerHTML = '<p style="color:#999;font-size:0.82rem;">' + _t('evaluation.need_2_columns') + '</p>';
                     return;
                 }
 
@@ -529,8 +531,8 @@
                         data: {
                             labels: labels,
                             datasets: [
-                                { label: 'Real', data: rVals, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
-                                { label: 'Synthetic', data: sVals, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
+                                { label: _t('evaluation.chart_real'), data: rVals, backgroundColor: 'rgba(21,101,192,0.5)', borderColor: '#1565C0', borderWidth: 1 },
+                                { label: _t('evaluation.chart_synthetic'), data: sVals, backgroundColor: 'rgba(230,81,0,0.5)', borderColor: '#E65100', borderWidth: 1 }
                             ]
                         },
                         options: {
@@ -539,7 +541,7 @@
                             plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } },
                             scales: {
                                 x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
-                                y: { beginAtZero: true, title: { display: true, text: 'Count', font: { size: 10 } } }
+                                y: { beginAtZero: true, title: { display: true, text: _t('evaluation.chart_count'), font: { size: 10 } } }
                             }
                         }
                     });
@@ -632,13 +634,13 @@
 
                 // Gauge display
                 var statusText, statusClass;
-                if (overall >= 0.8) { statusText = 'Excellent'; statusClass = 'badge-green'; }
-                else if (overall >= 0.5) { statusText = 'Good'; statusClass = 'badge-orange'; }
-                else { statusText = 'Needs Improvement'; statusClass = 'badge-red'; }
+                if (overall >= 0.8) { statusText = _t('status.excellent'); statusClass = 'badge-green'; }
+                else if (overall >= 0.5) { statusText = _t('status.good'); statusClass = 'badge-orange'; }
+                else { statusText = _t('status.needs_improvement'); statusClass = 'badge-red'; }
 
                 gaugeEl.innerHTML =
                     '<div class="score-num" style="color:' + (overall >= 0.8 ? '#2E7D32' : overall >= 0.5 ? '#E65100' : '#C62828') + ';">' + (overall * 100).toFixed(1) + '%</div>' +
-                    '<div class="score-label">Data Quality Score</div>' +
+                    '<div class="score-label">' + _t('evaluation.data_quality_score') + '</div>' +
                     '<div class="score-status ' + statusClass + '">' + statusText + '</div>';
 
                 // Breakdown
@@ -647,10 +649,10 @@
                     return '<div class="qs-item"><span class="qs-label">' + label + '</span><div class="qs-bar-wrap"><div class="qs-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div><span class="qs-val">' + pct + '%</span></div>';
                 }
                 breakdownEl.innerHTML =
-                    breakdownItem('Statistical Similarity (40%)', statSim, '#1565C0') +
-                    breakdownItem('Distribution Similarity (35%)', distSim, '#E65100') +
-                    breakdownItem('Correlation Similarity (25%)', corrSim, '#2E7D32') +
-                    '<div class="info-note"><strong>Note:</strong> Quality is computed entirely from actual data comparison — no hardcoded values. Score ranges: 80-100% Excellent, 50-79% Good, below 50% Needs Improvement.</div>';
+                    breakdownItem(_t('evaluation.statistical_similarity'), statSim, '#1565C0') +
+                    breakdownItem(_t('evaluation.distribution_similarity'), distSim, '#E65100') +
+                    breakdownItem(_t('evaluation.correlation_similarity'), corrSim, '#2E7D32') +
+                    '<div class="info-note">' + _t('evaluation.quality_note') + '</div>';
             }
 
             // Preview modal handlers
@@ -664,5 +666,6 @@
             loadEvaluation();
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

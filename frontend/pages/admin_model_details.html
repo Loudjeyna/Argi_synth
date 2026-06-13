@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Model Details</title>
+    <title data-i18n="model.details">SynthAI - Model Details</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -57,28 +57,28 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
         </aside>
 
         <main class="main-content" id="main-content">
-            <a href="admin_models.html" class="back-link">&larr; Back to Models</a>
+            <a href="admin_models.html" class="back-link" data-i18n="model.go_back">&larr; Back to Models</a>
             <div class="page-header" id="model-page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
-                    <h2 id="model-name-display">Model Details</h2>
-                    <p id="model-subtitle">Loading...</p>
+                    <h2 id="model-name-display" data-i18n="model.details">Model Details</h2>
+                    <p id="model-subtitle" data-i18n="common.loading">Loading...</p>
                 </div>
                 <div class="header-actions">
-                    <button id="retrain-btn" class="btn btn-outline" style="border-color:var(--primary);color:var(--primary);">Retrain Model</button>
+                    <button id="retrain-btn" class="btn btn-outline" style="border-color:var(--primary);color:var(--primary);" data-i18n="model.retrain">Retrain Model</button>
                 </div>
             </div>
 
             <div id="model-not-found" style="display:none;">
                 <div class="card" style="text-align:center;padding:2rem;">
-                    <p style="font-size:1.1rem;color:#666;">Model not found.</p>
-                    <a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;">Back to Models</a>
+                    <p style="font-size:1.1rem;color:#666;" data-i18n="common.no_data">Model not found.</p>
+<a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;" data-i18n="models.title">Back to Models</a>
                 </div>
             </div>
 
@@ -88,45 +88,45 @@
 
                 <!-- Dataset Info -->
                 <div class="section-card">
-                    <h3>Original Dataset</h3>
+                    <h3 data-i18n="table.dataset_name">Original Dataset</h3>
                     <div id="dataset-info-content"></div>
                 </div>
 
                 <!-- Cleaning Report -->
                 <div class="section-card">
-                    <h3>Cleaning Report</h3>
+                    <h3 data-i18n="training.report">Cleaning Report</h3>
                     <div id="cleaning-report-content"></div>
                 </div>
 
                 <!-- Training Config -->
                 <div class="section-card">
-                    <h3>Training Configuration</h3>
+                    <h3 data-i18n="training.config">Training Configuration</h3>
                     <div id="training-config-content"></div>
                 </div>
 
                 <!-- Training Evaluation -->
                 <div class="section-card">
-                    <h3>Training Evaluation</h3>
+                    <h3 data-i18n="model.training_evaluation">Training Evaluation</h3>
                     <div id="training-evaluation-content">
-                        <div class="empty-gen">No evaluation data available. Train the model first.</div>
+<div class="empty-gen" data-i18n="common.no_data">No evaluation data available. Train the model first.</div>
                     </div>
                 </div>
 
                 <!-- Version History -->
                 <div class="section-card">
-                    <h3>Version History <span id="version-history-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <h3 data-i18n="sidebar.models">Version History <span id="version-history-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
                     <div id="version-history-content">
-                        <div class="empty-gen">No versions available.</div>
+<div class="empty-gen" data-i18n="common.no_data">No versions available.</div>
                     </div>
                 </div>
 
                 <!-- Retrain Panel (hidden by default) -->
                 <div class="section-card" id="retrain-section" style="display:none;">
-                    <h3>Retrain Model</h3>
-                    <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Adjust training parameters and retrain this model using its existing dataset.</p>
+                    <h3 data-i18n="sidebar.new_training">Retrain Model</h3>
+                    <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;" data-i18n="training.config">Adjust training parameters and retrain this model using its existing dataset.</p>
                     <div class="retrain-params">
                         <div class="form-group">
-                            <label for="retrain-epochs">Epochs</label>
+                            <label for="retrain-epochs" data-i18n="training.epochs">Epochs</label>
                             <select id="retrain-epochs" class="form-control">
                                 <option value="100">100</option>
                                 <option value="300">300</option>
@@ -135,7 +135,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="retrain-batch-size">Batch Size</label>
+                            <label for="retrain-batch-size" data-i18n="training.batch_size">Batch Size</label>
                             <select id="retrain-batch-size" class="form-control">
                                 <option value="128" selected>128</option>
                                 <option value="256">256</option>
@@ -143,7 +143,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="retrain-lr">Learning Rate</label>
+                            <label for="retrain-lr" data-i18n="training.lr">Learning Rate</label>
                             <select id="retrain-lr" class="form-control">
                                 <option value="0.0001">0.0001</option>
                                 <option value="0.0002" selected>0.0002</option>
@@ -152,12 +152,12 @@
                         </div>
                     </div>
                     <div style="margin-top:1rem;display:flex;gap:0.5rem;">
-                        <button id="start-retrain-btn" class="btn btn-primary">Start Retrain</button>
-                        <button id="cancel-retrain-btn" class="btn btn-outline">Cancel</button>
+                        <button id="start-retrain-btn" class="btn btn-primary" data-i18n="model.retrain">Start Retrain</button>
+                        <button id="cancel-retrain-btn" class="btn btn-outline" data-i18n="common.cancel">Cancel</button>
                     </div>
                     <div id="retrain-progress" style="display:none;margin-top:1rem;">
                         <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem;">
-                            <span>Retraining...</span>
+                            <span data-i18n="model.retraining">Retraining...</span>
                             <span id="retrain-progress-text">0%</span>
                         </div>
                         <div style="height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden;">
@@ -170,16 +170,16 @@
 
                 <!-- Training History -->
                 <div class="section-card">
-                    <h3>Training History <span id="version-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <h3 data-i18n="sidebar.history">Training History <span id="version-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
                     <div id="training-history-content">
-                        <div class="empty-gen">No training history available.</div>
+<div class="empty-gen" data-i18n="common.no_data">No training history available.</div>
                     </div>
                 </div>
 
             </div>
         </main>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/services/history.js"></script>
@@ -196,6 +196,8 @@
             }
         })();
 
+        function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
+
         var _currentModel = null;
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -204,7 +206,8 @@
                 if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             try {
@@ -230,55 +233,55 @@
         function showNotFound() {
             document.getElementById('model-content').style.display = 'none';
             document.getElementById('model-not-found').style.display = 'block';
-            document.getElementById('model-subtitle').textContent = 'Model not found';
+            document.getElementById('model-subtitle').textContent = _t('empty.no_data');
         }
 
         function renderModel(model) {
             document.getElementById('model-name-display').textContent = model.name;
             var date = new Date(model.createdAt);
-            document.getElementById('model-subtitle').textContent = 'Created ' + date.toLocaleString();
+            document.getElementById('model-subtitle').textContent = _t('model.created') + ' ' + date.toLocaleString();
 
-            var statusLabels = { trained: 'Trained', in_progress: 'In Progress', failed: 'Failed' };
+            var statusLabels = { trained: _t('status.trained'), in_progress: _t('status.in_progress'), failed: _t('status.failed') };
             var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
 
             var versions = model.versions || [];
             var retrainCount = versions.filter(function(v) { return v.type === 'retrain'; }).length;
 
             document.getElementById('model-meta-grid').innerHTML =
-                '<div class="detail-card"><div class="detail-label">Status</div><div class="detail-value" style="color:' + (statusColors[model.status] || '#666') + ';">' + (statusLabels[model.status] || model.status) + '</div></div>' +
-                '<div class="detail-card"><div class="detail-label">Created</div><div class="detail-value" style="font-size:0.9rem;">' + date.toLocaleString() + '</div></div>' +
-                '<div class="detail-card"><div class="detail-label">Versions</div><div class="detail-value">' + versions.length + '</div></div>' +
-                '<div class="detail-card" style="border-left-color:#FF9800;"><div class="detail-label">Retrains</div><div class="detail-value">' + retrainCount + '</div></div>';
+                '<div class="detail-card"><div class="detail-label">' + _t('model.status') + '</div><div class="detail-value" style="color:' + (statusColors[model.status] || '#666') + ';">' + (statusLabels[model.status] || model.status) + '</div></div>' +
+                '<div class="detail-card"><div class="detail-label">' + _t('model.created') + '</div><div class="detail-value" style="font-size:0.9rem;">' + date.toLocaleString() + '</div></div>' +
+                '<div class="detail-card"><div class="detail-label">' + _t('model.versions') + '</div><div class="detail-value">' + versions.length + '</div></div>' +
+                '<div class="detail-card" style="border-left-color:#FF9800;"><div class="detail-label">' + _t('model.retrains') + '</div><div class="detail-value">' + retrainCount + '</div></div>';
 
             var di = model.datasetInfo || {};
             document.getElementById('dataset-info-content').innerHTML =
-                '<div class="info-row"><span class="info-label">File</span><span class="info-value">' + (di.fileName || 'N/A') + '</span></div>' +
-                '<div class="info-row"><span class="info-label">Original Rows</span><span class="info-value">' + (di.originalRows || 0) + '</span></div>' +
-                '<div class="info-row"><span class="info-label">Original Columns</span><span class="info-value">' + (di.originalCols || 0) + '</span></div>' +
-                '<div class="info-row"><span class="info-label">Headers</span><span class="info-value">' + (di.headers ? di.headers.join(', ') : 'N/A') + '</span></div>';
+                '<div class="info-row"><span class="info-label">' + _t('model.file') + '</span><span class="info-value">' + (di.fileName || _t('common.no_data')) + '</span></div>' +
+                '<div class="info-row"><span class="info-label">' + _t('model.original_rows') + '</span><span class="info-value">' + (di.originalRows || 0) + '</span></div>' +
+                '<div class="info-row"><span class="info-label">' + _t('model.original_columns') + '</span><span class="info-value">' + (di.originalCols || 0) + '</span></div>' +
+                '<div class="info-row"><span class="info-label">' + _t('model.headers') + '</span><span class="info-value">' + (di.headers ? di.headers.join(', ') : _t('common.no_data')) + '</span></div>';
 
             var cr = model.cleaningReport;
             if (cr) {
                 var crHtml = '';
-                if (cr.missing) crHtml += '<div class="info-row"><span class="info-label">Missing Values</span><span class="info-value">' + (cr.missing.fillCount || 0) + ' filled</span></div>';
-                if (cr.duplicates) crHtml += '<div class="info-row"><span class="info-label">Duplicates</span><span class="info-value">' + (cr.duplicates.removed || 0) + ' removed</span></div>';
-                if (cr.constants && cr.constants.removed && cr.constants.removed.length > 0) crHtml += '<div class="info-row"><span class="info-label">Constant Columns</span><span class="info-value">' + cr.constants.removed.join(', ') + ' removed</span></div>';
-                if (cr.outliers) crHtml += '<div class="info-row"><span class="info-label">Outliers</span><span class="info-value">' + (cr.outliers.total || 0) + ' handled</span></div>';
+                if (cr.missing) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.missing') + '</span><span class="info-value">' + (cr.missing.fillCount || 0) + ' ' + _t('model.filled') + '</span></div>';
+                if (cr.duplicates) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.duplicates') + '</span><span class="info-value">' + (cr.duplicates.removed || 0) + ' ' + _t('model.removed') + '</span></div>';
+                if (cr.constants && cr.constants.removed && cr.constants.removed.length > 0) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.constants') + '</span><span class="info-value">' + cr.constants.removed.join(', ') + ' ' + _t('model.removed') + '</span></div>';
+                if (cr.outliers) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.outliers') + '</span><span class="info-value">' + (cr.outliers.total || 0) + ' ' + _t('model.handled') + '</span></div>';
                 if (cr.types) {
                     var typesList = Object.keys(cr.types).map(function(k) { return k + ': ' + cr.types[k]; }).join(', ');
-                    crHtml += '<div class="info-row"><span class="info-label">Detected Types</span><span class="info-value">' + typesList + '</span></div>';
+                    crHtml += '<div class="info-row"><span class="info-label">' + _t('training.types') + '</span><span class="info-value">' + typesList + '</span></div>';
                 }
-                document.getElementById('cleaning-report-content').innerHTML = crHtml || '<p style="color:#999;font-size:0.9rem;">No cleaning report available.</p>';
+                document.getElementById('cleaning-report-content').innerHTML = crHtml || '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
             } else {
-                document.getElementById('cleaning-report-content').innerHTML = '<p style="color:#999;font-size:0.9rem;">No cleaning report available.</p>';
+                document.getElementById('cleaning-report-content').innerHTML = '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
             }
 
             var cfg = model.config || {};
             document.getElementById('training-config-content').innerHTML =
                 '<div class="config-grid">' +
-                '<div class="config-item"><div class="config-val">' + (cfg.epochs || '-') + '</div><div class="config-label">Epochs</div></div>' +
-                '<div class="config-item"><div class="config-val">' + (cfg.batchSize || '-') + '</div><div class="config-label">Batch Size</div></div>' +
-                '<div class="config-item"><div class="config-val">' + (cfg.learningRate || '-') + '</div><div class="config-label">Learning Rate</div></div>' +
+                '<div class="config-item"><div class="config-val">' + (cfg.epochs || '-') + '</div><div class="config-label">' + _t('model.epochs') + '</div></div>' +
+                '<div class="config-item"><div class="config-val">' + (cfg.batchSize || '-') + '</div><div class="config-label">' + _t('model.batch_size') + '</div></div>' +
+                '<div class="config-item"><div class="config-val">' + (cfg.learningRate || '-') + '</div><div class="config-label">' + _t('model.learning_rate') + '</div></div>' +
                 '</div>';
 
             renderTrainingEvaluation(model);
@@ -292,35 +295,35 @@
             var versions = model.versions || [];
             var latest = versions[versions.length - 1];
             if (!latest || !latest.evaluation) {
-                container.innerHTML = '<div class="empty-gen">No evaluation data available. Train the model first.</div>';
+                container.innerHTML = '<div class="empty-gen">' + _t('model.no_evaluation') + '</div>';
                 return;
             }
             var ev = latest.evaluation;
             var cfg = latest.config || {};
             var d = new Date(latest.createdAt);
             var dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            var statusLabels = { trained: 'Completed', in_progress: 'In Progress', failed: 'Failed' };
+            var statusLabels = { trained: _t('status.completed'), in_progress: _t('status.in_progress'), failed: _t('status.failed') };
             var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
-            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityLabels = { good: _t('status.good'), acceptable: _t('status.acceptable'), needs_improvement: _t('status.needs_improvement') };
             var qualityClass = 'quality-' + (ev.trainingQuality || 'needs_improvement');
             var imbalance = ModelService.trainingImbalanceWarning(ev.generatorLoss, ev.discriminatorLoss);
 
             container.innerHTML =
                 '<div class="eval-grid" style="margin-bottom:0.75rem;">' +
-                '<div class="eval-item"><div class="eval-label">Model Name</div><div class="eval-value">' + model.name + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Version Number</div><div class="eval-value">' + latest.version + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Training Date &amp; Time</div><div class="eval-value" style="font-size:0.9rem;">' + dateStr + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Training Duration</div><div class="eval-value">' + ev.trainingDuration + 's</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Epochs</div><div class="eval-value">' + (cfg.epochs || '-') + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Batch Size</div><div class="eval-value">' + (cfg.batchSize || '-') + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Learning Rate</div><div class="eval-value">' + (cfg.learningRate || '-') + '</div></div>' +
-                '<div class="eval-item"><div class="eval-label">Training Status</div><div class="eval-value" style="color:' + (statusColors[latest.status] || '#666') + ';">' + (statusLabels[latest.status] || latest.status) + '</div></div>' +
-                '<div class="eval-item" style="border-left-color:#1565C0;"><div class="eval-label">Generator Loss</div><div class="eval-value loss-val loss-gen">' + ev.generatorLoss.toFixed(4) + '</div></div>' +
-                '<div class="eval-item" style="border-left-color:#E65100;"><div class="eval-label">Discriminator Loss</div><div class="eval-value loss-val loss-disc">' + ev.discriminatorLoss.toFixed(4) + '</div></div>' +
-                '<div class="eval-item" style="grid-column:1/2;"><div class="eval-label">Training Quality</div><div class="eval-value"><span class="quality-badge ' + qualityClass + '">' + (qualityLabels[ev.trainingQuality] || ev.trainingQuality) + '</span></div></div>' +
-                '<div class="eval-item" style="border-left-color:#9C27B0;grid-column:2/3;"><div class="eval-label">Loss Gap</div><div class="eval-value loss-val" style="color:#9C27B0;">' + Math.abs(ev.generatorLoss - ev.discriminatorLoss).toFixed(4) + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.name') + '</div><div class="eval-value">' + model.name + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.version') + '</div><div class="eval-value">' + latest.version + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.training_date') + '</div><div class="eval-value" style="font-size:0.9rem;">' + dateStr + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.training_duration') + '</div><div class="eval-value">' + ev.trainingDuration + 's</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.epochs') + '</div><div class="eval-value">' + (cfg.epochs || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.batch_size') + '</div><div class="eval-value">' + (cfg.batchSize || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.learning_rate') + '</div><div class="eval-value">' + (cfg.learningRate || '-') + '</div></div>' +
+                '<div class="eval-item"><div class="eval-label">' + _t('model.training_status') + '</div><div class="eval-value" style="color:' + (statusColors[latest.status] || '#666') + ';">' + (statusLabels[latest.status] || latest.status) + '</div></div>' +
+                '<div class="eval-item" style="border-left-color:#1565C0;"><div class="eval-label">' + _t('model.generator_loss') + '</div><div class="eval-value loss-val loss-gen">' + ev.generatorLoss.toFixed(4) + '</div></div>' +
+                '<div class="eval-item" style="border-left-color:#E65100;"><div class="eval-label">' + _t('model.discriminator_loss') + '</div><div class="eval-value loss-val loss-disc">' + ev.discriminatorLoss.toFixed(4) + '</div></div>' +
+                '<div class="eval-item" style="grid-column:1/2;"><div class="eval-label">' + _t('model.training_quality') + '</div><div class="eval-value"><span class="quality-badge ' + qualityClass + '">' + (qualityLabels[ev.trainingQuality] || ev.trainingQuality) + '</span></div></div>' +
+                '<div class="eval-item" style="border-left-color:#9C27B0;grid-column:2/3;"><div class="eval-label">' + _t('model.loss_gap') + '</div><div class="eval-value loss-val" style="color:#9C27B0;">' + Math.abs(ev.generatorLoss - ev.discriminatorLoss).toFixed(4) + '</div></div>' +
                 '</div>' +
-                (imbalance ? '<div class="imbalance-warning"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M8 1L1 14h14L8 1z" fill="#FF9800"/><path d="M8 5v4M8 12v-1" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg><span><strong>Possible Training Imbalance</strong> — Large gap between Generator Loss (' + ev.generatorLoss.toFixed(4) + ') and Discriminator Loss (' + ev.discriminatorLoss.toFixed(4) + '). Consider adjusting training parameters.</span></div>' : '');
+                (imbalance ? '<div class="imbalance-warning"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M8 1L1 14h14L8 1z" fill="#FF9800"/><path d="M8 5v4M8 12v-1" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg><span>' + _t('model.imbalance_warning') + '</span></div>' : '');
         }
 
         function renderVersionHistory(model) {
@@ -331,10 +334,10 @@
                 container.innerHTML = '<div class="empty-gen">No versions available.</div>';
                 return;
             }
-            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityLabels = { good: _t('status.good'), acceptable: _t('status.acceptable'), needs_improvement: _t('status.needs_improvement') };
             var qualityClasses = { good: 'quality-good', acceptable: 'quality-acceptable', needs_improvement: 'quality-needs_improvement' };
             var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
-            var statusLabels = { trained: 'Completed', in_progress: 'In Progress', failed: 'Failed' };
+            var statusLabels = { trained: _t('status.completed'), in_progress: _t('status.in_progress'), failed: _t('status.failed') };
 
             var rows = versions.slice().reverse().map(function(v) {
                 var d = new Date(v.createdAt);
@@ -346,7 +349,7 @@
                 var quality = ev ? (ev.trainingQuality || '') : '';
                 var qLabel = qualityLabels[quality] || '';
                 var qClass = qualityClasses[quality] || '';
-                var label = v.type === 'initial' ? 'Initial Training' : 'Retrain #' + v.version;
+                var label = v.type === 'initial' ? _t('model.initial_training') : _t('model.retrain_num') + ' #' + v.version;
                 return '<tr>' +
                     '<td><strong>' + label + '</strong></td>' +
                     '<td>' + dateStr + '</td>' +
@@ -361,7 +364,7 @@
             container.innerHTML =
                 '<div class="table-container" style="max-height:400px;overflow-y:auto;">' +
                 '<table class="version-table">' +
-                '<thead><tr><th>Version</th><th>Date</th><th>Epochs</th><th>Generator Loss</th><th>Discriminator Loss</th><th>Quality</th><th>Status</th></tr></thead>' +
+                '<thead><tr><th>' + _t('model.version') + '</th><th>' + _t('table.date') + '</th><th>' + _t('model.epochs') + '</th><th>' + _t('model.generator_loss') + '</th><th>' + _t('model.discriminator_loss') + '</th><th>' + _t('model.training_quality') + '</th><th>' + _t('table.status') + '</th></tr></thead>' +
                 '<tbody>' + rows + '</tbody></table></div>';
         }
 
@@ -373,16 +376,16 @@
                 container.innerHTML = '<div class="empty-gen">No training history available.</div>';
                 return;
             }
-            var statusLbl = { trained: 'Trained', in_progress: 'In Progress', failed: 'Failed' };
+            var statusLbl = { trained: _t('status.trained'), in_progress: _t('status.in_progress'), failed: _t('status.failed') };
             var statusDot = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
-            var qualityLabels = { good: 'Good', acceptable: 'Acceptable', needs_improvement: 'Needs Improvement' };
+            var qualityLabels = { good: _t('status.good'), acceptable: _t('status.acceptable'), needs_improvement: _t('status.needs_improvement') };
             var qualityClasses = { good: 'quality-good', acceptable: 'quality-acceptable', needs_improvement: 'quality-needs_improvement' };
             container.innerHTML = versions.slice().reverse().map(function(v, idx) {
                 var d = new Date(v.createdAt);
                 var dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 var cfg = v.config || {};
                 var isInitial = v.type === 'initial';
-                var label = isInitial ? 'Initial Training' : 'Retrain #' + v.version;
+                var label = isInitial ? _t('model.initial_training') : _t('model.retrain_num') + ' #' + v.version;
                 var statusColor = statusDot[v.status] || '#999';
                 var statusLabel = statusLbl[v.status] || v.status;
                 var badgeBg = isInitial ? '#E8F5E9' : '#FFF8E1';
@@ -490,10 +493,10 @@
                 progress += 5;
                 document.getElementById('retrain-progress-bar').style.width = progress + '%';
                 document.getElementById('retrain-progress-text').textContent = progress + '%';
-                document.getElementById('retrain-status-text').textContent = 'Training epoch ' + Math.ceil(progress / (100 / epochs)) + ' of ' + epochs + '...';
+                document.getElementById('retrain-status-text').textContent = _t('model.training_progress').replace('{current}', Math.ceil(progress / (100 / epochs))).replace('{total}', epochs);
                 if (progress >= 100) {
                     clearInterval(interval);
-                    document.getElementById('retrain-status-text').textContent = 'Retraining complete!';
+                    document.getElementById('retrain-status-text').textContent = _t('model.retrain_complete');
                     document.getElementById('retrain-progress-bar').style.width = '100%';
                     document.getElementById('retrain-progress-text').textContent = '100%';
 
@@ -528,7 +531,7 @@
                         var resultDiv = document.getElementById('retrain-result');
                         resultDiv.style.display = 'block';
                         resultDiv.className = 'status-message status-success';
-                        resultDiv.innerHTML = '<strong>Retrain complete!</strong> Version ' + version.version + ' trained with ' + epochs + ' epochs.';
+                        resultDiv.innerHTML = '<strong>' + _t('model.retrain_complete') + '</strong> ' + _t('model.version') + ' ' + version.version + ' ' + _t('model.retrain_epochs') + ' ' + epochs + ' ' + _t('model.epochs') + '.';
                         document.getElementById('start-retrain-btn').disabled = false;
                         document.getElementById('cancel-retrain-btn').disabled = false;
 
@@ -541,5 +544,6 @@
         }
 
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>

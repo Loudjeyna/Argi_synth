@@ -654,17 +654,56 @@ const DataService = (function() {
             fileUrl: fileUrl
         });
 
+        _uploadToCloudinary(data, headers, model.name, verNum).then(function(cloudUrl) {
+            if (cloudUrl) {
+                entry.cloudinaryUrl = cloudUrl;
+                var gens = getGenerations();
+                var idx = gens.findIndex(function(g) { return g.id === entry.id; });
+                if (idx !== -1) {
+                    gens[idx].cloudinaryUrl = cloudUrl;
+                    saveGenerations(gens);
+                }
+            }
+        });
+
         return entry;
     }
 
     var _cloudUrls = {};
 
-    function _createCloudUrl(data, headers, modelName, version) {
-        var id = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    var CLOUDINARY_CONFIG = {
+        cloudName: 'dvwsxexad',
+        uploadPreset: 'synthai_uploads',
+        folder: 'synthai_datasets'
+    };
+
+    function _csvBlob(data, headers) {
         var csv = [headers.join(','), ...data.map(function(row) {
             return headers.map(function(h) { return '"' + (row[h] || '') + '"'; }).join(',');
         })].join('\n');
-        var blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+        return new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8' });
+    }
+
+    function _uploadToCloudinary(data, headers, modelName, version) {
+        var blob = _csvBlob(data, headers);
+        var formData = new FormData();
+        formData.append('file', blob, (modelName || 'dataset') + '_v' + (version || 1) + '.csv');
+        formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+        formData.append('folder', CLOUDINARY_CONFIG.folder);
+        formData.append('public_id', 'synthai_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+
+        return fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CONFIG.cloudName + '/raw/upload', {
+            method: 'POST',
+            body: formData
+        }).then(function(r) { return r.json(); }).then(function(result) {
+            if (result.secure_url) return result.secure_url;
+            return null;
+        }).catch(function() { return null; });
+    }
+
+    function _createCloudUrl(data, headers, modelName, version) {
+        var id = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        var blob = _csvBlob(data, headers);
         var url = URL.createObjectURL(blob);
         _cloudUrls[id] = url;
         return 'synthai://cloud/' + id;
@@ -693,9 +732,14 @@ const DataService = (function() {
         var gen = getGenerationById(id);
         if (!gen) return false;
 
-        // Try cloud URL first
+        // Try Cloudinary URL first
         var url = null;
-        if (gen.fileUrl) {
+        if (gen.cloudinaryUrl) {
+            url = gen.cloudinaryUrl;
+        }
+
+        // Fallback to local cloud URL
+        if (!url && gen.fileUrl) {
             url = resolveCloudUrl(gen.fileUrl);
         }
 
@@ -857,8 +901,8 @@ const DataService = (function() {
         var validation = validatePreview(preview);
         var qualityScore = validation.qualityScore;
         var qualityLabel = 'Poor';
-        if (qualityScore >= 90) qualityLabel = 'Excellent';
-        else if (qualityScore >= 75) qualityLabel = 'Good';
+        if (qualityScore >= 90) qualityLabel = (typeof I18nService !== 'undefined' ? I18nService.t('status.excellent') : 'Excellent');
+        else if (qualityScore >= 75) qualityLabel = (typeof I18nService !== 'undefined' ? I18nService.t('status.good') : 'Good');
         else if (qualityScore >= 50) qualityLabel = 'Fair';
 
         // Compute correlation similarity

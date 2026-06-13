@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthAI - Crop Prediction</title>
+    <title data-i18n="predict.title">SynthAI - Crop Prediction</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
         .prod-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-radius: 10px; border: 1px solid #C8E6C9; }
@@ -74,17 +74,17 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;"><span data-i18n="logout">Logout</span></button></div>
         </aside>
 
         <main class="main-content">
             <a class="back-link" href="farmer_home.html" style="margin-bottom:0.5rem;display:inline-flex;align-items:center;gap:0.3rem;color:#2E7D32;text-decoration:none;font-size:0.85rem;">&larr; Dashboard</a>
             <div class="page-header">
-                <h2>Crop Prediction</h2>
-                <p>Enter your soil and climate conditions to get a crop recommendation from the production model</p>
+                <h2 data-i18n="predict.title">Crop Prediction</h2>
+                <p data-i18n="predict.subtitle">Enter your soil and climate conditions to get a crop recommendation from the production model</p>
             </div>
             <div id="status-msg"></div>
 
@@ -97,43 +97,43 @@
                     <h3 class="card-title">Enter Field Conditions</h3>
                     <div class="input-grid">
                         <div class="input-group">
-                            <label>Nitrogen (N) <span class="unit">mg/kg</span></label>
+                            <label data-i18n="predict.nitrogen">Nitrogen (N) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
                             <input type="number" id="input-n" value="50" min="0" max="200" step="1">
                         </div>
                         <div class="input-group">
-                            <label>Phosphorus (P) <span class="unit">mg/kg</span></label>
+                            <label data-i18n="predict.phosphorus">Phosphorus (P) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
                             <input type="number" id="input-p" value="40" min="0" max="200" step="1">
                         </div>
                         <div class="input-group">
-                            <label>Potassium (K) <span class="unit">mg/kg</span></label>
+                            <label data-i18n="predict.potassium">Potassium (K) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
                             <input type="number" id="input-k" value="40" min="0" max="250" step="1">
                         </div>
                         <div class="input-group">
-                            <label>Temperature <span class="unit">&deg;C</span></label>
+                            <label data-i18n="predict.temp">Temperature <span class="unit" data-i18n="unit.celsius">&deg;C</span></label>
                             <input type="number" id="input-temp" value="25" min="0" max="50" step="0.5">
                         </div>
                         <div class="input-group">
-                            <label>Humidity <span class="unit">%</span></label>
+                            <label data-i18n="predict.humidity">Humidity <span class="unit" data-i18n="unit.percent">%</span></label>
                             <input type="number" id="input-humidity" value="60" min="0" max="100" step="1">
                         </div>
                         <div class="input-group">
-                            <label>Soil pH</label>
+                            <label data-i18n="predict.ph">Soil pH</label>
                             <input type="number" id="input-ph" value="6.5" min="0" max="14" step="0.1">
                         </div>
                         <div class="input-group">
-                            <label>Rainfall <span class="unit">mm</span></label>
+                            <label data-i18n="predict.rainfall">Rainfall <span class="unit">mm</span></label>
                             <input type="number" id="input-rain" value="120" min="0" max="500" step="5">
                         </div>
                     </div>
                     <div style="margin-top:1.25rem;display:flex;gap:0.75rem;align-items:center;">
-                        <button id="predict-btn" class="pred-btn">Predict Crop</button>
-                        <button id="reset-btn" class="btn btn-outline">Reset</button>
+                        <button id="predict-btn" class="pred-btn" data-i18n="predict.btn">Predict Crop</button>
+                        <button id="reset-btn" class="btn btn-outline" data-i18n="predict.reset">Reset</button>
                     </div>
                 </div>
 
                 <div class="loading-overlay" id="loading-overlay">
                     <div class="spinner"></div>
-                    <p style="color:#666;font-size:0.9rem;">Production model is analyzing your conditions...</p>
+                    <p style="color:#666;font-size:0.9rem;" data-i18n="predict.analyzing">Production model is analyzing your conditions...</p>
                 </div>
 
                 <!-- Result Area -->
@@ -144,19 +144,21 @@
             <div id="no-prod-msg" style="display:none;">
                 <div class="card no-prod">
                     <div class="icon-warn">!</div>
-                    <h3>No Production Model Available</h3>
-                    <p>The system administrator has not yet set a production model. Please contact your administrator to configure a production model before making predictions.</p>
+                    <h3 data-i18n="predict.no_model">No Production Model Available</h3>
+                    <p data-i18n="predict.no_model_desc">The system administrator has not yet set a production model. Please contact your administrator to configure a production model before making predictions.</p>
                 </div>
             </div>
         </main>
     </div>
-
+    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
     <script src="../js/services/model.js"></script>
     <script src="../js/services/recommendation.js"></script>
     <script src="../js/services/history.js"></script>
     <script src="../js/app.js"></script>
     <script>
+        function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
+
         (function() {
             var btn = document.getElementById('logout-btn');
             if (btn) {
@@ -175,7 +177,8 @@
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
             try { AuthService.syncSessionFromStorage(); } catch (e) {}
-            try { App.setupSidebar(); } catch (e) {}
+            try { App.setupSidebar();
+try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             try { App.setupUserPanel(); } catch (e) {}
 
             var prodModel = null;
@@ -303,16 +306,16 @@
                 var ringColor = best.compatibility >= 80 ? '#2E7D32' : best.compatibility >= 50 ? '#FF9800' : '#F44336';
 
                 // Status message
-                var statusText = best.compatibility >= 80 ? 'Excellent' : best.compatibility >= 50 ? 'Good' : 'Low';
+                var statusText = best.compatibility >= 80 ? _t('status.excellent') : best.compatibility >= 50 ? _t('status.good') : _t('status.low');
                 var statusBadge = best.compatibility >= 80 ? 'status-success' : best.compatibility >= 50 ? 'status-warning' : 'status-error';
 
                 var html =
                     '<div class="result-card">' +
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">' +
                     '<div>' +
-                    '<div style="font-size:0.8rem;color:#999;text-transform:uppercase;letter-spacing:1px;">Recommended Crop</div>' +
+                    '<div style="font-size:0.8rem;color:#999;text-transform:uppercase;letter-spacing:1px;">' + _t('predict.recommended_crop') + '</div>' +
                     '<div class="result-crop">' + best.displayName + '</div>' +
-                    '<span class="status-badge ' + statusBadge + '" style="font-size:0.78rem;"><span class="dot"></span> ' + statusText + ' Match</span>' +
+                    '<span class="status-badge ' + statusBadge + '" style="font-size:0.78rem;"><span class="dot"></span> ' + statusText + ' ' + _t('predict.match') + '</span>' +
                     '</div>' +
                     '<div class="confidence-ring">' +
                     '<svg width="80" height="80">' +
@@ -323,13 +326,13 @@
                     '</div>' +
                     '</div>' +
                     '<div class="confidence-detail" style="margin-top:0.5rem;">' +
-                    '<span class="label">Confidence Score:</span> ' + best.compatibility + '% compatibility with the production model\'s knowledge base' +
+                    '<span class="label">' + _t('predict.confidence_score') + ':</span> ' + best.compatibility + '%' + _t('predict.compatibility') +
                     '</div>' +
                     '<div class="compat-grid">' +
                     best.details.map(function(d) {
                         return '<div class="compat-item">' +
                             '<div class="param">' + d.name + '</div>' +
-                            '<div class="vals"><span class="input-val">' + d.input + '</span> <span class="optimal">[' + d.optimal + ']</span></div>' +
+                            '<div class="vals"><span>' + _t('predict.input') + ': <span class="input-val">' + d.input + '</span></span> <span>' + _t('predict.optimal') + ': <span class="optimal">[' + d.optimal + ']</span></span></div>' +
                             '<div style="display:flex;align-items:center;gap:0.3rem;margin-top:0.2rem;">' +
                             '<div class="alt-bar" style="flex:1;height:4px;"><div class="alt-bar-fill" style="width:' + d.score + '%;background:' + (d.score >= 80 ? '#2E7D32' : d.score >= 50 ? '#FF9800' : '#F44336') + ';"></div></div>' +
                             '<span style="font-size:0.7rem;color:#999;">' + d.score + '%</span>' +
@@ -364,8 +367,8 @@
 
                 // Water and fertilizer
                 html += '<div style="display:flex;gap:1.5rem;margin-top:0.75rem;font-size:0.85rem;color:#666;">' +
-                    '<span><strong>Water Requirement:</strong> ' + best.water + '</span>' +
-                    '<span><strong>Fertilizer Level:</strong> ' + best.fertilizer + '</span>' +
+                    '<span><strong>' + _t('predict.water_requirement') + ':</strong> ' + best.water + '</span>' +
+                    '<span><strong>' + _t('predict.fertilizer_level') + ':</strong> ' + best.fertilizer + '</span>' +
                     '</div>';
 
                 html += '</div>';
@@ -374,10 +377,10 @@
                 if (altRows.length > 0) {
                     html += '<div class="alt-results">' +
                         '<div class="card">' +
-                        '<h3 class="card-title">Alternative Crops</h3>' +
+                        '<h3 class="card-title">' + _t('predict.alternative_crops') + '</h3>' +
                         '<div style="overflow-x:auto;">' +
                         '<table class="alt-table">' +
-                        '<thead><tr><th>Crop</th><th>Compatibility</th><th>Water</th><th>Fertilizer</th></tr></thead>' +
+                        '<thead><tr><th>' + _t('predict.crop') + '</th><th>' + _t('predict.compatibility') + '</th><th>' + _t('predict.water') + '</th><th>' + _t('predict.fertilizer') + '</th></tr></thead>' +
                         '<tbody>' +
                         altRows.map(function(r) {
                             var barColor = r.compatibility >= 80 ? '#2E7D32' : r.compatibility >= 50 ? '#FF9800' : '#F44336';
@@ -390,7 +393,7 @@
                         '</tbody></table></div></div></div>';
                 }
 
-                html += '<div style="margin-top:1rem;"><a class="reset-link" onclick="resetForm()">Try different conditions &rarr;</a></div>';
+                html += '<div style="margin-top:1rem;"><a class="reset-link" onclick="resetForm()">' + _t('predict.try_different') + '</a></div>';
 
                 area.innerHTML = html;
                 area.style.display = 'block';
@@ -485,5 +488,6 @@
             init();
         });
     </script>
+<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
