@@ -324,4 +324,5 @@ MIT License - See LICENSE file for details.
 
 **SynthAI - Smart Agricultural Intelligence Platform**
 
-Growing the future with AI
+Growing the future with AI#   A r g i _ s y n t h  
+ 
