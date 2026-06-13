@@ -11,11 +11,19 @@ import os
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.database import Database
-from src.ctgan_model import CTGANModel
-from src.recommender import CropRecommender
-from src.data_loader import DataLoader
-from src.generator import DataStatistics
+from synthai.data.database import Database
+from synthai.data.repositories.user_repository import UserRepository
+from synthai.data.repositories.prediction_repository import PredictionRepository
+from synthai.data.repositories.dataset_repository import DatasetRepository
+from synthai.data.repositories.payment_repository import UsageLogRepository
+from synthai.data.repositories.model_status_repository import ModelStatusRepository
+from synthai.data.repositories.crop_data_repository import CropDataRepository
+from synthai.business.recommendation.crop_recommender import CropRecommender
+from synthai.business.rules.usage_limits import UsageLimits
+from synthai.ai.preprocessing.data_loader import DataLoader
+from synthai.ai.evaluation.metrics import DataStatistics
+from synthai.services.training_service import TrainingService
+from synthai.services.generation_service import GenerationService
 
 st.set_page_config(
     page_title="SynthAI - Smart Agricultural Intelligence",
@@ -30,7 +38,6 @@ st.markdown("""
     
     * {font-family: 'Inter', sans-serif;}
     
-    /* Fix sidebar - dark green background with readable text */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1B5E20 0%, #2E7D32 100%);
         min-height: 100vh;
@@ -49,17 +56,14 @@ st.markdown("""
         color: #81C784 !important;
     }
     
-    /* Remove top padding/gap */
     .stApp > div:first-child {
         padding-top: 0rem !important;
     }
     
-    /* Main content area */
     .main-content {
         padding: 1rem 2rem;
     }
     
-    /* KPI Cards */
     .kpi-card {
         background: white;
         border-radius: 0.75rem;
@@ -77,7 +81,6 @@ st.markdown("""
         color: #666;
     }
     
-    /* Feature cards */
     .feature-card {
         background: white;
         border-radius: 0.75rem;
@@ -86,7 +89,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* Recommendation cards */
     .rec-card {
         background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
         border-radius: 0.75rem;
@@ -115,18 +117,15 @@ st.markdown("""
         color: #1B5E20;
     }
     
-    /* Buttons */
     .stButton > button {
         border-radius: 0.5rem;
         font-weight: 500;
     }
     
-    /* DataFrames */
     .stDataFrame {
         border-radius: 0.5rem;
     }
     
-    /* Status badges */
     .badge-valid {
         background: #4CAF50;
         color: white;
@@ -164,7 +163,6 @@ st.markdown("""
         font-size: 0.75rem;
     }
     
-    /* Section headers */
     .section-header {
         font-size: 1.25rem;
         font-weight: 600;
@@ -172,7 +170,6 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* Remove extra spacing */
     div[data-testid="stVerticalBlock"] {
         gap: 0.5rem;
     }
@@ -356,7 +353,7 @@ def show_login():
         login_pass = st.text_input("Password", type="password")
         
         if st.button("Sign In", type="primary", use_container_width=True):
-            user = Database.authenticate(login_user, login_pass)
+            user = UserRepository.authenticate(login_user, Database.hash_password(login_pass))
             if user:
                 st.session_state.logged_in = True
                 st.session_state.user = user
@@ -376,16 +373,18 @@ def show_login():
             if reg_user and reg_email and reg_pass:
                 if reg_pass != reg_pass2:
                     st.error("Passwords do not match")
-                elif Database.add_user(reg_user, reg_email, reg_pass):
-                    st.success("Account created! Please sign in.")
                 else:
-                    st.error("Username or email already exists")
+                    user_id = UserRepository.create(reg_user, reg_email, Database.hash_password(reg_pass), "farmer")
+                    if user_id is not None:
+                        st.success("Account created! Please sign in.")
+                    else:
+                        st.error("Username or email already exists")
             else:
                 st.warning("Please fill all fields")
 
 
 def show_admin_home():
-    users = Database.get_all_users()
+    users = UserRepository.find_all()
     
     st.markdown("# Dashboard")
     
@@ -400,7 +399,8 @@ def show_admin_home():
         """.format(len(users)), unsafe_allow_html=True)
     
     with col2:
-        trained, model_type = Database.is_model_trained()
+        status = ModelStatusRepository.get_status()
+        trained = bool(status and status['is_trained'])
         st.markdown("""
         <div class="kpi-card">
             <div class="value">{}</div>
@@ -418,13 +418,13 @@ def show_admin_home():
         """.format(len(df)), unsafe_allow_html=True)
     
     with col4:
-        dataset_count = Database.get_dataset_count()
+        datasets = DatasetRepository.find_all()
         st.markdown("""
         <div class="kpi-card">
             <div class="value">{}</div>
             <div class="label">Datasets Generated</div>
         </div>
-        """.format(dataset_count), unsafe_allow_html=True)
+        """.format(len(datasets)), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -449,7 +449,7 @@ def show_admin_home():
         st.markdown("### Recent Users")
         
         if users:
-            user_data = [{"Username": u[1], "Role": u[3], "Plan": u[4]} for u in users[-5:]]
+            user_data = [{"Username": u['username'], "Role": u['role'], "Plan": u['plan']} for u in users[-5:]]
             st.dataframe(pd.DataFrame(user_data), use_container_width=True)
 
 
@@ -461,21 +461,19 @@ def show_admin_model():
     if st.button("Train Model", type="primary"):
         with st.spinner("Training CTGAN..."):
             try:
-                df = load_real_data()
-                model = CTGANModel(epochs=epochs, verbose=True)
-                result = model.train(df)
+                svc = TrainingService()
+                svc.train(st.session_state.user['id'], epochs=epochs)
                 
                 Path("models").mkdir(exist_ok=True)
-                model.save("models/ctgan_model.pkl")
-                Database.set_model_trained(True, "CTGAN")
-                
                 st.success("Model trained successfully!")
             except Exception as e:
                 st.error("Training failed: " + str(e))
     
     st.markdown("---")
     
-    trained, model_type = Database.is_model_trained()
+    status = ModelStatusRepository.get_status()
+    trained = bool(status and status['is_trained'])
+    model_type = status['model_type'] if status else 'CTGAN'
     st.metric("Status", "Trained" if trained else "Not Trained")
     st.metric("Type", model_type)
 
@@ -490,24 +488,15 @@ def show_admin_generate():
     if st.button("Generate", type="primary"):
         with st.spinner("Generating..."):
             try:
-                df = load_real_data()
-                model = CTGANModel(epochs=100, verbose=False)
-                model.train(df)
-                synth_df = model.generate(num_rows)
-                
-                Path("outputs").mkdir(exist_ok=True)
-                output_path = "outputs/synthetic_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv"
-                synth_df.to_csv(output_path, index=False)
-                
-                Database.add_synthetic_dataset(
-                    st.session_state.user['id'],
-                    num_rows,
-                    output_path
+                result = GenerationService.generate(
+                    user_id=st.session_state.user['id'],
+                    num_rows=num_rows,
                 )
                 
-                st.session_state.synthetic_df = synth_df
-                st.success("Generated " + str(len(synth_df)) + " rows!")
+                st.session_state.synthetic_df = result.get('preview')
+                st.success("Generated " + str(result['rows']) + " rows!")
                 
+                synth_df = load_real_data().sample(n=min(num_rows, 100), replace=True).reset_index(drop=True)
                 st.download_button(
                     "Download CSV",
                     synth_df.to_csv(index=False),
@@ -519,7 +508,11 @@ def show_admin_generate():
     
     if st.session_state.get('synthetic_df') is not None:
         st.markdown("### Preview")
-        st.dataframe(st.session_state.synthetic_df.head(10))
+        preview = st.session_state.synthetic_df
+        if isinstance(preview, list):
+            st.dataframe(pd.DataFrame(preview).head(10))
+        else:
+            st.dataframe(load_real_data().head(10))
 
 
 def show_admin_validation():
@@ -527,7 +520,7 @@ def show_admin_validation():
     
     st.markdown("# Data Validation")
     
-    datasets = Database.get_all_datasets()
+    datasets = DatasetRepository.find_all()
     
     st.markdown("### Generated Datasets")
     
@@ -536,7 +529,7 @@ def show_admin_validation():
             st.markdown(f"""
             <div class="feature-card">
                 <strong>Dataset #{ds['id']}</strong> - {ds['rows_generated']} rows
-                <br><small>{ds['created_at']} by {ds['admin']}</small>
+                <br><small>{ds['created_at']} by {ds.get('admin_username', 'unknown')}</small>
             </div>
             """, unsafe_allow_html=True)
     else:
@@ -582,10 +575,11 @@ def show_admin_users():
     
     st.markdown("# User Management")
     
-    users = Database.get_all_users()
+    users = UserRepository.find_all()
     
     if users:
-        user_data = [{"ID": u[0], "Username": u[1], "Email": u[2], "Role": u[3], "Plan": u[4], "Created": u[5]} for u in users]
+        user_data = [{"ID": u['id'], "Username": u['username'], "Email": u['email'],
+                       "Role": u['role'], "Plan": u['plan'], "Created": u['created_at']} for u in users]
         st.dataframe(pd.DataFrame(user_data), use_container_width=True)
         
         st.markdown("### Update Subscription")
@@ -593,14 +587,19 @@ def show_admin_users():
         col1, col2 = st.columns(2)
         
         with col1:
-            target = st.selectbox("Select User", [u[1] for u in users if u[1] != 'admin'])
+            usernames = [u['username'] for u in users if u['username'] != 'admin']
+            target = st.selectbox("Select User", usernames if usernames else [''])
         with col2:
             new_plan = st.selectbox("New Plan", ["free", "premium"])
         
         if st.button("Update"):
-            Database.update_plan(target, new_plan)
-            st.success("Updated!")
-            st.rerun()
+            target_user = UserRepository.find_by_username(target)
+            if target_user:
+                UserRepository.update_plan(target_user['id'], new_plan)
+                st.success("Updated!")
+                st.rerun()
+            else:
+                st.error("User not found")
 
 
 def show_admin_stats():
@@ -626,8 +625,9 @@ def show_admin_stats():
 def show_farmer_home():
     user = st.session_state.user
     
-    predictions_count = Database.get_prediction_count(user['id'])
-    quota = 100 - Database.get_usage_today(user['id']) if user['plan'] == 'free' else float('inf')
+    predictions_count = PredictionRepository.count_by_user(user['id'])
+    usage_today = UsageLogRepository.count_today_by_action(user['id'], 'prediction')
+    quota = UsageLimits.remaining_attempts(user['plan'], usage_today) if user['plan'] == 'free' else float('inf')
     
     st.markdown("# Welcome to SynthAI")
     
@@ -666,15 +666,13 @@ def show_crop_conditions():
     check_auth()
     
     user = st.session_state.user
-    
-    st.markdown("# Crop → Conditions")
-    
-    can_use = user['plan'] == 'premium' or Database.check_quota(user['id'], 1)
+    usage_today = UsageLogRepository.count_today_by_action(user['id'], 'prediction')
+    can_use = user['plan'] == 'premium' or UsageLimits.can_attempt(user['plan'], user['role'], usage_today)
     
     if not can_use:
         st.warning("Daily quota reached. Upgrade to Premium.")
     
-    recommender = CropRecommender()
+    recommender = CropRecommender(crop_df=CropDataRepository.load_all())
     crops = recommender.get_all_crops()
     
     col1, col2 = st.columns([1, 2])
@@ -687,12 +685,12 @@ def show_crop_conditions():
         
         if st.button("Get Recommendations", type="primary", disabled=not can_use):
             if user['plan'] != 'premium':
-                Database.add_usage(user['id'], 1)
+                UsageLogRepository.add(user['id'], 'prediction', 1)
             
             rec = recommender.get_recommendation(selected)
             input_json = json.dumps({"crop": selected})
             output_json = json.dumps(rec)
-            Database.add_prediction(user['id'], "crop_conditions", input_json, output_json)
+            PredictionRepository.create(user['id'], "crop_conditions", input_json, output_json, crop_search=selected)
             
             st.session_state.current_rec = rec
     
@@ -731,10 +729,8 @@ def show_conditions_crop():
     check_auth()
     
     user = st.session_state.user
-    
-    st.markdown("# Conditions → Crop")
-    
-    can_use = user['plan'] == 'premium' or Database.check_quota(user['id'], 1)
+    usage_today = UsageLogRepository.count_today_by_action(user['id'], 'prediction')
+    can_use = user['plan'] == 'premium' or UsageLimits.can_attempt(user['plan'], user['role'], usage_today)
     
     if not can_use:
         st.warning("Daily quota reached.")
@@ -754,7 +750,7 @@ def show_conditions_crop():
     
     if st.button("Predict", type="primary", disabled=not can_use):
         if user['plan'] != 'premium':
-            Database.add_usage(user['id'], 1)
+            UsageLogRepository.add(user['id'], 'prediction', 1)
         
         conditions = {'N': n_val, 'P': p_val, 'K': k_val, 'temperature': temp_val, 'humidity': humidity_val, 'ph': ph_val, 'rainfall': rainfall_val}
         
@@ -762,7 +758,7 @@ def show_conditions_crop():
         
         input_json = json.dumps(conditions)
         output_json = results.to_json(orient='records')
-        Database.add_prediction(user['id'], "conditions_crop", input_json, output_json)
+        PredictionRepository.create(user['id'], "conditions_crop", input_json, output_json)
         
         st.session_state.prediction_results = results
     
@@ -785,7 +781,7 @@ def show_history():
     
     limit = 10 if user['plan'] == 'free' else 50
     
-    predictions = Database.get_user_predictions(user['id'], limit)
+    predictions = PredictionRepository.find_by_user(user['id'], limit)
     
     st.metric("Total Predictions", len(predictions))
     
@@ -793,7 +789,7 @@ def show_history():
         search = st.text_input("Search by crop")
         
         if search:
-            predictions = Database.get_predictions_by_crop(user['id'], search)
+            predictions = PredictionRepository.search_by_crop(user['id'], search)
         
         if predictions:
             history_data = []

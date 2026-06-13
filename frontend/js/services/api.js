@@ -1,6 +1,6 @@
 /* SynthAI - Backend API Client with automatic JS simulation fallback */
 const ApiService = (function() {
-    const API_BASE = 'http://localhost:8000/api';
+    const API_BASE = 'http://127.0.0.1:8001/api';
     const CACHE_KEY = 'synthai_api_available';
 
     function isAvailable() {
@@ -58,7 +58,7 @@ const ApiService = (function() {
     }
 
     function generateData(numRows) {
-        return apiPost('/generate', { num_rows: numRows || 1000 });
+        return apiPost('/datasets/generate', { num_rows: numRows || 1000 });
     }
 
     function getDatasets() {
@@ -66,7 +66,7 @@ const ApiService = (function() {
     }
 
     function validateDataset(datasetId) {
-        return apiGet('/validate/' + datasetId);
+        return apiGet('/datasets/validate/' + datasetId);
     }
 
     function getStats() {
