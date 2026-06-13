@@ -44,11 +44,29 @@ const App = (function() {
         window.location.href = routes[role] || PAGES.login;
     }
 
+    // Fallback translations when I18nService is not available
+    var TRANSLATIONS = {
+        'sidebar.dashboard': 'Dashboard',
+        'sidebar.new_training': 'New Training',
+        'sidebar.models': 'Models',
+        'sidebar.generate_data': 'Generate Data',
+        'sidebar.datasets': 'Datasets',
+        'sidebar.data_augmentation': 'Data Augmentation',
+        'sidebar.model_comparison': 'Model Comparison',
+        'sidebar.crop_prediction': 'Crop Prediction',
+        'sidebar.crop_requirements': 'Crop Requirements',
+        'sidebar.users': 'Users',
+        'sidebar.soil_vs_crop': 'Soil vs Crop',
+        'sidebar.history': 'History',
+        'sidebar.subscriptions': 'Subscriptions',
+        'lang.en': 'Language'
+    };
+
     function _t(key) {
         if (typeof I18nService !== 'undefined' && I18nService.t) {
             return I18nService.t(key);
         }
-        return key;
+        return TRANSLATIONS[key] || key;
     }
 
     function setupSidebar() {

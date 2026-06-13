@@ -16,6 +16,10 @@
         .size-card { background: white; border: 2px solid #E0E0E0; border-radius: 12px; padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s; }
         .size-card:hover { border-color: #66BB6A; }
         .size-card.selected { border-color: #2E7D32; background: #E8F5E9; }
+        .size-card.disabled { opacity: 0.55; border-color: #CCCCCC; background: #F5F5F5; cursor: not-allowed; }
+        .size-card.disabled:hover { border-color: #CCCCCC; }
+        .size-card.disabled .size-name { color: #999; }
+        .size-card.disabled .access-note { margin-top: 0.75rem; font-size: 0.8rem; color: #777; }
         .size-card .size-name { font-weight: 700; font-size: 1rem; color: #1B5E20; }
         .size-card .size-rows { color: #666; font-size: 0.85rem; margin-top: 0.25rem; }
         .gen-progress { margin-top: 1.5rem; display: none; }
@@ -142,6 +146,7 @@
     <script src="../js/services/model.js"></script>
     <script src="../js/services/data.js"></script>
     <script src="../js/services/history.js"></script>
+    <script src="../js/services/payment.js"></script>
     <script src="../js/services/api.js"></script>
     <script src="../js/app.js"></script>
     <script>
@@ -172,6 +177,11 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             var selectedModelId = null;
             var selectedVersion = null;
             var selectedLevel = 'medium';
+            var user = AuthService.getCurrentUser();
+            var allowedLevels = ['medium'];
+            if (user && typeof PaymentService !== 'undefined') {
+                allowedLevels = PaymentService.getDatasetLimit(user.id) || ['medium'];
+            }
 
             // Populate model dropdown
             function loadModels() {
@@ -280,21 +290,26 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
             // Size cards
             var levels = [
-                { id: 'medium', name: 'Medium', rows: 1000 },
-                { id: 'large', name: 'Large', rows: 10000 },
-                { id: 'bigdata', name: 'Big Data', rows: 100000 }
+                { id: 'medium', name: 'Medium', rows: 1000, requiredPlan: 'free' },
+                { id: 'large', name: 'Large', rows: 10000, requiredPlan: 'pro' },
+                { id: 'bigdata', name: 'Big Data', rows: 100000, requiredPlan: 'premium' }
             ];
             var sizeContainer = document.getElementById('size-cards');
             sizeContainer.innerHTML = levels.map(function(l) {
+                var disabled = allowedLevels.indexOf(l.id) === -1;
                 var sel = l.id === selectedLevel ? ' selected' : '';
-                return '<div class="size-card' + sel + '" data-level="' + l.id + '">' +
+                var disabledClass = disabled ? ' disabled' : '';
+                var note = disabled ? '<div class="access-note">' + (l.id === 'large' ? 'Pro plan required' : 'Premium plan required') + '</div>' : '';
+                return '<div class="size-card' + sel + disabledClass + '" data-level="' + l.id + '" data-disabled="' + disabled + '">' +
                     '<div class="size-name">' + l.name + '</div>' +
                     '<div class="size-rows">' + l.rows.toLocaleString() + ' rows</div>' +
+                    note +
                     '</div>';
             }).join('');
 
             document.querySelectorAll('.size-card').forEach(function(card) {
                 card.addEventListener('click', function() {
+                    if (card.dataset.disabled === 'true') return;
                     document.querySelectorAll('.size-card').forEach(function(c) { c.classList.remove('selected'); });
                     card.classList.add('selected');
                     selectedLevel = card.dataset.level;

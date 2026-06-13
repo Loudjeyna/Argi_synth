@@ -25,7 +25,7 @@ server = http.server.ThreadingHTTPServer(
 print('=' * 50)
 print('  SynthAI Server Running!')
 print('=' * 50)
-print(f'  Open: http://127.0.0.1:{port}/pages/login.html')
+print(f'  Open: http://127.0.0.1:{port}/pages/first.html')
 print('  Login: admin / admin123')
 print('  Ctrl+C to stop.')
 print('=' * 50)

@@ -3,491 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="predict.title">SynthAI - Crop Prediction</title>
+    <title>SynthAI - Conditions to Crop</title>
     <link rel="stylesheet" href="../styles/global.css">
     <style>
-        .prod-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border-radius: 10px; border: 1px solid #C8E6C9; }
-        .prod-header .badge { background: #2E7D32; color: white; padding: 0.2rem 0.7rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
-        .prod-header .model-info { font-size: 0.85rem; color: #333; }
-        .prod-header .model-info strong { color: #1B5E20; }
-        .prod-header .model-info .detail { font-size: 0.78rem; color: #666; }
-
-        .no-prod { text-align: center; padding: 3rem 1rem; }
-        .no-prod .icon-warn { font-size: 2.5rem; color: #FF9800; margin-bottom: 0.75rem; display: block; }
-        .no-prod h3 { color: #E65100; margin-bottom: 0.5rem; }
-        .no-prod p { color: #666; font-size: 0.9rem; max-width: 400px; margin: 0 auto; }
-
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
-        .input-group label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margin-bottom: 0.3rem; }
-        .input-group .unit { font-size: 0.72rem; color: #999; font-weight: 400; }
-        .input-group input { width: 100%; padding: 0.55rem 0.65rem; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 0.9rem; transition: border-color 0.15s; }
-        .input-group input:focus { outline: none; border-color: #2E7D32; box-shadow: 0 0 0 2px rgba(46,125,50,0.1); }
-
-        .pred-btn { padding: 0.7rem 2.5rem; background: #2E7D32; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-        .pred-btn:hover { background: #1B5E20; }
-        .pred-btn:disabled { background: #A5D6A7; cursor: not-allowed; }
-
-        .result-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .result-crop { font-size: 2.2rem; font-weight: 800; color: #1B5E20; margin: 0.5rem 0; }
-        .result-confidence { display: flex; align-items: center; gap: 1rem; margin: 0.75rem 0; }
-        .confidence-ring { position: relative; width: 80px; height: 80px; }
-        .confidence-ring svg { transform: rotate(-90deg); }
-        .confidence-ring .ring-bg { fill: none; stroke: #E8F5E9; stroke-width: 6; }
-        .confidence-ring .ring-fg { fill: none; stroke-width: 6; stroke-linecap: round; }
-        .confidence-ring .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
-        .confidence-detail { font-size: 0.85rem; color: #666; }
-        .confidence-detail .label { font-weight: 600; color: #333; }
-
-        .compat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; margin: 1rem 0; }
-        .compat-item { padding: 0.5rem; background: #F9FDF9; border-radius: 6px; border: 1px solid #E8F5E9; }
-        .compat-item .param { font-size: 0.75rem; color: #666; }
-        .compat-item .vals { font-size: 0.85rem; font-weight: 600; color: #333; margin-top: 0.15rem; display: flex; justify-content: space-between; }
-        .compat-item .input-val { color: #1565C0; }
-        .compat-item .optimal { color: #2E7D32; font-size: 0.75rem; }
-        .compat-item .match-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 0.3rem; }
-        .compat-item .match-dot.good { background: #2E7D32; }
-        .compat-item .match-dot.ok { background: #FF9800; }
-        .compat-item .match-dot.poor { background: #F44336; }
-
-        .alt-results { margin-top: 1.5rem; }
-        .alt-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .alt-table th { background: #F5F7F5; padding: 0.5rem 0.65rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #E0E0E0; }
-        .alt-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid #F0F0F0; }
-        .alt-table tr:hover td { background: #F9FDF9; }
-        .alt-bar { height: 6px; background: #E0E0E0; border-radius: 3px; overflow: hidden; min-width: 100px; }
-        .alt-bar-fill { height: 100%; border-radius: 3px; }
-
-        .loading-overlay { display: none; text-align: center; padding: 2rem; }
-        .loading-overlay.active { display: block; }
-        .loading-overlay .spinner { width: 36px; height: 36px; border: 3px solid #E0E0E0; border-top-color: #2E7D32; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 0.75rem; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .reset-link { color: #2E7D32; cursor: pointer; font-size: 0.82rem; text-decoration: underline; margin-top: 0.75rem; display: inline-block; }
-        .reset-link:hover { color: #1B5E20; }
-
-        .model-badge-sm { display: inline-block; padding: 0.15rem 0.45rem; background: #E8F5E9; color: #2E7D32; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
-
-        .explanation-box { background: #F5F7F5; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.82rem; color: #555; margin-top: 0.75rem; line-height: 1.6; }
-        .explanation-box strong { color: #333; }
+        .match-bar { height: 8px; border-radius: 4px; background: #E0E0E0; overflow: hidden; margin-top: 0.25rem; }
+        .match-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #66BB6A, #2E7D32); }
+        .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 0.85rem; }
+        .rank-1 { background: #FFD700; color: #000; }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #fff; }
     </style>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><h1>SynthAI</h1><p>Smart Agricultural Intelligence</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;"><span data-i18n="logout">Logout</span></button></div>
+            <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;">Logout</button></div>
         </aside>
-
         <main class="main-content">
-            <a class="back-link" href="farmer_home.html" style="margin-bottom:0.5rem;display:inline-flex;align-items:center;gap:0.3rem;color:#2E7D32;text-decoration:none;font-size:0.85rem;">&larr; Dashboard</a>
-            <div class="page-header">
-                <h2 data-i18n="predict.title">Crop Prediction</h2>
-                <p data-i18n="predict.subtitle">Enter your soil and climate conditions to get a crop recommendation from the production model</p>
-            </div>
+            <div class="page-header"><h2>Conditions to Crop</h2><p>Enter your soil and climate conditions to find the best matching crops</p></div>
             <div id="status-msg"></div>
-
-            <!-- Production Model Info -->
-            <div id="prod-header-area"></div>
-
-            <!-- Input Form -->
-            <div id="input-section" style="display:none;">
-                <div class="card">
-                    <h3 class="card-title">Enter Field Conditions</h3>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label data-i18n="predict.nitrogen">Nitrogen (N) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
-                            <input type="number" id="input-n" value="50" min="0" max="200" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.phosphorus">Phosphorus (P) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
-                            <input type="number" id="input-p" value="40" min="0" max="200" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.potassium">Potassium (K) <span class="unit" data-i18n="unit.mgkg">mg/kg</span></label>
-                            <input type="number" id="input-k" value="40" min="0" max="250" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.temp">Temperature <span class="unit" data-i18n="unit.celsius">&deg;C</span></label>
-                            <input type="number" id="input-temp" value="25" min="0" max="50" step="0.5">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.humidity">Humidity <span class="unit" data-i18n="unit.percent">%</span></label>
-                            <input type="number" id="input-humidity" value="60" min="0" max="100" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.ph">Soil pH</label>
-                            <input type="number" id="input-ph" value="6.5" min="0" max="14" step="0.1">
-                        </div>
-                        <div class="input-group">
-                            <label data-i18n="predict.rainfall">Rainfall <span class="unit">mm</span></label>
-                            <input type="number" id="input-rain" value="120" min="0" max="500" step="5">
-                        </div>
-                    </div>
-                    <div style="margin-top:1.25rem;display:flex;gap:0.75rem;align-items:center;">
-                        <button id="predict-btn" class="pred-btn" data-i18n="predict.btn">Predict Crop</button>
-                        <button id="reset-btn" class="btn btn-outline" data-i18n="predict.reset">Reset</button>
-                    </div>
+            <div class="card">
+                <h3 class="card-title">Enter Your Conditions</h3>
+                <div class="form-row">
+                    <div class="form-group"><label for="n-val">Nitrogen (N)</label><input type="number" id="n-val" class="form-control" value="50" min="0" max="140"></div>
+                    <div class="form-group"><label for="p-val">Phosphorus (P)</label><input type="number" id="p-val" class="form-control" value="50" min="0" max="145"></div>
+                    <div class="form-group"><label for="k-val">Potassium (K)</label><input type="number" id="k-val" class="form-control" value="50" min="0" max="205"></div>
                 </div>
-
-                <div class="loading-overlay" id="loading-overlay">
-                    <div class="spinner"></div>
-                    <p style="color:#666;font-size:0.9rem;" data-i18n="predict.analyzing">Production model is analyzing your conditions...</p>
+                <div class="form-row">
+                    <div class="form-group"><label for="temp-val">Temperature (&deg;C)</label><input type="number" id="temp-val" class="form-control" value="25" min="0" max="50"></div>
+                    <div class="form-group"><label for="humidity-val">Humidity (%)</label><input type="number" id="humidity-val" class="form-control" value="70" min="0" max="100"></div>
+                    <div class="form-group"><label for="ph-val">Soil pH</label><input type="number" id="ph-val" class="form-control" value="6.5" step="0.1" min="0" max="14"></div>
+                    <div class="form-group"><label for="rain-val">Rainfall (mm)</label><input type="number" id="rain-val" class="form-control" value="100" min="0" max="500"></div>
                 </div>
-
-                <!-- Result Area -->
-                <div id="result-area" style="display:none;"></div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="predict-btn" class="btn btn-primary">Predict Best Crops</button>
+                    <button id="reset-btn" class="btn btn-outline">Reset Values</button>
+                </div>
             </div>
-
-            <!-- No Production Model Message -->
-            <div id="no-prod-msg" style="display:none;">
-                <div class="card no-prod">
-                    <div class="icon-warn">!</div>
-                    <h3 data-i18n="predict.no_model">No Production Model Available</h3>
-                    <p data-i18n="predict.no_model_desc">The system administrator has not yet set a production model. Please contact your administrator to configure a production model before making predictions.</p>
+            <div id="result-area" style="display: none;">
+                <div class="card">
+                    <h3 class="card-title">Top Crop Matches</h3>
+                    <div class="table-container">
+                        <table><thead><tr><th>Rank</th><th>Crop</th><th>Compatibility</th><th>Water</th><th>Fertilizer</th></tr></thead>
+                        <tbody id="results-tbody"></tbody></table>
+                    </div>
                 </div>
+                <div class="card" id="top-pick-card" style="display: none;">
+                    <h3 class="card-title">Best Recommendation</h3>
+                    <div id="top-pick" style="text-align: center; padding: 1rem;"></div>
+                </div>
+                <button id="export-btn" class="btn btn-outline">Download Results as CSV</button>
             </div>
         </main>
     </div>
-    <script src="../js/services/i18n.js"></script>
     <script src="../js/services/auth.js"></script>
-    <script src="../js/services/model.js"></script>
-    <script src="../js/services/recommendation.js"></script>
     <script src="../js/services/history.js"></script>
+    <script src="../js/services/recommendation.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = AuthService.getCurrentUser();
+            if (!user) { window.location.href = '/pages/login.html'; return; }
 
-        (function() {
-            var btn = document.getElementById('logout-btn');
-            if (btn) {
-                btn.addEventListener('click', function() {
-                    try { AuthService.logout(); } catch (e) { sessionStorage.clear(); }
-                    window.location.href = '/pages/login.html';
-                });
+            // Setup sidebar & user panel FIRST (before any role check)
+            App.setupSidebar(); App.setupUserPanel(); App.setupLogout();
+
+            // Allow both farmer and admin roles
+            if (user.role !== 'farmer' && user.role !== 'admin') {
+                document.querySelector('.main-content').innerHTML = '<div class="page-header"><h2>Access Denied</h2><p>This page is for farmers and admins only.</p><a href="login.html" class="btn btn-primary">Go Back</a></div>';
+                return;
             }
-        })();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var user;
-            try {
-                user = AuthService.getCurrentUser();
-                if (!user || (user.role !== 'farmer' && user.role !== 'admin')) { window.location.href = '/pages/login.html'; return; }
-            } catch (e) { window.location.href = '/pages/login.html'; return; }
+            AuthService.syncSessionFromStorage();
 
-            try { AuthService.syncSessionFromStorage(); } catch (e) {}
-            try { App.setupSidebar();
-try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
-            try { App.setupUserPanel(); } catch (e) {}
-
-            var prodModel = null;
-
-            function init() {
-                prodModel = null;
-                try { prodModel = ModelService.getProductionModel(); } catch (e) {}
-
-                var prodArea = document.getElementById('prod-header-area');
-                var inputSection = document.getElementById('input-section');
-                var noProdMsg = document.getElementById('no-prod-msg');
-
-                if (!prodModel) {
-                    prodArea.innerHTML = '';
-                    inputSection.style.display = 'none';
-                    noProdMsg.style.display = 'block';
+            document.getElementById('predict-btn').addEventListener('click', () => {
+                if (!AuthService.canAttempt()) {
+                    document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Daily prediction limit reached. <a href="subscription.html">Upgrade to Premium</a> for unlimited access.</div>';
                     return;
                 }
-
-                noProdMsg.style.display = 'none';
-                inputSection.style.display = 'block';
-
-                var verNum = 1;
-                if (prodModel.versions && prodModel.versions.length > 0) {
-                    verNum = prodModel.versions.length;
-                }
-                var configStr = '';
-                if (prodModel.config) {
-                    configStr = prodModel.config.epochs + ' epochs, BS=' + prodModel.config.batchSize + ', LR=' + prodModel.config.learningRate;
-                }
-
-                prodArea.innerHTML =
-                    '<div class="prod-header">' +
-                    '<div><span class="badge">PRODUCTION MODEL</span></div>' +
-                    '<div class="model-info">' +
-                    '<strong>' + prodModel.name + '</strong> <span class="model-badge-sm">v' + verNum + '</span><br>' +
-                    '<span class="detail">' + configStr + '</span>' +
-                    '</div>' +
-                    '</div>';
-            }
-
-            // ============================================
-            // Prediction Logic
-            // ============================================
-            function predictCrop(conditions) {
-                var crops = RecommendationService.getCrops();
-                var cropData = {};
-                crops.forEach(function(c) {
-                    cropData[c] = RecommendationService.getCropConditions(c);
-                });
-
-                // For each crop, compute a compatibility score (0-100)
-                var results = crops.map(function(crop) {
-                    var data = cropData[crop];
-                    if (!data) return null;
-
-                    // Per-feature compatibility scores
-                    var features = [
-                        { name: 'N', input: conditions.n, optimal: data.n },
-                        { name: 'P', input: conditions.p, optimal: data.p },
-                        { name: 'K', input: conditions.k, optimal: data.k },
-                        { name: 'Temperature', input: conditions.temperature, optimal: data.temp },
-                        { name: 'Humidity', input: conditions.humidity, optimal: data.humidity },
-                        { name: 'pH', input: conditions.ph, optimal: data.ph },
-                        { name: 'Rainfall', input: conditions.rainfall, optimal: data.rainfall }
-                    ];
-
-                    var totalScore = 0;
-                    var maxScore = 0;
-                    var details = [];
-
-                    features.forEach(function(f) {
-                        var lo = f.optimal[0], hi = f.optimal[1];
-                        var mid = (lo + hi) / 2;
-                        var range = (hi - lo) || 1;
-
-                        // Score: 100 if within range, decreasing linearly outside
-                        var score;
-                        if (f.input >= lo && f.input <= hi) {
-                            score = 100;
-                        } else {
-                            var dist = Math.min(Math.abs(f.input - lo), Math.abs(f.input - hi));
-                            score = Math.max(0, 100 - (dist / range) * 100);
-                        }
-
-                        var weight = 1;
-                        totalScore += score * weight;
-                        maxScore += 100 * weight;
-
-                        var matchClass = score >= 80 ? 'good' : score >= 50 ? 'ok' : 'poor';
-                        details.push({
-                            name: f.name,
-                            input: f.input,
-                            optimal: lo + '-' + hi,
-                            score: Math.round(score),
-                            matchClass: matchClass
-                        });
-                    });
-
-                    var compatibility = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-                    return {
-                        crop: crop,
-                        displayName: RecommendationService.getCropDisplayName(crop),
-                        compatibility: compatibility,
-                        water: data.water,
-                        fertilizer: data.fertilizer,
-                        details: details
-                    };
-                }).filter(function(r) { return r !== null; });
-
-                // Sort by compatibility descending
-                results.sort(function(a, b) { return b.compatibility - a.compatibility; });
-                return results;
-            }
-
-            // ============================================
-            // Render Results
-            // ============================================
-            function renderResults(results, conditions) {
-                var area = document.getElementById('result-area');
-                var best = results[0];
-                var altRows = results.slice(1, 6);
-
-                // Confidence ring color
-                var ringColor = best.compatibility >= 80 ? '#2E7D32' : best.compatibility >= 50 ? '#FF9800' : '#F44336';
-
-                // Status message
-                var statusText = best.compatibility >= 80 ? _t('status.excellent') : best.compatibility >= 50 ? _t('status.good') : _t('status.low');
-                var statusBadge = best.compatibility >= 80 ? 'status-success' : best.compatibility >= 50 ? 'status-warning' : 'status-error';
-
-                var html =
-                    '<div class="result-card">' +
-                    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">' +
-                    '<div>' +
-                    '<div style="font-size:0.8rem;color:#999;text-transform:uppercase;letter-spacing:1px;">' + _t('predict.recommended_crop') + '</div>' +
-                    '<div class="result-crop">' + best.displayName + '</div>' +
-                    '<span class="status-badge ' + statusBadge + '" style="font-size:0.78rem;"><span class="dot"></span> ' + statusText + ' ' + _t('predict.match') + '</span>' +
-                    '</div>' +
-                    '<div class="confidence-ring">' +
-                    '<svg width="80" height="80">' +
-                    '<circle class="ring-bg" cx="40" cy="40" r="34"/>' +
-                    '<circle class="ring-fg" stroke="' + ringColor + '" stroke-dasharray="' + (best.compatibility * 2.13) + ' 213.6" cx="40" cy="40" r="34"/>' +
-                    '</svg>' +
-                    '<div class="ring-text" style="color:' + ringColor + ';">' + best.compatibility + '%</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="confidence-detail" style="margin-top:0.5rem;">' +
-                    '<span class="label">' + _t('predict.confidence_score') + ':</span> ' + best.compatibility + '%' + _t('predict.compatibility') +
-                    '</div>' +
-                    '<div class="compat-grid">' +
-                    best.details.map(function(d) {
-                        return '<div class="compat-item">' +
-                            '<div class="param">' + d.name + '</div>' +
-                            '<div class="vals"><span>' + _t('predict.input') + ': <span class="input-val">' + d.input + '</span></span> <span>' + _t('predict.optimal') + ': <span class="optimal">[' + d.optimal + ']</span></span></div>' +
-                            '<div style="display:flex;align-items:center;gap:0.3rem;margin-top:0.2rem;">' +
-                            '<div class="alt-bar" style="flex:1;height:4px;"><div class="alt-bar-fill" style="width:' + d.score + '%;background:' + (d.score >= 80 ? '#2E7D32' : d.score >= 50 ? '#FF9800' : '#F44336') + ';"></div></div>' +
-                            '<span style="font-size:0.7rem;color:#999;">' + d.score + '%</span>' +
-                            '</div>' +
-                            '</div>';
-                    }).join('') +
-                    '</div>';
-
-                // Explanation
-                var explanation = '';
-                if (best.compatibility >= 80) {
-                    explanation = 'Your field conditions are an <strong>excellent match</strong> for ' + best.displayName + '. All measured parameters fall within the optimal growing ranges defined by the production model.';
-                } else if (best.compatibility >= 50) {
-                    // Find which factors are suboptimal
-                    var poorFactors = best.details.filter(function(d) { return d.score < 50; }).map(function(d) { return d.name; });
-                    if (poorFactors.length > 0) {
-                        explanation = 'Your conditions are a <strong>good match</strong> for ' + best.displayName + ', but ' + poorFactors.join(', ') + ' ' +
-                            (poorFactors.length === 1 ? 'is' : 'are') + ' outside the optimal range. Consider amending ' + poorFactors.join(', ') + ' for better results.';
-                    } else {
-                        explanation = 'Your conditions are a <strong>good match</strong> for ' + best.displayName + ' with most parameters within acceptable ranges.';
-                    }
-                } else {
-                    var okFactors = best.details.filter(function(d) { return d.score >= 50; }).map(function(d) { return d.name; });
-                    if (okFactors.length > 0) {
-                        explanation = 'Your field conditions have a <strong>low match</strong> for ' + best.displayName + '. Only ' + okFactors.join(', ') + ' ' +
-                            (okFactors.length === 1 ? 'is' : 'are') + ' within range. Consider a different crop or adjusting soil parameters.';
-                    } else {
-                        explanation = 'Your field conditions <strong>do not match</strong> ' + best.displayName + '. Almost all parameters are outside the optimal growing ranges. Consider looking at alternative crops below.';
-                    }
-                }
-                html += '<div class="explanation-box">' + explanation + '</div>';
-
-                // Water and fertilizer
-                html += '<div style="display:flex;gap:1.5rem;margin-top:0.75rem;font-size:0.85rem;color:#666;">' +
-                    '<span><strong>' + _t('predict.water_requirement') + ':</strong> ' + best.water + '</span>' +
-                    '<span><strong>' + _t('predict.fertilizer_level') + ':</strong> ' + best.fertilizer + '</span>' +
-                    '</div>';
-
-                html += '</div>';
-
-                // Alternative results
-                if (altRows.length > 0) {
-                    html += '<div class="alt-results">' +
-                        '<div class="card">' +
-                        '<h3 class="card-title">' + _t('predict.alternative_crops') + '</h3>' +
-                        '<div style="overflow-x:auto;">' +
-                        '<table class="alt-table">' +
-                        '<thead><tr><th>' + _t('predict.crop') + '</th><th>' + _t('predict.compatibility') + '</th><th>' + _t('predict.water') + '</th><th>' + _t('predict.fertilizer') + '</th></tr></thead>' +
-                        '<tbody>' +
-                        altRows.map(function(r) {
-                            var barColor = r.compatibility >= 80 ? '#2E7D32' : r.compatibility >= 50 ? '#FF9800' : '#F44336';
-                            return '<tr>' +
-                                '<td><strong>' + r.displayName + '</strong></td>' +
-                                '<td><div style="display:flex;align-items:center;gap:0.5rem;"><div class="alt-bar"><div class="alt-bar-fill" style="width:' + r.compatibility + '%;background:' + barColor + ';"></div></div><span style="font-weight:600;">' + r.compatibility + '%</span></div></td>' +
-                                '<td>' + r.water + '</td>' +
-                                '<td>' + r.fertilizer + '</td></tr>';
-                        }).join('') +
-                        '</tbody></table></div></div></div>';
-                }
-
-                html += '<div style="margin-top:1rem;"><a class="reset-link" onclick="resetForm()">' + _t('predict.try_different') + '</a></div>';
-
-                area.innerHTML = html;
-                area.style.display = 'block';
-                area.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                // Save to history
-                try {
-                    HistoryService.addEntry({
-                        userId: user.id,
-                        type: 'conditions_crop',
-                        input: JSON.stringify(conditions),
-                        result: best.displayName + ' (' + best.compatibility + '%)',
-                        modelId: prodModel ? prodModel.id : null,
-                        modelName: prodModel ? prodModel.name : null
-                    });
-                } catch (e) {}
-            }
-
-            // ============================================
-            // Event Handlers
-            // ============================================
-            document.getElementById('predict-btn').addEventListener('click', function() {
-                // Check attempt limit
-                try {
-                    if (!AuthService.canAttempt()) {
-                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Daily prediction limit reached. <a href="subscription.html">Upgrade to Premium</a> for unlimited access.</div>';
-                        return;
-                    }
-                } catch (e) {}
-
-                var conditions = {
-                    n: parseFloat(document.getElementById('input-n').value),
-                    p: parseFloat(document.getElementById('input-p').value),
-                    k: parseFloat(document.getElementById('input-k').value),
-                    temperature: parseFloat(document.getElementById('input-temp').value),
-                    humidity: parseFloat(document.getElementById('input-humidity').value),
-                    ph: parseFloat(document.getElementById('input-ph').value),
-                    rainfall: parseFloat(document.getElementById('input-rain').value)
+                const conditions = {
+                    n: parseFloat(document.getElementById('n-val').value),
+                    p: parseFloat(document.getElementById('p-val').value),
+                    k: parseFloat(document.getElementById('k-val').value),
+                    temperature: parseFloat(document.getElementById('temp-val').value),
+                    humidity: parseFloat(document.getElementById('humidity-val').value),
+                    ph: parseFloat(document.getElementById('ph-val').value),
+                    rainfall: parseFloat(document.getElementById('rain-val').value)
                 };
-
-                // Validate
-                for (var key in conditions) {
-                    if (isNaN(conditions[key]) || conditions[key] < 0) {
-                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please enter valid positive numbers for all fields.</div>';
-                        return;
-                    }
+                if (Object.values(conditions).some(v => isNaN(v) || v < 0)) {
+                    document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Please enter valid positive values for all fields.</div>';
+                    return;
                 }
+                AuthService.recordAttempt();
+                const results = RecommendationService.predictCrop(conditions);
+                HistoryService.addEntry({ userId: user.id, type: 'conditions_crop', input: JSON.stringify(conditions), result: results[0].crop });
 
-                document.getElementById('status-msg').innerHTML = '';
-                document.getElementById('loading-overlay').classList.add('active');
-                document.getElementById('predict-btn').disabled = true;
+                document.getElementById('results-tbody').innerHTML = results.map((r, i) => {
+                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+                    const matchPct = parseInt(r.match_score);
+                    return '<tr>' +
+                        '<td><span class="rank-badge ' + rankClass + '">' + r.rank + '</span></td>' +
+                        '<td><strong>' + r.crop + '</strong></td>' +
+                        '<td><div style="min-width: 120px;"><strong>' + r.match_score + '</strong><div class="match-bar"><div class="match-fill" style="width: ' + matchPct + '%;"></div></div></div></td>' +
+                        '<td>' + r.water_level + '</td>' +
+                        '<td>' + r.fertilizer_level + '</td></tr>';
+                }).join('');
 
-                // Simulate processing delay
-                setTimeout(function() {
-                    try {
-                        // Record attempt
-                        try { AuthService.recordAttempt(); } catch (e) {}
-
-                        var results = predictCrop(conditions);
-
-                        document.getElementById('status-msg').innerHTML =
-                            '<div class="status-message status-success">Prediction complete! Recommended: <strong>' + results[0].displayName + '</strong> (' + results[0].compatibility + '% compatibility)</div>';
-
-                        renderResults(results, conditions);
-                    } catch (e) {
-                        document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">Prediction error: ' + e.message + '</div>';
-                    }
-
-                    document.getElementById('loading-overlay').classList.remove('active');
-                    document.getElementById('predict-btn').disabled = false;
-                }, 600);
+                document.getElementById('top-pick').innerHTML = '<div style="font-size: 2.5rem; font-weight: 700; color: #1B5E20;">' + results[0].crop + '</div><p style="color: #666; margin-top: 0.5rem;">Best match with ' + results[0].match_score + ' compatibility</p><p style="color: #888; font-size: 0.85rem;">Water: ' + results[0].water_level + ' | Fertilizer: ' + results[0].fertilizer_level + '</p>';
+                document.getElementById('top-pick-card').style.display = 'block';
+                document.getElementById('result-area').style.display = 'block';
+                document.getElementById('status-msg').innerHTML = '<div class="status-message status-success">Top recommendation: <strong>' + results[0].crop + '</strong> (' + results[0].match_score + ' match)</div>';
             });
 
-            document.getElementById('reset-btn').addEventListener('click', function() {
-                resetForm();
-            });
-
-            window.resetForm = function() {
-                document.getElementById('input-n').value = 50;
-                document.getElementById('input-p').value = 40;
-                document.getElementById('input-k').value = 40;
-                document.getElementById('input-temp').value = 25;
-                document.getElementById('input-humidity').value = 60;
-                document.getElementById('input-ph').value = 6.5;
-                document.getElementById('input-rain').value = 120;
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                document.getElementById('n-val').value = 50;
+                document.getElementById('p-val').value = 50;
+                document.getElementById('k-val').value = 50;
+                document.getElementById('temp-val').value = 25;
+                document.getElementById('humidity-val').value = 70;
+                document.getElementById('ph-val').value = 6.5;
+                document.getElementById('rain-val').value = 100;
                 document.getElementById('result-area').style.display = 'none';
-                document.getElementById('result-area').innerHTML = '';
                 document.getElementById('status-msg').innerHTML = '';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
+            });
 
-            init();
+            document.getElementById('export-btn').addEventListener('click', () => {
+                const conditions = {
+                    n: parseFloat(document.getElementById('n-val').value),
+                    p: parseFloat(document.getElementById('p-val').value),
+                    k: parseFloat(document.getElementById('k-val').value),
+                    temperature: parseFloat(document.getElementById('temp-val').value),
+                    humidity: parseFloat(document.getElementById('humidity-val').value),
+                    ph: parseFloat(document.getElementById('ph-val').value),
+                    rainfall: parseFloat(document.getElementById('rain-val').value)
+                };
+                const results = RecommendationService.predictCrop(conditions);
+                RecommendationService.exportResults(results, 'predictions');
+            });
         });
     </script>
-<script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
