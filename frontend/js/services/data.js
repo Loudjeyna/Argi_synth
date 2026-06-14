@@ -454,6 +454,7 @@ const DataService = (function() {
     }
 
     var _fullDatasetCache = {};
+    var _augmentationCache = {};
     var PREVIEW_ROW_LIMIT = 50;
 
     function addGeneration(entry) {
@@ -784,7 +785,43 @@ const DataService = (function() {
     }
 
     function saveAugmentations(data) {
-        localStorage.setItem(AUGMENTATIONS_KEY, JSON.stringify(data));
+        // Truncate preview data before saving to prevent localStorage overflow
+        data.forEach(function(entry) {
+            if (entry.preview && entry.preview.data && Array.isArray(entry.preview.data)) {
+                if (!_augmentationCache[entry.id]) {
+                    _augmentationCache[entry.id] = entry.preview.data;
+                }
+                entry.preview.data = entry.preview.data.slice(0, PREVIEW_ROW_LIMIT);
+                entry.preview._fullDataAvailable = true;
+            }
+        });
+        try {
+            localStorage.setItem(AUGMENTATIONS_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.warn('LocalStorage quota exceeded for augmentations, cleaning up old entries...');
+            // Try keeping only the 3 most recent entries
+            if (data.length > 3) {
+                data = data.slice(0, 3);
+            }
+            try {
+                localStorage.setItem(AUGMENTATIONS_KEY, JSON.stringify(data));
+            } catch (e2) {
+                console.error('Failed to save augmentations even after cleanup:', e2);
+                // Last resort: clear augmentation history
+                try { localStorage.removeItem(AUGMENTATIONS_KEY); } catch(e3) {}
+            }
+        }
+    }
+
+    function getAugmentationFullData(id) {
+        if (_augmentationCache[id]) return _augmentationCache[id];
+        var aug = getAugmentationById(id);
+        if (!aug || !aug.preview) return null;
+        if (aug.preview._fullDataAvailable && aug.preview.data.length <= PREVIEW_ROW_LIMIT) {
+            // Data was truncated - return whatever preview data we have
+            return aug.preview.data;
+        }
+        return aug.preview.data;
     }
 
     function getAugmentationById(id) {
@@ -927,9 +964,21 @@ const DataService = (function() {
             dateStr: new Date().toISOString()
         };
 
+        // Cache full augmented data in memory before truncating for localStorage
+        if (entry.preview && Array.isArray(entry.preview.data)) {
+            _augmentationCache[entry.id] = entry.preview.data;
+            entry.preview.data = entry.preview.data.slice(0, PREVIEW_ROW_LIMIT);
+            entry.preview._fullDataAvailable = true;
+        }
+
         var augs = getAugmentations();
         augs.unshift(entry);
-        saveAugmentations(augs);
+        try {
+            saveAugmentations(augs);
+        } catch (e) {
+            console.error('Failed to save augmentation to localStorage:', e);
+            // Data is still in memory cache, augmentation still succeeds
+        }
 
         return { success: true, result: entry };
     }
@@ -937,7 +986,8 @@ const DataService = (function() {
     function exportAugmentation(id) {
         var aug = getAugmentationById(id);
         if (!aug) return false;
-        var data = aug.preview ? aug.preview.data : [];
+        // Use full data from memory cache if available, otherwise fall back to preview data
+        var data = getAugmentationFullData(id) || (aug.preview ? aug.preview.data : []);
         if (data.length === 0) return false;
         var headers = aug.headers || Object.keys(data[0]);
         var csv = [headers.join(','),
@@ -977,6 +1027,7 @@ const DataService = (function() {
         getAugmentationStats: getAugmentationStats,
         parseDataFromCSV: parseDataFromCSV,
         augmentDataset: augmentDataset,
-        exportAugmentation: exportAugmentation
+        exportAugmentation: exportAugmentation,
+        getAugmentationFullData: getAugmentationFullData
     };
 })();
