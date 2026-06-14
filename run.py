@@ -1,19 +1,28 @@
 import http.server, socketserver, os, sys, socket
+from urllib.parse import urlparse
 
 # Set working directory to frontend folder
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend'))
 
-# Detect if we're on a cloud platform (Render, Railway, Koyeb, etc.)
-# Render sets PORT environment variable automatically
+# Detect if we're on a cloud platform
 PORT_ENV = os.environ.get('PORT', '')
 is_cloud = PORT_ENV != ''
 
+class RedirectHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        # Redirect root URL to the first page
+        parsed = urlparse(self.path)
+        if parsed.path == '/' or parsed.path == '':
+            self.send_response(302)
+            self.send_header('Location', '/pages/first.html')
+            self.end_headers()
+            return
+        return super().do_GET()
+
 if is_cloud:
-    # CLOUD: Use Render's PORT and bind to 0.0.0.0 (accessible from internet)
     port = int(PORT_ENV)
     host = '0.0.0.0'
 else:
-    # LOCAL: Find free port and bind to localhost only
     def find_free_port(start=8080, end=8090):
         for port in range(start, end):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -32,7 +41,7 @@ else:
 
 server = http.server.ThreadingHTTPServer(
     (host, port),
-    http.server.SimpleHTTPRequestHandler
+    RedirectHandler
 )
 
 print('=' * 50)
@@ -41,7 +50,7 @@ print('=' * 50)
 if is_cloud:
     print(f'  Running on cloud (host={host}, port={port})')
 else:
-    print(f'  Open: http://127.0.0.1:{port}/pages/index.html')
+    print(f'  Open: http://127.0.0.1:{port}/pages/first.html')
     print('  Login: admin / admin123')
 print('  Ctrl+C to stop.')
 print('=' * 50)
