@@ -3,24 +3,27 @@ import http.server, socketserver, os, sys, socket
 # Set working directory to frontend folder
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend'))
 
-def find_free_port(start=8080, end=8090):
-    for port in range(start, end):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.bind(('127.0.0.1', port))
-                return port
-            except OSError:
-                continue
-    return None
+# Detect if we're on a cloud platform (Render, Railway, Koyeb, etc.)
+# Render sets PORT environment variable automatically
+PORT_ENV = os.environ.get('PORT', '')
+is_cloud = PORT_ENV != ''
 
-# On Render: use PORT env variable and bind to 0.0.0.0
-# On local:  find a free port and bind to 127.0.0.1
-is_render = os.environ.get('RENDER', '') == '1'
-
-if is_render:
-    port = int(os.environ.get('PORT', 8080))
+if is_cloud:
+    # CLOUD: Use Render's PORT and bind to 0.0.0.0 (accessible from internet)
+    port = int(PORT_ENV)
     host = '0.0.0.0'
 else:
+    # LOCAL: Find free port and bind to localhost only
+    def find_free_port(start=8080, end=8090):
+        for port in range(start, end):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind(('127.0.0.1', port))
+                    return port
+                except OSError:
+                    continue
+        return None
+
     port = find_free_port()
     if port is None:
         print('ERROR: No free port available in range 8080-8089.')
@@ -35,8 +38,8 @@ server = http.server.ThreadingHTTPServer(
 print('=' * 50)
 print('  SynthAI Server Running!')
 print('=' * 50)
-if is_render:
-    print(f'  Running on Render (port {port})')
+if is_cloud:
+    print(f'  Running on cloud (host={host}, port={port})')
 else:
     print(f'  Open: http://127.0.0.1:{port}/pages/first.html')
     print('  Login: admin / admin123')
