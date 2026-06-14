@@ -317,6 +317,12 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             renderKPIs();
             renderTable();
         }
+
+        // Expose handlers to inline onclick attributes
+        window.viewModel = viewModel;
+        window.deleteModel = deleteModel;
+        window.setProduction = setProduction;
+        window.unsetProduction = unsetProduction;
     </script>
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>

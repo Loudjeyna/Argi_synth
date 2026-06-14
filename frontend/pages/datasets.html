@@ -260,7 +260,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                         '<button onclick="previewGeneration(' + g.id + ')" title="' + _t('action.preview') + '">' + _t('action.preview') + '</button>' +
                         '<a href="data_evaluation.html?id=' + g.id + '" class="btn-eval" title="' + _t('action.evaluate') + '">' + _t('action.evaluate') + '</a>' +
                         '<button onclick="exportGeneration(' + g.id + ')" title="' + _t('action.export') + '">' + _t('action.export') + '</button>' +
-                        '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="' + _t('action.delete') + '">' + _t('action.delete') + '</button>' +
+                        (g._fromBackend ? '' : '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="' + _t('action.delete') + '">' + _t('action.delete') + '</button>') +
                         '</div>';
 
                     return '<tr>' +
@@ -315,6 +315,10 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             loadData();
         });
 
+        function _t(key) {
+            return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(key) : key;
+        }
+
         // Global functions for button handlers
         function previewGeneration(id) {
             var rows = DataService.getGenerationPreviewRows(id, 10);
@@ -359,6 +363,11 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             }
             location.reload();
         }
+
+        // Expose handlers to inline onclick attributes
+        window.previewGeneration = previewGeneration;
+        window.exportGeneration = exportGeneration;
+        window.deleteGeneration = deleteGeneration;
     </script>
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
