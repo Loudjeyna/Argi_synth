@@ -67,10 +67,9 @@
 
             <div class="card gen-form">
                 <div class="step-indicator">
-                    <span class="step active" id="step-1" data-i18n="generate.step_model">1. Select Model</span>
-                    <span class="step" id="step-2" data-i18n="generate.step_version">2. Choose Version</span>
-                    <span class="step" id="step-3" data-i18n="generate.step_size">3. Choose Size</span>
-                    <span class="step" id="step-4" data-i18n="generate.step_gen">4. Generate</span>
+                    <span class="step active" id="step-1" data-i18n="generate.step_model">1. Select a Model</span>
+                    <span class="step" id="step-2" data-i18n="generate.step_size">2. Choose Size</span>
+                    <span class="step" id="step-3" data-i18n="generate.step_gen">3. Generate</span>
                 </div>
 
                 <!-- Step 1: Model Selection -->
@@ -82,16 +81,7 @@
                     <div id="model-info-display" class="model-info"></div>
                 </div>
 
-                <!-- Version Selection (shown after model is selected) -->
-                <div class="model-select-card" id="version-selection-section" style="display:none;">
-                    <label style="font-weight:600;font-size:0.9rem;color:#333;display:block;margin-bottom:0.5rem;" data-i18n="generate.version">Model Version</label>
-                    <select id="version-select">
-                        <option value="" data-i18n="generate.choose_version">-- Select a version --</option>
-                    </select>
-                    <div id="version-info-display" class="model-info"></div>
-                </div>
-
-                <!-- Step 3: Size Selection -->
+                <!-- Step 2: Size Selection -->
                 <h3 class="card-title" style="margin-top:1.5rem;" data-i18n="generate.size">Dataset Size</h3>
                 <div class="size-cards" id="size-cards"></div>
 
@@ -175,7 +165,6 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
             var selectedModelId = null;
-            var selectedVersion = null;
             var selectedLevel = 'medium';
             var user = AuthService.getCurrentUser();
             var allowedLevels = ['medium'];
@@ -213,11 +202,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             // Model selection handler
             document.getElementById('model-select').addEventListener('change', function() {
                 selectedModelId = this.value ? parseInt(this.value) : null;
-                selectedVersion = null;
-                document.getElementById('version-select').value = '';
                 var info = document.getElementById('model-info-display');
-                var versionSection = document.getElementById('version-selection-section');
-                var versionSelect = document.getElementById('version-select');
 
                 if (selectedModelId) {
                     var model = null;
@@ -225,66 +210,27 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     if (model) {
                         var versions = model.versions || [];
                         var lastVer = versions[versions.length - 1];
-                        var lastDate = lastVer ? new Date(lastVer.createdAt).toLocaleString() : new Date(model.createdAt).toLocaleString();
+                        var lastDate = lastVer ? new Date(lastVer.createdAt).toLocaleDateString() + ' ' + new Date(lastVer.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date(model.createdAt).toLocaleString();
                         info.innerHTML =
                             '<span>' + _t('model.versions') + ': ' + versions.length + '</span>' +
                             '<span>' + _t('dashboard.last_training') + ': ' + lastDate + '</span>' +
                             '<span>' + _t('model.status') + ': ' + (model.status === 'trained' ? _t('status.trained') : model.status) + '</span>';
-
-                        // Populate versions
-                        versionSection.style.display = 'block';
-                        var verOptions = '<option value="">' + _t('generate.choose_version') + '</option>';
-                        versions.slice().reverse().forEach(function(v) {
-                            var vDate = new Date(v.createdAt);
-                            var vDateStr = vDate.toLocaleDateString() + ' ' + vDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            var config = v.config || {};
-                            var ev = v.evaluation;
-                            var lossStr = ev ? ' | G:' + ev.generatorLoss.toFixed(2) + ' D:' + ev.discriminatorLoss.toFixed(2) : '';
-                            var label = (v.type === 'initial' ? _t('model.initial_training') : _t('action.retrain')) + ' v' + v.version + ' — ' + vDateStr + ' — ' + (config.epochs || '?') + ' ep' + lossStr;
-                            verOptions += '<option value="' + v.version + '">' + label + '</option>';
-                        });
-                        versionSelect.innerHTML = verOptions;
-                        document.getElementById('version-info-display').innerHTML = '<span>' + versions.length + ' ' + _t('model.versions').toLowerCase() + ' — select one to generate from</span>';
                     }
                 } else {
                     info.innerHTML = '<span>' + allModels.length + ' trained model(s) available</span>';
-                    versionSection.style.display = 'none';
-                }
-                updateGenerateBtn();
-            });
-
-            // Version selection handler
-            document.getElementById('version-select').addEventListener('change', function() {
-                selectedVersion = this.value ? parseInt(this.value) : null;
-                var info = document.getElementById('version-info-display');
-                if (selectedVersion && selectedModelId) {
-                    var model = ModelService.getModel(selectedModelId);
-                    if (model) {
-                        var v = (model.versions || []).find(function(v) { return v.version === selectedVersion; });
-                        if (v) {
-                            var cfg = v.config || {};
-                            var ev = v.evaluation;
-                            info.innerHTML =
-                                '<span>Epochs: ' + (cfg.epochs || '-') + '</span>' +
-                                '<span>Batch: ' + (cfg.batchSize || '-') + '</span>' +
-                                '<span>LR: ' + (cfg.learningRate || '-') + '</span>' +
-                                (ev ? '<span>G Loss: ' + ev.generatorLoss.toFixed(4) + '</span>' : '') +
-                                (ev ? '<span>D Loss: ' + ev.discriminatorLoss.toFixed(4) + '</span>' : '');
-                        }
-                    }
-                } else {
-                    info.innerHTML = '<span>' + ((ModelService.getModel(selectedModelId) || {}).versions || []).length + ' ' + _t('model.versions').toLowerCase() + ' — select one to generate from</span>';
                 }
                 updateGenerateBtn();
             });
 
             function updateGenerateBtn() {
                 var btn = document.getElementById('generate-btn');
-                btn.disabled = !(selectedModelId && selectedVersion);
-                if (selectedModelId && selectedVersion) {
-                    document.getElementById('step-2').classList.add('done');
+                btn.disabled = !selectedModelId;
+                if (selectedModelId) {
+                    document.getElementById('step-1').classList.add('done');
+                    document.getElementById('step-2').classList.add('active');
                 } else {
-                    document.getElementById('step-2').classList.remove('done');
+                    document.getElementById('step-1').classList.remove('done');
+                    document.getElementById('step-2').classList.remove('active');
                 }
             }
 
@@ -327,24 +273,28 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 var result = document.getElementById('gen-result');
                 progress.classList.add('active');
                 result.classList.remove('active');
-                document.getElementById('step-3').classList.add('done');
-                document.getElementById('step-4').classList.add('active');
+                document.getElementById('step-1').classList.add('done');
+                document.getElementById('step-2').classList.add('active');
 
-                // Simulate generation progress
                 var pct = 0;
+                document.getElementById('gen-progress-detail').textContent = '';
+                document.getElementById('gen-progress-bar').style.width = '0%';
+                document.getElementById('gen-progress-pct').textContent = '0%';
+
                 var interval = setInterval(function() {
-                    pct += 8;
-                    document.getElementById('gen-progress-bar').style.width = Math.min(pct, 100) + '%';
-                    document.getElementById('gen-progress-pct').textContent = Math.min(pct, 100) + '%';
-                    if (pct < 30) {
-                        document.getElementById('gen-progress-detail').textContent = 'Loading model generator...';
-                    } else if (pct < 60) {
-                        document.getElementById('gen-progress-detail').textContent = 'Generating ' + selectedLevel + ' dataset...';
+                    pct += Math.floor(Math.random() * 12) + 6;
+                    if (pct > 100) pct = 100;
+                    document.getElementById('gen-progress-bar').style.width = pct + '%';
+                    document.getElementById('gen-progress-pct').textContent = pct + '%';
+
+                    if (pct < 60) {
+                        document.getElementById('gen-progress-detail').textContent = _t('generate.progress_preparing') || 'Preparing data...';
                     } else if (pct < 90) {
-                        document.getElementById('gen-progress-detail').textContent = 'Finalizing...';
+                        document.getElementById('gen-progress-detail').textContent = _t('generate.progress_generating') || 'Generating dataset...';
                     } else {
-                        document.getElementById('gen-progress-detail').textContent = 'Finalizing...';
+                        document.getElementById('gen-progress-detail').textContent = _t('generate.progress_finalizing') || 'Finalizing...';
                     }
+
                     if (pct >= 100) {
                         clearInterval(interval);
                         completeGeneration();
@@ -358,7 +308,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
                     var entry = null;
                     try {
-                        entry = DataService.generateFromModel(selectedModelId, selectedVersion, selectedLevel);
+                        entry = DataService.generateFromModel(selectedModelId, null, selectedLevel);
                     } catch (e) {
                         document.getElementById('status-msg').innerHTML = '<div class="status-message status-error">' + _t('generate.generating') + ' ' + _t('status.failed') + ': ' + (e.message || 'Unknown') + '</div>';
                         btn.disabled = false;
@@ -376,7 +326,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     _lastGenId = entry.id;
 
                     var modelName = entry.modelName || 'Unknown';
-                    var modelVer = entry.modelVersion || selectedVersion || 1;
+                    var modelVer = entry.modelVersion || 1;
                     var rows = (entry.rows || 0).toLocaleString();
 
                     document.getElementById('result-details').innerHTML =
@@ -386,10 +336,11 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
                     progress.classList.remove('active');
                     result.classList.add('active');
-                    document.getElementById('step-4').classList.remove('active');
-                    document.getElementById('step-4').classList.add('done');
+                    document.getElementById('step-2').classList.remove('active');
+                    document.getElementById('step-2').classList.add('done');
+                    document.getElementById('step-3').classList.add('done');
 
-                    // Save to history
+                    var quality = 100;
                     try {
                         HistoryService.addEntry({
                             type: 'data_generation',

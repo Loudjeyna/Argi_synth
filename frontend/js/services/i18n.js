@@ -153,8 +153,8 @@ const I18nService = (function() {
             'generate.rows_gen': 'Rows Generated',
             'generate.step_model': '1. Select Model',
             'generate.step_version': '2. Choose Version',
-            'generate.step_size': '3. Choose Size',
-            'generate.step_gen': '4. Generate',
+            'generate.step_size': '2. Choose Size',
+            'generate.step_gen': '3. Generate',
 
             // Datasets
             'datasets.title': 'Generated Data Dashboard',
@@ -826,8 +826,8 @@ const I18nService = (function() {
             'generate.rows_gen': 'Lignes G\u00e9n\u00e9r\u00e9es',
             'generate.step_model': '1. Choisir Mod\u00e8le',
             'generate.step_version': '2. Choisir Version',
-            'generate.step_size': '3. Choisir Taille',
-            'generate.step_gen': '4. G\u00e9n\u00e9rer',
+            'generate.step_size': '2. Choisir Taille',
+            'generate.step_gen': '3. G\u00e9n\u00e9rer',
 
             'datasets.title': 'Jeux de Donn\u00e9es',
             'datasets.subtitle': 'Parcourir et t\u00e9l\u00e9charger',
@@ -1451,8 +1451,8 @@ const I18nService = (function() {
             'generate.rows_gen': '\u0627\u0644\u0635\u0641\u0648\u0641 \u0627\u0644\u0645\u0648\u0644\u062f\u0629',
             'generate.step_model': '1. \u0627\u062e\u062a\u0631 \u0646\u0645\u0648\u0630\u062c\u0627\u064b',
             'generate.step_version': '2. \u0627\u062e\u062a\u0631 \u0646\u0633\u062e\u0629',
-            'generate.step_size': '3. \u0627\u062e\u062a\u0631 \u0627\u0644\u062d\u062c\u0645',
-            'generate.step_gen': '4. \u062a\u0648\u0644\u064a\u062f',
+            'generate.step_size': '2. \u0627\u062e\u062a\u0631 \u0627\u0644\u062d\u062c\u0645',
+            'generate.step_gen': '3. \u062a\u0648\u0644\u064a\u062f',
 
             'datasets.title': '\u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a',
             'datasets.subtitle': '\u0627\u0633\u062a\u0639\u0631\u0627\u0636 \u0648\u062a\u062d\u0645\u064a\u0644',
