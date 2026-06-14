@@ -41,7 +41,7 @@ print('=' * 50)
 if is_cloud:
     print(f'  Running on cloud (host={host}, port={port})')
 else:
-    print(f'  Open: http://127.0.0.1:{port}/pages/first.html')
+    print(f'  Open: http://127.0.0.1:{port}/pages/index.html')
     print('  Login: admin / admin123')
 print('  Ctrl+C to stop.')
 print('=' * 50)
