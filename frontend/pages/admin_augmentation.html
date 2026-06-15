@@ -58,7 +58,6 @@
 
 <div class="actions-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
 <button id="show-create-btn" class="btn btn-primary" data-i18n="augment.title">+ New Augmentation</button>
-<button id="refresh-btn" class="btn btn-outline" data-i18n="common.filter">Refresh</button>
 </div>
 
 <div id="create-section" style="display:none;" class="card" style="margin-bottom:1.5rem;">
@@ -212,6 +211,7 @@ return '<div class="aug-log-card">' +
 '<div style="display:flex;gap:0.5rem;">' +
 '<button class="btn btn-outline view-detail-btn" data-id="' + a.id + '" style="padding:0.4rem 0.75rem;font-size:0.85rem;">Details</button>' +
 '<button class="btn btn-primary dl-btn" data-id="' + a.id + '" style="padding:0.4rem 0.75rem;font-size:0.85rem;">Download</button>' +
+'<button class="btn btn-danger delete-aug-btn" data-id="' + a.id + '" style="padding:0.4rem 0.75rem;font-size:0.85rem;">Delete</button>' +
 '</div>' +
 '</div>';
 }).join('');
@@ -220,6 +220,24 @@ btn.addEventListener('click', function() { showDetail(parseInt(this.dataset.id))
 });
 container.querySelectorAll('.dl-btn').forEach(function(btn) {
 btn.addEventListener('click', function() { DataService.exportAugmentation(parseInt(this.dataset.id)); });
+});
+container.querySelectorAll('.delete-aug-btn').forEach(function(btn) {
+btn.addEventListener('click', function() {
+var id = parseInt(this.dataset.id);
+if (!confirm('Delete this augmentation record and associated data?')) return;
+var card = btn.closest('.aug-log-card');
+if (DataService.deleteAugmentation(id)) {
+if (card && card.parentNode) { card.parentNode.removeChild(card); }
+if (augResult && augResult.id === id) {
+augResult = null;
+document.getElementById('aug-result').style.display = 'none';
+}
+renderSystemStats();
+renderLogs();
+} else {
+alert('Failed to delete augmentation.');
+}
+});
 });
 }
 
@@ -278,8 +296,6 @@ document.getElementById('detail-modal').style.display = 'flex';
 
 document.getElementById('close-detail').addEventListener('click', function() { document.getElementById('detail-modal').style.display = 'none'; });
 document.getElementById('detail-modal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
-document.getElementById('refresh-btn').addEventListener('click', function() { renderSystemStats(); renderLogs(); });
-
 document.getElementById('show-create-btn').addEventListener('click', function() {
 var section = document.getElementById('create-section');
 section.style.display = section.style.display === 'none' ? 'block' : 'none';

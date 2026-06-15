@@ -828,6 +828,17 @@ const DataService = (function() {
         return getAugmentations().find(function(a) { return a.id === id; }) || null;
     }
 
+    function deleteAugmentation(id) {
+        if (id == null) return false;
+        var augs = getAugmentations();
+        var targetId = Number(id);
+        var next = augs.filter(function(a) { return Number(a.id) !== targetId; });
+        if (next.length === augs.length) return false;
+        delete _augmentationCache[targetId];
+        saveAugmentations(next);
+        return true;
+    }
+
     function getUserAugmentations(userId) {
         return getAugmentations().filter(function(a) { return a.userId === userId; }).sort(function(a, b) { return b.createdAt - a.createdAt; });
     }
@@ -1023,6 +1034,7 @@ const DataService = (function() {
         // Augmentation
         getAugmentations: getAugmentations,
         getAugmentationById: getAugmentationById,
+        deleteAugmentation: deleteAugmentation,
         getUserAugmentations: getUserAugmentations,
         getAugmentationStats: getAugmentationStats,
         parseDataFromCSV: parseDataFromCSV,
