@@ -115,7 +115,7 @@
                     (isPopular ? '<div class="plan-popular-badge">' + _t('plan.most_popular') + '</div>' : '') +
                     '<div class="plan-name">' + p.name + '</div>' +
                     '<div class="plan-price"><span class="currency">$</span>' + p.price + '<span class="period">' + p.period + '</span></div>' +
-                    '<ul class="plan-features">' + p.features.map(f => '<li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>' + f + '</li>').join('') + '</ul>' +
+                    '<ul class="plan-features">' + p.features.map(f => '<li><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>' + _t(f) + '</li>').join('') + '</ul>' +
                     '<button class="btn-subscribe ' + btnClass + '" ' + disabled + ' data-plan="' + p.id + '">' + btnText + '</button>' +
                     '</div>';
             }).join('');
