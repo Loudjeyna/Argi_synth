@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -114,7 +114,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Platform</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
@@ -689,7 +689,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 headers.forEach(function(h) {
                     if (perCol[h] > 0) {
                         var colPct = ((perCol[h] / rows.length) * 100).toFixed(1);
-                        detailsHtml += '<div class="step-detail-row"><span class="warning">N:</span> ' + h + ' — ' + perCol[h] + ' missing (' + colPct + '%)</div>';
+                        detailsHtml += '<div class="step-detail-row"><span class="warning">N:</span> ' + h + ' â€” ' + perCol[h] + ' missing (' + colPct + '%)</div>';
                     }
                 });
             }
@@ -829,7 +829,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     var b = bounds[col];
                     var stratLabel = autoStrategy[col] === 'cap' ? 'Capped' : (autoStrategy[col] === 'remove' ? 'Removed' : 'Kept');
                     detailsHtml += '<div class="step-detail-row"><span class="' + (autoStrategy[col] === 'keep' ? 'success' : 'warning') + '">' +
-                        col + ': ' + (outliers[col] || 0) + ' outliers (IQR=' + b.iqr.toFixed(1) + ') — Strategy: ' + stratLabel + '</span></div>';
+                        col + ': ' + (outliers[col] || 0) + ' outliers (IQR=' + b.iqr.toFixed(1) + ') â€” Strategy: ' + stratLabel + '</span></div>';
                 }
             });
             if (totalOutliers === 0) {
@@ -1169,3 +1169,4 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
     </script>
 </body>
 </html>
+

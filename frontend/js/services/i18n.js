@@ -1,4 +1,4 @@
-/* SynthAI - Internationalization Service */
+﻿/* SynthAI - Internationalization Service */
 const I18nService = (function() {
     var STORAGE_KEY = 'synthai_lang';
     var currentLang = localStorage.getItem(STORAGE_KEY) || 'en';
@@ -8,7 +8,7 @@ const I18nService = (function() {
         en: {
             // Global / Sidebar
             'app.name': 'SynthAI',
-            'app.tagline': 'Smart Agricultural Intelligence',
+            'app.tagline': 'Smart Agricultural Platform',
             'sidebar.dashboard': 'Dashboard',
             'sidebar.new_training': 'New Training',
             'sidebar.models': 'Models',
@@ -17,7 +17,7 @@ const I18nService = (function() {
             'sidebar.data_augmentation': 'Data Augmentation',
             'sidebar.model_comparison': 'Model Comparison',
             'sidebar.crop_prediction': 'Crop Prediction',
-            'sidebar.crop_requirements': 'Crop → Conditions',
+            'sidebar.crop_requirements': 'Crop â†’ Conditions',
             'sidebar.subscriptions': 'Subscriptions',
             'sidebar.users': 'Users',
             'sidebar.history': 'History',
@@ -31,6 +31,7 @@ const I18nService = (function() {
             'login.password': 'Password',
             'login.btn': 'Sign In',
             'login.no_account': "Don't have an account?",
+            'login.register_success': 'Account created successfully. Please sign in.',
             'login.register': 'Register',
             'login.register_title': 'Create Account',
             'login.register_subtitle': 'Join SynthAI platform',
@@ -668,7 +669,7 @@ const I18nService = (function() {
             // Extra keys used in various pages
             'dashboard.total': 'total',
             'dashboard.of_users': 'of users',
-            'tagline': 'Smart Agricultural Intelligence',
+            'tagline': 'Smart Agricultural Platform',
             'requirements.title': 'Crop Requirements',
             'requirements.subtitle': 'Select a crop to view its ideal growing conditions',
             'requirements.select_crop': 'Select a Crop',
@@ -696,8 +697,8 @@ const I18nService = (function() {
             'sidebar.data_augmentation': 'Augmentation de Donn\u00e9es',
             'sidebar.model_comparison': 'Comparaison de Mod\u00e8les',
             'sidebar.crop_prediction': 'Pr\u00e9diction de Culture',
-            'sidebar.crop_requirements': 'Culture → Conditions',
-            'sidebar.Crop Prediction': 'Prédiction des Cultures',
+            'sidebar.crop_requirements': 'Culture â†’ Conditions',
+            'sidebar.Crop Prediction': 'PrÃ©diction des Cultures',
             'sidebar.subscriptions': 'Abonnements',
             'sidebar.users': 'Utilisateurs',
             'sidebar.history': 'Historique',
@@ -710,6 +711,7 @@ const I18nService = (function() {
             'login.password': 'Mot de passe',
             'login.btn': 'Se Connecter',
             'login.no_account': 'Pas de compte ?',
+            'login.register_success': 'Compte cr\u00e9\u00e9 avec succ\u00e8s. Veuillez vous connecter.',
             'login.register': 'S\'inscrire',
             'login.register_title': 'Cr\u00e9er un Compte',
             'login.register_subtitle': 'Rejoignez la plateforme SynthAI',
@@ -1336,6 +1338,7 @@ const I18nService = (function() {
             'login.password': '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631',
             'login.btn': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644',
             'login.no_account': '\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u062d\u0633\u0627\u0628\u061f',
+            'login.register_success': '\u062a\u0645 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628 \u0628\u0646\u062c\u0627\u062d. \u0627\u0644\u0631\u062c\u0627\u0621 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644.',
             'login.register': '\u0627\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628',
             'login.register_title': '\u0627\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628',
             'login.register_subtitle': '\u0627\u0646\u0636\u0645 \u0625\u0644\u0649 \u0645\u0646\u0635\u0629 SynthAI',
@@ -2023,3 +2026,4 @@ const I18nService = (function() {
         translations: translations
     };
 })();
+

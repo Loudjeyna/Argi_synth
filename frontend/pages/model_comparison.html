@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -110,7 +110,7 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Intelligence</p></div>
+            <div class="sidebar-brand"><img src="logo.png" alt="SynthAI" class="sidebar-logo"><h1 data-i18n="app.name">SynthAI</h1><p data-i18n="app.tagline">Smart Agricultural Platform</p></div>
             <div id="user-panel"></div>
             <nav class="sidebar-nav" id="sidebar-nav"></nav>
             <div style="padding: 1rem; margin-top: 2rem;"><button id="logout-btn" class="btn btn-outline" style="width: 100%; border-color: rgba(255,255,255,0.2); color: white;" data-i18n="logout">Logout</button></div>
@@ -655,7 +655,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
                     return '<div class="model-detail-panel">' +
                         '<div class="model-detail-header" onclick="toggleDetail(' + idx + ')">' +
-                        '<span>#' + (idx + 1) + ' ' + r.modelName + ' (v' + r.version + ') — ' + _t('compare.score') + ': ' + (r.score.overall * 100).toFixed(1) + '%</span>' +
+                        '<span>#' + (idx + 1) + ' ' + r.modelName + ' (v' + r.version + ') â€” ' + _t('compare.score') + ': ' + (r.score.overall * 100).toFixed(1) + '%</span>' +
                         '<span class="toggle-icon">&gt;</span></div>' +
                         '<div class="model-detail-body" id="' + panelId + '">' +
                         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">' +
@@ -817,3 +817,4 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
+
