@@ -223,20 +223,15 @@ btn.addEventListener('click', function() { DataService.exportAugmentation(parseI
 });
 container.querySelectorAll('.delete-aug-btn').forEach(function(btn) {
 btn.addEventListener('click', function() {
-var id = parseInt(this.dataset.id);
+var id = Number(this.dataset.id);
 if (!confirm('Delete this augmentation record and associated data?')) return;
-var card = btn.closest('.aug-log-card');
-if (DataService.deleteAugmentation(id)) {
-if (card && card.parentNode) { card.parentNode.removeChild(card); }
-if (augResult && augResult.id === id) {
-augResult = null;
-document.getElementById('aug-result').style.display = 'none';
+if (!DataService.deleteAugmentation(id)) {
+alert('Failed to delete augmentation.');
+return;
 }
+augResult = augResult && Number(augResult.id) === id ? null : augResult;
 renderSystemStats();
 renderLogs();
-} else {
-alert('Failed to delete augmentation.');
-}
 });
 });
 }

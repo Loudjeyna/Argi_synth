@@ -824,15 +824,22 @@ const DataService = (function() {
         return aug.preview.data;
     }
 
+    function normalizeAugmentationId(id) {
+        var normalized = Number(id);
+        return Number.isNaN(normalized) ? null : normalized;
+    }
+
     function getAugmentationById(id) {
-        return getAugmentations().find(function(a) { return a.id === id; }) || null;
+        var targetId = normalizeAugmentationId(id);
+        if (targetId === null) return null;
+        return getAugmentations().find(function(a) { return normalizeAugmentationId(a.id) === targetId; }) || null;
     }
 
     function deleteAugmentation(id) {
-        if (id == null) return false;
+        var targetId = normalizeAugmentationId(id);
+        if (targetId === null) return false;
         var augs = getAugmentations();
-        var targetId = Number(id);
-        var next = augs.filter(function(a) { return Number(a.id) !== targetId; });
+        var next = augs.filter(function(a) { return normalizeAugmentationId(a.id) !== targetId; });
         if (next.length === augs.length) return false;
         delete _augmentationCache[targetId];
         saveAugmentations(next);
