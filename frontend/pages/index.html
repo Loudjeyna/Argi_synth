@@ -106,6 +106,7 @@
         .auth-buttons {
             display: flex;
             gap: 1rem;
+            align-items: center;
         }
 
         .btn-nav {
@@ -126,6 +127,34 @@
         .btn-primary-nav:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 0.35rem;
+            margin-right: 0.25rem;
+        }
+
+        .lang-btn {
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-main);
+        }
+
+        .lang-btn.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            color: var(--success);
+            font-weight: 600;
         }
 
         /* =========================================
@@ -150,6 +179,7 @@
 
         .gradient-text {
             background: linear-gradient(135deg, var(--success) 0%, var(--primary) 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -444,7 +474,7 @@
         }
 
         .pricing-card.featured::before {
-            content: 'Most Popular';
+            content: attr(data-badge);
             position: absolute;
             top: -12px;
             left: 50%;
@@ -596,6 +626,10 @@
             .hero-text p { margin: 0 auto 2rem auto; }
             .hero-btns { justify-content: center; }
             .nav-links { display: none; }
+            nav { padding: 1rem; }
+            .auth-buttons { gap: 0.5rem; }
+            .lang-switcher { gap: 0.25rem; }
+            .lang-btn { padding: 0.3rem 0.4rem; font-size: 0.75rem; }
             .hero-visual { height: 350px; }
             .hero-text h1 { font-size: 2.5rem; }
             .features-grid { grid-template-columns: 1fr; }
@@ -614,26 +648,27 @@
         </a>
 
         <ul class="nav-links">
-            <li><a href="#solutions">Solutions</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#about">About</a></li>
+            <li><a href="#solutions" data-i18n="landing.nav.solutions">Solutions</a></li>
+            <li><a href="#features" data-i18n="landing.nav.features">Features</a></li>
+            <li><a href="#pricing" data-i18n="landing.nav.pricing">Pricing</a></li>
+            <li><a href="#about" data-i18n="landing.nav.about">About</a></li>
         </ul>
 
         <div class="auth-buttons">
-            <a href="login.html" class="btn-nav btn-ghost">Log In</a>
-            <a href="login.html" class="btn-nav btn-primary-nav">Register</a>
+            <div class="lang-switcher" id="index-lang-switcher"></div>
+            <a href="login.html" class="btn-nav btn-ghost" data-i18n="landing.nav.login">Log In</a>
+            <a href="login.html" class="btn-nav btn-primary-nav" data-i18n="landing.nav.register">Register</a>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
     <section class="hero">
         <div class="hero-text">
-            <h1>Cultivate the Future with <br><span class="gradient-text">Smart Intelligence.</span></h1>
-            <p>SynthAI leverages advanced machine learning to monitor soil health, predict crop yields, and optimize irrigation for maximum sustainability.</p>
+            <h1><span data-i18n="landing.hero.title">Cultivate the Future with</span> <br><span class="gradient-text" data-i18n="landing.hero.highlight">Smart Intelligence.</span></h1>
+            <p data-i18n="landing.hero.subtitle">SynthAI leverages advanced machine learning to monitor soil health, predict crop yields, and optimize irrigation for maximum sustainability.</p>
             <div class="hero-btns">
-                <button class="btn-large btn-start" onclick="window.location.href='login.html'">Get Started</button>
-                <button class="btn-large btn-demo" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">View Demo</button>
+                <button class="btn-large btn-start" onclick="window.location.href='login.html'" data-i18n="landing.action.get_started">Get Started</button>
+                <button class="btn-large btn-demo" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})" data-i18n="landing.action.view_demo">View Demo</button>
             </div>
         </div>
 
@@ -643,18 +678,18 @@
                 <div class="grid-lines"></div>
                 <div class="data-point dp-1">
                     <div class="dot green"></div>
-                    <div><div class="data-label">Soil Moisture</div><div class="data-val">Optimal</div></div>
+                    <div><div class="data-label" data-i18n="landing.visual.soil">Soil Moisture</div><div class="data-val" data-i18n="landing.visual.optimal">Optimal</div></div>
                 </div>
                 <div class="data-point dp-2">
                     <div class="dot blue"></div>
-                    <div><div class="data-label">Yield Pred.</div><div class="data-val">+14%</div></div>
+                    <div><div class="data-label" data-i18n="landing.visual.yield">Yield Pred.</div><div class="data-val">+14%</div></div>
                 </div>
                 <div class="data-point dp-3">
                     <div class="dot green"></div>
-                    <div><div class="data-label">System Status</div><div class="data-val">Active</div></div>
+                    <div><div class="data-label" data-i18n="landing.visual.status">System Status</div><div class="data-val" data-i18n="status.active">Active</div></div>
                 </div>
                 <div style="padding: 1rem; border-top: 1px solid var(--border-light); margin-top: auto;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Crop Analysis</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="landing.visual.analysis">Crop Analysis</div>
                     <div class="chart-container">
                         <div class="bar" style="height: 40%; animation-duration: 2s;"></div>
                         <div class="bar" style="height: 70%; animation-duration: 2.5s;"></div>
@@ -671,9 +706,9 @@
          SOLUTIONS SECTION
          ========================================= -->
     <section id="solutions" class="section">
-        <div class="section-label">Solutions</div>
-        <h2 class="section-title">Everything you need for<br><span class="gradient-text">smarter agriculture</span></h2>
-        <p class="section-subtitle">From soil analysis to yield prediction, SynthAI provides end-to-end AI-powered tools designed for modern farming challenges.</p>
+        <div class="section-label" data-i18n="landing.nav.solutions">Solutions</div>
+        <h2 class="section-title"><span data-i18n="landing.solutions.title">Everything you need for</span><br><span class="gradient-text" data-i18n="landing.solutions.highlight">smarter agriculture</span></h2>
+        <p class="section-subtitle" data-i18n="landing.solutions.subtitle">From soil analysis to yield prediction, SynthAI provides end-to-end AI-powered tools designed for modern farming challenges.</p>
 
     
         <div class="solutions-grid">
@@ -681,43 +716,43 @@
                 <div class="solution-icon" style="background: rgba(16, 185, 129, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
-                <h3>Crop Prediction</h3>
-                <p>Input your soil and climate conditions to get AI-powered crop recommendations tailored to your specific field environment and maximize your yield potential.</p>
+                <h3 data-i18n="landing.solution.crop.title">Crop Prediction</h3>
+                <p data-i18n="landing.solution.crop.desc">Input your soil and climate conditions to get AI-powered crop recommendations tailored to your specific field environment and maximize your yield potential.</p>
             </div>
             <div class="solution-card">
                 <div class="solution-icon" style="background: rgba(99, 102, 241, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                 </div>
-                <h3>Soil Analysis</h3>
-                <p>Analyze NPK levels, pH, and moisture data to understand your soil profile. Get instant compatibility scores against optimal ranges for any crop.</p>
+                <h3 data-i18n="landing.solution.soil.title">Soil Analysis</h3>
+                <p data-i18n="landing.solution.soil.desc">Analyze NPK levels, pH, and moisture data to understand your soil profile. Get instant compatibility scores against optimal ranges for any crop.</p>
             </div>
             <div class="solution-card">
                 <div class="solution-icon" style="background: rgba(236, 72, 153, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
-                <h3>Synthetic Data Generation</h3>
-                <p>Generate realistic agricultural datasets using CTGAN models. Augment your existing data for research, training, and analysis with high-fidelity synthetic records.</p>
+                <h3 data-i18n="landing.solution.synthetic.title">Synthetic Data Generation</h3>
+                <p data-i18n="landing.solution.synthetic.desc">Generate realistic agricultural datasets using CTGAN models. Augment your existing data for research, training, and analysis with high-fidelity synthetic records.</p>
             </div>
             <div class="solution-card">
                 <div class="solution-icon" style="background: rgba(245, 158, 11, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
                 </div>
-                <h3>Model Training</h3>
-                <p>Train and deploy custom CTGAN models on your own datasets. Monitor training progress, compare versions, and set production models with one click.</p>
+                <h3 data-i18n="landing.solution.training.title">Model Training</h3>
+                <p data-i18n="landing.solution.training.desc">Train and deploy custom CTGAN models on your own datasets. Monitor training progress, compare versions, and set production models with one click.</p>
             </div>
             <div class="solution-card">
                 <div class="solution-icon" style="background: rgba(16, 185, 129, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </div>
-                <h3>Data Augmentation</h3>
-                <p>Upload your agricultural CSV datasets and apply intelligent augmentation with configurable multipliers. Track quality scores and statistical preservation in real time.</p>
+                <h3 data-i18n="landing.solution.augmentation.title">Data Augmentation</h3>
+                <p data-i18n="landing.solution.augmentation.desc">Upload your agricultural CSV datasets and apply intelligent augmentation with configurable multipliers. Track quality scores and statistical preservation in real time.</p>
             </div>
             <div class="solution-card">
                 <div class="solution-icon" style="background: rgba(99, 102, 241, 0.1);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                 </div>
-                <h3>Multi-Role Access</h3>
-                <p>Built-in support for Administrators, Companies, and Farmers. Each role gets a tailored dashboard with relevant tools and permissions for their workflow.</p>
+                <h3 data-i18n="landing.solution.roles.title">Multi-Role Access</h3>
+                <p data-i18n="landing.solution.roles.desc">Built-in support for Administrators, Companies, and Farmers. Each role gets a tailored dashboard with relevant tools and permissions for their workflow.</p>
             </div>
         </div>
     </section>
@@ -726,52 +761,52 @@
          FEATURES SECTION
          ========================================= -->
     <section id="features" class="section">
-        <div class="section-label">Features</div>
-        <h2 class="section-title">Why choose <span class="gradient-text">SynthAI?</span></h2>
-        <p class="section-subtitle">Built with cutting-edge technology and designed specifically for agricultural intelligence, SynthAI delivers unmatched accuracy and usability.</p>
+        <div class="section-label" data-i18n="landing.nav.features">Features</div>
+        <h2 class="section-title"><span data-i18n="landing.features.title">Why choose</span> <span class="gradient-text">SynthAI?</span></h2>
+        <p class="section-subtitle" data-i18n="landing.features.subtitle">Built with cutting-edge technology and designed specifically for agricultural intelligence, SynthAI delivers unmatched accuracy and usability.</p>
 
         
         <div class="features-grid">
             <div class="feature-item">
                 <div class="feature-number">01</div>
                 <div>
-                    <h4>CTGAN-Powered Generation</h4>
-                    <p>Leverage conditional tabular GANs to produce high-fidelity synthetic agricultural data that preserves statistical distributions and correlations of your original datasets.</p>
+                    <h4 data-i18n="landing.feature.ctgan.title">CTGAN-Powered Generation</h4>
+                    <p data-i18n="landing.feature.ctgan.desc">Leverage conditional tabular GANs to produce high-fidelity synthetic agricultural data that preserves statistical distributions and correlations of your original datasets.</p>
                 </div>
             </div>
             <div class="feature-item">
                 <div class="feature-number">02</div>
                 <div>
-                    <h4>Algerian Crop Database</h4>
-                    <p>Pre-loaded with optimal growing conditions for 22 Algerian crops including Durum Wheat, Barley, Dates, Olives, Chickpeas, and more — all backed by agricultural research.</p>
+                    <h4 data-i18n="landing.feature.crops.title">Algerian Crop Database</h4>
+                    <p data-i18n="landing.feature.crops.desc">Pre-loaded with optimal growing conditions for 22 Algerian crops including Durum Wheat, Barley, Dates, Olives, Chickpeas, and more — all backed by agricultural research.</p>
                 </div>
             </div>
             <div class="feature-item">
                 <div class="feature-number">03</div>
                 <div>
-                    <h4>Real-Time Quality Metrics</h4>
-                    <p>Every generation and augmentation comes with quality scores, similarity percentages, and statistical comparisons between original and synthetic data for full transparency.</p>
+                    <h4 data-i18n="landing.feature.quality.title">Real-Time Quality Metrics</h4>
+                    <p data-i18n="landing.feature.quality.desc">Every generation and augmentation comes with quality scores, similarity percentages, and statistical comparisons between original and synthetic data for full transparency.</p>
                 </div>
             </div>
             <div class="feature-item">
                 <div class="feature-number">04</div>
                 <div>
-                    <h4>Cloud Storage Integration</h4>
-                    <p>Generated datasets are automatically stored in the cloud with downloadable URLs. No local storage limits — access your data anytime from anywhere.</p>
+                    <h4 data-i18n="landing.feature.cloud.title">Cloud Storage Integration</h4>
+                    <p data-i18n="landing.feature.cloud.desc">Generated datasets are automatically stored in the cloud with downloadable URLs. No local storage limits — access your data anytime from anywhere.</p>
                 </div>
             </div>
             <div class="feature-item">
                 <div class="feature-number">05</div>
                 <div>
-                    <h4>Model Versioning & Comparison</h4>
-                    <p>Track every training run, compare model versions side by side, and promote your best-performing model to production with a single click.</p>
+                    <h4 data-i18n="landing.feature.versioning.title">Model Versioning & Comparison</h4>
+                    <p data-i18n="landing.feature.versioning.desc">Track every training run, compare model versions side by side, and promote your best-performing model to production with a single click.</p>
                 </div>
             </div>
             <div class="feature-item">
                 <div class="feature-number">06</div>
                 <div>
-                    <h4>Secure & Role-Based</h4>
-                    <p>Three-tier access control ensures administrators, companies, and farmers each see only what they need. Session management and plan-based limits keep your platform secure.</p>
+                    <h4 data-i18n="landing.feature.secure.title">Secure & Role-Based</h4>
+                    <p data-i18n="landing.feature.secure.desc">Three-tier access control ensures administrators, companies, and farmers each see only what they need. Session management and plan-based limits keep your platform secure.</p>
                 </div>
             </div>
         </div>
@@ -781,66 +816,66 @@
          PRICING SECTION
          ========================================= -->
     <section id="pricing" class="section">
-        <div class="section-label">Pricing</div>
-        <h2 class="section-title">Simple, transparent <span class="gradient-text">pricing</span></h2>
-        <p class="section-subtitle">Start free and scale as you grow. No hidden fees, no surprises.</p>
+        <div class="section-label" data-i18n="landing.nav.pricing">Pricing</div>
+        <h2 class="section-title"><span data-i18n="landing.pricing.title">Simple, transparent</span> <span class="gradient-text" data-i18n="landing.pricing.highlight">pricing</span></h2>
+        <p class="section-subtitle" data-i18n="landing.pricing.subtitle">Start free and scale as you grow. No hidden fees, no surprises.</p>
 
         
         <div class="pricing-grid">
             <div class="pricing-card">
-                <h3>Free</h3>
-                <div class="pricing-price">$0<span>/month</span></div>
+                <h3 data-i18n="sub.free">Free</h3>
+                <div class="pricing-price">$0<span data-i18n="plan.month">/month</span></div>
                 <ul class="pricing-features">
-                    <li>5 predictions per day</li>
-                    <li>1,000 rows dataset size</li>
-                    <li>10 history entries</li>
-                    <li>Crop only datasets</li>
-                    <li>Basic analytics</li>
-                    <li>Standard support</li>
+                    <li data-i18n="landing.price.free.1">5 predictions per day</li>
+                    <li data-i18n="landing.price.free.2">1,000 rows dataset size</li>
+                    <li data-i18n="landing.price.free.3">10 history entries</li>
+                    <li data-i18n="landing.price.free.4">Crop only datasets</li>
+                    <li data-i18n="landing.price.free.5">Basic analytics</li>
+                    <li data-i18n="landing.price.free.6">Standard support</li>
                 </ul>
-                <a href="login.html" class="btn-pricing btn-pricing-outline">Get Started</a>
+                <a href="login.html" class="btn-pricing btn-pricing-outline" data-i18n="landing.action.get_started">Get Started</a>
             </div>
 
             <div class="pricing-card">
-                <h3>Pro</h3>
-                <div class="pricing-price">$12<span>/month</span></div>
+                <h3 data-i18n="sub.pro">Pro</h3>
+                <div class="pricing-price">$12<span data-i18n="plan.month">/month</span></div>
                 <ul class="pricing-features">
-                    <li>50 predictions per day</li>
-                    <li>10,000 rows dataset size</li>
-                    <li>100 history entries</li>
-                    <li>All dataset types</li>
-                    <li>Standard analytics</li>
-                    <li>Priority support</li>
+                    <li data-i18n="landing.price.pro.1">50 predictions per day</li>
+                    <li data-i18n="landing.price.pro.2">10,000 rows dataset size</li>
+                    <li data-i18n="landing.price.pro.3">100 history entries</li>
+                    <li data-i18n="landing.price.pro.4">All dataset types</li>
+                    <li data-i18n="landing.price.pro.5">Standard analytics</li>
+                    <li data-i18n="landing.price.pro.6">Priority support</li>
                 </ul>
-                <a href="login.html" class="btn-pricing btn-pricing-outline">Upgrade Now</a>
+                <a href="login.html" class="btn-pricing btn-pricing-outline" data-i18n="landing.action.upgrade_now">Upgrade Now</a>
             </div>
 
-            <div class="pricing-card featured">
-                <h3>Premium</h3>
-                <div class="pricing-price">$29<span>/month</span></div>
+            <div class="pricing-card featured" data-badge="Most Popular">
+                <h3 data-i18n="sub.premium">Premium</h3>
+                <div class="pricing-price">$29<span data-i18n="plan.month">/month</span></div>
                 <ul class="pricing-features">
-                    <li>Unlimited predictions</li>
-                    <li>100,000 rows dataset size</li>
-                    <li>Unlimited history entries</li>
-                    <li>All dataset types + Custom</li>
-                    <li>Advanced analytics</li>
-                    <li>24/7 Priority support</li>
+                    <li data-i18n="landing.price.premium.1">Unlimited predictions</li>
+                    <li data-i18n="landing.price.premium.2">100,000 rows dataset size</li>
+                    <li data-i18n="landing.price.premium.3">Unlimited history entries</li>
+                    <li data-i18n="landing.price.premium.4">All dataset types + Custom</li>
+                    <li data-i18n="landing.price.premium.5">Advanced analytics</li>
+                    <li data-i18n="landing.price.premium.6">24/7 Priority support</li>
                 </ul>
-                <a href="login.html" class="btn-pricing btn-pricing-primary">Upgrade Now</a>
+                <a href="login.html" class="btn-pricing btn-pricing-primary" data-i18n="landing.action.upgrade_now">Upgrade Now</a>
             </div>
 
             <div class="pricing-card">
-                <h3>Enterprise</h3>
-                <div class="pricing-price">Custom</div>
+                <h3 data-i18n="landing.price.enterprise">Enterprise</h3>
+                <div class="pricing-price" data-i18n="landing.price.custom">Custom</div>
                 <ul class="pricing-features">
-                    <li>Everything in Premium</li>
-                    <li>Custom model training</li>
-                    <li>Dedicated cloud storage</li>
-                    <li>API access</li>
-                    <li>Admin management console</li>
-                    <li>24/7 Dedicated support</li>
+                    <li data-i18n="landing.price.enterprise.1">Everything in Premium</li>
+                    <li data-i18n="landing.price.enterprise.2">Custom model training</li>
+                    <li data-i18n="landing.price.enterprise.3">Dedicated cloud storage</li>
+                    <li data-i18n="landing.price.enterprise.4">API access</li>
+                    <li data-i18n="landing.price.enterprise.5">Admin management console</li>
+                    <li data-i18n="landing.price.enterprise.6">24/7 Dedicated support</li>
                 </ul>
-                <a href="login.html" class="btn-pricing btn-pricing-outline">Contact Us</a>
+                <a href="login.html" class="btn-pricing btn-pricing-outline" data-i18n="landing.action.contact">Contact Us</a>
             </div>
         </div>
     </section>
@@ -851,34 +886,34 @@
     <section id="about" class="section">
         <div class="about-grid">
             <div>
-                <div class="section-label">About</div>
-                <h2 class="section-title">Built for the future of <span class="gradient-text">Algerian agriculture</span></h2>
-                <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;">
+                <div class="section-label" data-i18n="landing.nav.about">About</div>
+                <h2 class="section-title"><span data-i18n="landing.about.title">Built for the future of</span> <span class="gradient-text" data-i18n="landing.about.highlight">Algerian agriculture</span></h2>
+                <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;" data-i18n="landing.about.p1">
                     SynthAI was designed to bridge the gap between advanced AI research and practical agricultural decision-making. Our platform empowers farmers, agronomists, and agricultural companies with tools that were previously only available to large-scale research institutions.
                 </p>
-                <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;">
+                <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;" data-i18n="landing.about.p2">
                     From predicting the best crop for your soil conditions to generating synthetic datasets for research, SynthAI combines CTGAN-powered data generation with a comprehensive Algerian crop database to deliver actionable intelligence tailored to the North African climate.
                 </p>
-                <p style="color: var(--text-muted); line-height: 1.7;">
+                <p style="color: var(--text-muted); line-height: 1.7;" data-i18n="landing.about.p3">
                     We believe that smart agriculture starts with smart data. By making AI accessible to every farmer and researcher, we aim to contribute to food security and sustainable farming practices across the region.
                 </p>
             </div>
             <div class="about-stats">
                 <div class="about-stat-card">
                     <div class="stat-value">22</div>
-                    <div class="stat-label">Crop Varieties</div>
+                    <div class="stat-label" data-i18n="landing.stat.crops">Crop Varieties</div>
                 </div>
                 <div class="about-stat-card">
                     <div class="stat-value">7</div>
-                    <div class="stat-label">Soil Parameters</div>
+                    <div class="stat-label" data-i18n="landing.stat.soil">Soil Parameters</div>
                 </div>
                 <div class="about-stat-card">
                     <div class="stat-value">CTGAN</div>
-                    <div class="stat-label">AI Engine</div>
+                    <div class="stat-label" data-i18n="landing.stat.engine">AI Engine</div>
                 </div>
                 <div class="about-stat-card">
                     <div class="stat-value">100K+</div>
-                    <div class="stat-label">Rows per Generation</div>
+                    <div class="stat-label" data-i18n="landing.stat.rows">Rows per Generation</div>
                 </div>
             </div>
         </div>
@@ -886,8 +921,326 @@
 
     <!-- FOOTER -->
     <footer>
-        <p>&copy; 2025 SynthAI — Smart Agricultural Intelligence. All rights reserved.</p>
+        <p data-i18n="landing.footer">&copy; 2025 SynthAI — Smart Agricultural Intelligence. All rights reserved.</p>
     </footer>
 
+    <script src="../js/services/i18n.js"></script>
+    <script>
+        // Language switcher on landing page
+        (function() {
+            var sw = document.getElementById('index-lang-switcher');
+            if (sw && typeof I18nService !== 'undefined') {
+                var landingTranslations = {
+                    en: {
+                        'landing.nav.solutions': 'Solutions',
+                        'landing.nav.features': 'Features',
+                        'landing.nav.pricing': 'Pricing',
+                        'landing.nav.about': 'About',
+                        'landing.nav.login': 'Log In',
+                        'landing.nav.register': 'Register',
+                        'landing.hero.title': 'Cultivate the Future with',
+                        'landing.hero.highlight': 'Smart Intelligence.',
+                        'landing.hero.subtitle': 'SynthAI leverages advanced machine learning to monitor soil health, predict crop yields, and optimize irrigation for maximum sustainability.',
+                        'landing.action.get_started': 'Get Started',
+                        'landing.action.view_demo': 'View Demo',
+                        'landing.action.upgrade_now': 'Upgrade Now',
+                        'landing.action.contact': 'Contact Us',
+                        'landing.visual.soil': 'Soil Moisture',
+                        'landing.visual.optimal': 'Optimal',
+                        'landing.visual.yield': 'Yield Pred.',
+                        'landing.visual.status': 'System Status',
+                        'landing.visual.analysis': 'Crop Analysis',
+                        'landing.solutions.title': 'Everything you need for',
+                        'landing.solutions.highlight': 'smarter agriculture',
+                        'landing.solutions.subtitle': 'From soil analysis to yield prediction, SynthAI provides end-to-end AI-powered tools designed for modern farming challenges.',
+                        'landing.solution.crop.title': 'Crop Prediction',
+                        'landing.solution.crop.desc': 'Input your soil and climate conditions to get AI-powered crop recommendations tailored to your specific field environment and maximize your yield potential.',
+                        'landing.solution.soil.title': 'Soil Analysis',
+                        'landing.solution.soil.desc': 'Analyze NPK levels, pH, and moisture data to understand your soil profile. Get instant compatibility scores against optimal ranges for any crop.',
+                        'landing.solution.synthetic.title': 'Synthetic Data Generation',
+                        'landing.solution.synthetic.desc': 'Generate realistic agricultural datasets using CTGAN models. Augment your existing data for research, training, and analysis with high-fidelity synthetic records.',
+                        'landing.solution.training.title': 'Model Training',
+                        'landing.solution.training.desc': 'Train and deploy custom CTGAN models on your own datasets. Monitor training progress, compare versions, and set production models with one click.',
+                        'landing.solution.augmentation.title': 'Data Augmentation',
+                        'landing.solution.augmentation.desc': 'Upload your agricultural CSV datasets and apply intelligent augmentation with configurable multipliers. Track quality scores and statistical preservation in real time.',
+                        'landing.solution.roles.title': 'Multi-Role Access',
+                        'landing.solution.roles.desc': 'Built-in support for Administrators, Companies, and Farmers. Each role gets a tailored dashboard with relevant tools and permissions for their workflow.',
+                        'landing.features.title': 'Why choose',
+                        'landing.features.subtitle': 'Built with cutting-edge technology and designed specifically for agricultural intelligence, SynthAI delivers unmatched accuracy and usability.',
+                        'landing.feature.ctgan.title': 'CTGAN-Powered Generation',
+                        'landing.feature.ctgan.desc': 'Leverage conditional tabular GANs to produce high-fidelity synthetic agricultural data that preserves statistical distributions and correlations of your original datasets.',
+                        'landing.feature.crops.title': 'Algerian Crop Database',
+                        'landing.feature.crops.desc': 'Pre-loaded with optimal growing conditions for 22 Algerian crops including Durum Wheat, Barley, Dates, Olives, Chickpeas, and more - all backed by agricultural research.',
+                        'landing.feature.quality.title': 'Real-Time Quality Metrics',
+                        'landing.feature.quality.desc': 'Every generation and augmentation comes with quality scores, similarity percentages, and statistical comparisons between original and synthetic data for full transparency.',
+                        'landing.feature.cloud.title': 'Cloud Storage Integration',
+                        'landing.feature.cloud.desc': 'Generated datasets are automatically stored in the cloud with downloadable URLs. No local storage limits - access your data anytime from anywhere.',
+                        'landing.feature.versioning.title': 'Model Versioning & Comparison',
+                        'landing.feature.versioning.desc': 'Track every training run, compare model versions side by side, and promote your best-performing model to production with a single click.',
+                        'landing.feature.secure.title': 'Secure & Role-Based',
+                        'landing.feature.secure.desc': 'Three-tier access control ensures administrators, companies, and farmers each see only what they need. Session management and plan-based limits keep your platform secure.',
+                        'landing.pricing.title': 'Simple, transparent',
+                        'landing.pricing.highlight': 'pricing',
+                        'landing.pricing.subtitle': 'Start free and scale as you grow. No hidden fees, no surprises.',
+                        'landing.price.free.1': '5 predictions per day',
+                        'landing.price.free.2': '1,000 rows dataset size',
+                        'landing.price.free.3': '10 history entries',
+                        'landing.price.free.4': 'Crop only datasets',
+                        'landing.price.free.5': 'Basic analytics',
+                        'landing.price.free.6': 'Standard support',
+                        'landing.price.pro.1': '50 predictions per day',
+                        'landing.price.pro.2': '10,000 rows dataset size',
+                        'landing.price.pro.3': '100 history entries',
+                        'landing.price.pro.4': 'All dataset types',
+                        'landing.price.pro.5': 'Standard analytics',
+                        'landing.price.pro.6': 'Priority support',
+                        'landing.price.premium.1': 'Unlimited predictions',
+                        'landing.price.premium.2': '100,000 rows dataset size',
+                        'landing.price.premium.3': 'Unlimited history entries',
+                        'landing.price.premium.4': 'All dataset types + Custom',
+                        'landing.price.premium.5': 'Advanced analytics',
+                        'landing.price.premium.6': '24/7 Priority support',
+                        'landing.price.enterprise': 'Enterprise',
+                        'landing.price.custom': 'Custom',
+                        'landing.price.enterprise.1': 'Everything in Premium',
+                        'landing.price.enterprise.2': 'Custom model training',
+                        'landing.price.enterprise.3': 'Dedicated cloud storage',
+                        'landing.price.enterprise.4': 'API access',
+                        'landing.price.enterprise.5': 'Admin management console',
+                        'landing.price.enterprise.6': '24/7 Dedicated support',
+                        'landing.about.title': 'Built for the future of',
+                        'landing.about.highlight': 'Algerian agriculture',
+                        'landing.about.p1': 'SynthAI was designed to bridge the gap between advanced AI research and practical agricultural decision-making. Our platform empowers farmers, agronomists, and agricultural companies with tools that were previously only available to large-scale research institutions.',
+                        'landing.about.p2': 'From predicting the best crop for your soil conditions to generating synthetic datasets for research, SynthAI combines CTGAN-powered data generation with a comprehensive Algerian crop database to deliver actionable intelligence tailored to the North African climate.',
+                        'landing.about.p3': 'We believe that smart agriculture starts with smart data. By making AI accessible to every farmer and researcher, we aim to contribute to food security and sustainable farming practices across the region.',
+                        'landing.stat.crops': 'Crop Varieties',
+                        'landing.stat.soil': 'Soil Parameters',
+                        'landing.stat.engine': 'AI Engine',
+                        'landing.stat.rows': 'Rows per Generation',
+                        'landing.footer': '© 2025 SynthAI - Smart Agricultural Intelligence. All rights reserved.',
+                        'landing.badge.popular': 'Most Popular'
+                    },
+                    fr: {
+                        'landing.nav.solutions': 'Solutions',
+                        'landing.nav.features': 'Fonctionnalites',
+                        'landing.nav.pricing': 'Tarifs',
+                        'landing.nav.about': 'A propos',
+                        'landing.nav.login': 'Connexion',
+                        'landing.nav.register': 'Inscription',
+                        'landing.hero.title': 'Cultivez l avenir avec',
+                        'landing.hero.highlight': 'l intelligence agricole.',
+                        'landing.hero.subtitle': 'SynthAI utilise le machine learning avance pour suivre la sante des sols, predire les rendements et optimiser l irrigation durable.',
+                        'landing.action.get_started': 'Commencer',
+                        'landing.action.view_demo': 'Voir la demo',
+                        'landing.action.upgrade_now': 'Mettre a niveau',
+                        'landing.action.contact': 'Nous contacter',
+                        'landing.visual.soil': 'Humidite du sol',
+                        'landing.visual.optimal': 'Optimal',
+                        'landing.visual.yield': 'Rendement prev.',
+                        'landing.visual.status': 'Etat du systeme',
+                        'landing.visual.analysis': 'Analyse des cultures',
+                        'landing.solutions.title': 'Tout ce dont vous avez besoin pour',
+                        'landing.solutions.highlight': 'une agriculture plus intelligente',
+                        'landing.solutions.subtitle': 'De l analyse des sols a la prediction des rendements, SynthAI fournit des outils IA complets pour les defis agricoles modernes.',
+                        'landing.solution.crop.title': 'Prediction des cultures',
+                        'landing.solution.crop.desc': 'Saisissez vos conditions de sol et de climat pour obtenir des recommandations IA adaptees a votre parcelle et maximiser le rendement.',
+                        'landing.solution.soil.title': 'Analyse du sol',
+                        'landing.solution.soil.desc': 'Analysez les niveaux NPK, le pH et l humidite pour comprendre votre sol. Obtenez des scores de compatibilite instantanes pour chaque culture.',
+                        'landing.solution.synthetic.title': 'Generation de donnees synthetiques',
+                        'landing.solution.synthetic.desc': 'Generez des jeux de donnees agricoles realistes avec des modeles CTGAN. Augmentez vos donnees pour la recherche, l entrainement et l analyse.',
+                        'landing.solution.training.title': 'Entrainement de modeles',
+                        'landing.solution.training.desc': 'Entrainez et deployez des modeles CTGAN personnalises sur vos propres donnees. Suivez la progression, comparez les versions et publiez le meilleur modele.',
+                        'landing.solution.augmentation.title': 'Augmentation de donnees',
+                        'landing.solution.augmentation.desc': 'Importez vos fichiers CSV agricoles et appliquez une augmentation intelligente avec multiplicateurs configurables et scores de qualite.',
+                        'landing.solution.roles.title': 'Acces multi-roles',
+                        'landing.solution.roles.desc': 'Support integre des administrateurs, entreprises et agriculteurs. Chaque role dispose d un tableau de bord adapte a son travail.',
+                        'landing.features.title': 'Pourquoi choisir',
+                        'landing.features.subtitle': 'Concu avec des technologies avancees pour l intelligence agricole, SynthAI offre precision, transparence et simplicite.',
+                        'landing.feature.ctgan.title': 'Generation avec CTGAN',
+                        'landing.feature.ctgan.desc': 'Utilisez des GAN tabulaires conditionnels pour produire des donnees agricoles synthetiques fideles aux distributions et correlations originales.',
+                        'landing.feature.crops.title': 'Base de cultures algeriennes',
+                        'landing.feature.crops.desc': 'Prechargee avec les conditions optimales de 22 cultures algeriennes, dont ble dur, orge, dattes, olives, pois chiches et plus encore.',
+                        'landing.feature.quality.title': 'Mesures qualite en temps reel',
+                        'landing.feature.quality.desc': 'Chaque generation et augmentation inclut scores de qualite, similarites et comparaisons statistiques entre donnees originales et synthetiques.',
+                        'landing.feature.cloud.title': 'Integration stockage cloud',
+                        'landing.feature.cloud.desc': 'Les jeux de donnees generes sont stockes dans le cloud avec des liens de telechargement. Accedez a vos donnees partout.',
+                        'landing.feature.versioning.title': 'Versioning et comparaison',
+                        'landing.feature.versioning.desc': 'Suivez chaque entrainement, comparez les versions et promouvez votre meilleur modele en production en un clic.',
+                        'landing.feature.secure.title': 'Securise et base sur les roles',
+                        'landing.feature.secure.desc': 'Un controle d acces a trois niveaux garantit que chaque utilisateur voit uniquement ce dont il a besoin.',
+                        'landing.pricing.title': 'Tarifs simples et',
+                        'landing.pricing.highlight': 'transparents',
+                        'landing.pricing.subtitle': 'Commencez gratuitement et evoluez selon vos besoins. Pas de frais caches, pas de surprises.',
+                        'landing.price.free.1': '5 predictions par jour',
+                        'landing.price.free.2': 'Jeu de donnees de 1 000 lignes',
+                        'landing.price.free.3': '10 entrees d historique',
+                        'landing.price.free.4': 'Jeux de donnees cultures seulement',
+                        'landing.price.free.5': 'Analyses de base',
+                        'landing.price.free.6': 'Support standard',
+                        'landing.price.pro.1': '50 predictions par jour',
+                        'landing.price.pro.2': 'Jeu de donnees de 10 000 lignes',
+                        'landing.price.pro.3': '100 entrees d historique',
+                        'landing.price.pro.4': 'Tous les types de donnees',
+                        'landing.price.pro.5': 'Analyses standard',
+                        'landing.price.pro.6': 'Support prioritaire',
+                        'landing.price.premium.1': 'Predictions illimitees',
+                        'landing.price.premium.2': 'Jeu de donnees de 100 000 lignes',
+                        'landing.price.premium.3': 'Historique illimite',
+                        'landing.price.premium.4': 'Tous types + personnalise',
+                        'landing.price.premium.5': 'Analyses avancees',
+                        'landing.price.premium.6': 'Support prioritaire 24/7',
+                        'landing.price.enterprise': 'Entreprise',
+                        'landing.price.custom': 'Sur mesure',
+                        'landing.price.enterprise.1': 'Tout Premium inclus',
+                        'landing.price.enterprise.2': 'Entrainement de modele personnalise',
+                        'landing.price.enterprise.3': 'Stockage cloud dedie',
+                        'landing.price.enterprise.4': 'Acces API',
+                        'landing.price.enterprise.5': 'Console admin',
+                        'landing.price.enterprise.6': 'Support dedie 24/7',
+                        'landing.about.title': 'Concu pour l avenir de',
+                        'landing.about.highlight': 'l agriculture algerienne',
+                        'landing.about.p1': 'SynthAI a ete concu pour rapprocher la recherche avancee en IA de la decision agricole pratique. La plateforme donne aux agriculteurs, agronomes et entreprises des outils auparavant reserves aux grands centres de recherche.',
+                        'landing.about.p2': 'De la prediction de la meilleure culture pour votre sol a la generation de donnees synthetiques, SynthAI combine CTGAN et une base de cultures algeriennes pour fournir une intelligence adaptee au climat nord-africain.',
+                        'landing.about.p3': 'Nous pensons que l agriculture intelligente commence par des donnees intelligentes. En rendant l IA accessible, nous contribuons a la securite alimentaire et aux pratiques durables.',
+                        'landing.stat.crops': 'Varietes de cultures',
+                        'landing.stat.soil': 'Parametres du sol',
+                        'landing.stat.engine': 'Moteur IA',
+                        'landing.stat.rows': 'Lignes par generation',
+                        'landing.footer': '© 2025 SynthAI - Intelligence agricole intelligente. Tous droits reserves.',
+                        'landing.badge.popular': 'Le plus populaire'
+                    },
+                    ar: {
+                        'landing.nav.solutions': 'الحلول',
+                        'landing.nav.features': 'المميزات',
+                        'landing.nav.pricing': 'الأسعار',
+                        'landing.nav.about': 'حول',
+                        'landing.nav.login': 'تسجيل الدخول',
+                        'landing.nav.register': 'إنشاء حساب',
+                        'landing.hero.title': 'ازرع المستقبل مع',
+                        'landing.hero.highlight': 'ذكاء زراعي متقدم.',
+                        'landing.hero.subtitle': 'تستخدم SynthAI التعلم الآلي لمراقبة صحة التربة، توقع المحاصيل، وتحسين الري لتحقيق استدامة أعلى.',
+                        'landing.action.get_started': 'ابدأ الآن',
+                        'landing.action.view_demo': 'عرض التجربة',
+                        'landing.action.upgrade_now': 'ترقية الآن',
+                        'landing.action.contact': 'اتصل بنا',
+                        'landing.visual.soil': 'رطوبة التربة',
+                        'landing.visual.optimal': 'مثالي',
+                        'landing.visual.yield': 'توقع الإنتاج',
+                        'landing.visual.status': 'حالة النظام',
+                        'landing.visual.analysis': 'تحليل المحاصيل',
+                        'landing.solutions.title': 'كل ما تحتاجه من أجل',
+                        'landing.solutions.highlight': 'زراعة أكثر ذكاء',
+                        'landing.solutions.subtitle': 'من تحليل التربة إلى توقع الإنتاج، توفر SynthAI أدوات ذكاء اصطناعي متكاملة لتحديات الزراعة الحديثة.',
+                        'landing.solution.crop.title': 'توقع المحاصيل',
+                        'landing.solution.crop.desc': 'أدخل ظروف التربة والمناخ للحصول على توصيات محاصيل مدعومة بالذكاء الاصطناعي ومناسبة لحقلتك.',
+                        'landing.solution.soil.title': 'تحليل التربة',
+                        'landing.solution.soil.desc': 'حلل مستويات NPK ودرجة الحموضة والرطوبة لفهم خصائص التربة والحصول على درجات توافق فورية.',
+                        'landing.solution.synthetic.title': 'توليد بيانات اصطناعية',
+                        'landing.solution.synthetic.desc': 'أنشئ بيانات زراعية واقعية باستخدام نماذج CTGAN وعزز بياناتك للبحث والتدريب والتحليل.',
+                        'landing.solution.training.title': 'تدريب النماذج',
+                        'landing.solution.training.desc': 'درّب وانشر نماذج CTGAN مخصصة على بياناتك، وتابع التقدم وقارن الإصدارات واختر نموذج الإنتاج.',
+                        'landing.solution.augmentation.title': 'تعزيز البيانات',
+                        'landing.solution.augmentation.desc': 'ارفع ملفات CSV الزراعية وطبق تعزيزاً ذكياً مع معاملات قابلة للضبط وتتبع جودة النتائج.',
+                        'landing.solution.roles.title': 'وصول متعدد الأدوار',
+                        'landing.solution.roles.desc': 'دعم مدمج للمسؤولين والشركات والمزارعين، مع لوحة تحكم مناسبة لكل دور.',
+                        'landing.features.title': 'لماذا تختار',
+                        'landing.features.subtitle': 'مصممة بتقنيات متقدمة للذكاء الزراعي، تقدم SynthAI دقة عالية وسهولة استخدام وشفافية.',
+                        'landing.feature.ctgan.title': 'توليد مدعوم بـ CTGAN',
+                        'landing.feature.ctgan.desc': 'استخدم الشبكات التوليدية للبيانات الجدولية لإنتاج بيانات زراعية اصطناعية عالية الجودة تحفظ التوزيعات والعلاقات.',
+                        'landing.feature.crops.title': 'قاعدة محاصيل جزائرية',
+                        'landing.feature.crops.desc': 'محملة مسبقاً بظروف نمو مثالية لـ 22 محصولاً جزائرياً مثل القمح الصلب والشعير والتمور والزيتون والحمص.',
+                        'landing.feature.quality.title': 'مقاييس جودة فورية',
+                        'landing.feature.quality.desc': 'كل عملية توليد أو تعزيز تتضمن درجات جودة ونسب تشابه ومقارنات إحصائية بين البيانات الأصلية والاصطناعية.',
+                        'landing.feature.cloud.title': 'تكامل التخزين السحابي',
+                        'landing.feature.cloud.desc': 'يتم حفظ البيانات المولدة في السحابة مع روابط تنزيل، لتصل إلى بياناتك من أي مكان.',
+                        'landing.feature.versioning.title': 'إصدارات ومقارنة النماذج',
+                        'landing.feature.versioning.desc': 'تتبع كل تدريب، قارن الإصدارات، وارفع أفضل نموذج إلى الإنتاج بنقرة واحدة.',
+                        'landing.feature.secure.title': 'آمن ومبني على الأدوار',
+                        'landing.feature.secure.desc': 'تحكم وصول بثلاثة مستويات يضمن أن يرى كل مستخدم ما يحتاجه فقط.',
+                        'landing.pricing.title': 'أسعار بسيطة',
+                        'landing.pricing.highlight': 'وشفافة',
+                        'landing.pricing.subtitle': 'ابدأ مجاناً وتوسع حسب حاجتك. بدون رسوم مخفية أو مفاجآت.',
+                        'landing.price.free.1': '5 توقعات يومياً',
+                        'landing.price.free.2': 'حجم بيانات 1,000 صف',
+                        'landing.price.free.3': '10 عناصر في السجل',
+                        'landing.price.free.4': 'بيانات المحاصيل فقط',
+                        'landing.price.free.5': 'تحليلات أساسية',
+                        'landing.price.free.6': 'دعم عادي',
+                        'landing.price.pro.1': '50 توقعاً يومياً',
+                        'landing.price.pro.2': 'حجم بيانات 10,000 صف',
+                        'landing.price.pro.3': '100 عنصر في السجل',
+                        'landing.price.pro.4': 'كل أنواع البيانات',
+                        'landing.price.pro.5': 'تحليلات قياسية',
+                        'landing.price.pro.6': 'دعم أولوية',
+                        'landing.price.premium.1': 'توقعات غير محدودة',
+                        'landing.price.premium.2': 'حجم بيانات 100,000 صف',
+                        'landing.price.premium.3': 'سجل غير محدود',
+                        'landing.price.premium.4': 'كل الأنواع + مخصص',
+                        'landing.price.premium.5': 'تحليلات متقدمة',
+                        'landing.price.premium.6': 'دعم أولوية 24/7',
+                        'landing.price.enterprise': 'المؤسسات',
+                        'landing.price.custom': 'مخصص',
+                        'landing.price.enterprise.1': 'كل مزايا Premium',
+                        'landing.price.enterprise.2': 'تدريب نموذج مخصص',
+                        'landing.price.enterprise.3': 'تخزين سحابي مخصص',
+                        'landing.price.enterprise.4': 'وصول API',
+                        'landing.price.enterprise.5': 'لوحة إدارة',
+                        'landing.price.enterprise.6': 'دعم مخصص 24/7',
+                        'landing.about.title': 'مصممة لمستقبل',
+                        'landing.about.highlight': 'الزراعة الجزائرية',
+                        'landing.about.p1': 'صُممت SynthAI لسد الفجوة بين أبحاث الذكاء الاصطناعي المتقدمة واتخاذ القرار الزراعي العملي، وتمكين المزارعين والمهندسين والشركات بأدوات قوية.',
+                        'landing.about.p2': 'من توقع أفضل محصول لظروف التربة إلى توليد بيانات اصطناعية، تجمع SynthAI بين CTGAN وقاعدة محاصيل جزائرية لتقديم ذكاء عملي مناسب لمناخ شمال أفريقيا.',
+                        'landing.about.p3': 'نؤمن أن الزراعة الذكية تبدأ بالبيانات الذكية. بجعل الذكاء الاصطناعي متاحاً، نساهم في الأمن الغذائي والممارسات المستدامة.',
+                        'landing.stat.crops': 'أصناف المحاصيل',
+                        'landing.stat.soil': 'معايير التربة',
+                        'landing.stat.engine': 'محرك الذكاء الاصطناعي',
+                        'landing.stat.rows': 'صفوف لكل توليد',
+                        'landing.footer': '© 2025 SynthAI - ذكاء زراعي ذكي. جميع الحقوق محفوظة.',
+                        'landing.badge.popular': 'الأكثر شيوعاً'
+                    }
+                };
+
+                Object.keys(landingTranslations).forEach(function(lang) {
+                    I18nService.translations[lang] = I18nService.translations[lang] || {};
+                    Object.assign(I18nService.translations[lang], landingTranslations[lang]);
+                });
+
+                var langs = [
+                    { code: 'en', key: 'lang.en' },
+                    { code: 'fr', key: 'lang.fr' },
+                    { code: 'ar', key: 'lang.ar' }
+                ];
+
+                function applyLandingExtras() {
+                    var featured = document.querySelector('.pricing-card.featured');
+                    if (featured) {
+                        featured.setAttribute('data-badge', I18nService.t('landing.badge.popular'));
+                    }
+                }
+
+                function renderButtons() {
+                    var current = I18nService.getLang();
+                    sw.innerHTML = langs.map(function(l) {
+                        var active = l.code === current ? ' active' : '';
+                        return '<button class="lang-btn' + active + '" data-lang="' + l.code + '">' + I18nService.t(l.key) + '</button>';
+                    }).join('');
+                    sw.querySelectorAll('.lang-btn').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            I18nService.setLang(this.dataset.lang);
+                            applyLandingExtras();
+                            renderButtons();
+                        });
+                    });
+                }
+
+                renderButtons();
+                applyLandingExtras();
+            }
+
+            if (typeof I18nService !== 'undefined') {
+                I18nService.translatePage();
+            }
+        })();
+    </script>
 </body>
 </html>

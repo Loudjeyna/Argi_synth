@@ -26,6 +26,7 @@ const I18nService = (function() {
             // Login
             'login.title': 'Sign In',
             'login.subtitle': 'Access your SynthAI account',
+            'login.platform_tagline': 'Smart Agricultural Platform',
             'login.username': 'Username',
             'login.password': 'Password',
             'login.btn': 'Sign In',
@@ -704,6 +705,7 @@ const I18nService = (function() {
 
             'login.title': 'Connexion',
             'login.subtitle': 'Acc\u00e9dez \u00e0 votre compte SynthAI',
+            'login.platform_tagline': 'Plateforme Agricole Intelligente',
             'login.username': 'Nom d\'utilisateur',
             'login.password': 'Mot de passe',
             'login.btn': 'Se Connecter',
@@ -1329,6 +1331,7 @@ const I18nService = (function() {
 
             'login.title': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644',
             'login.subtitle': '\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u062d\u0633\u0627\u0628 SynthAI',
+            'login.platform_tagline': '\u0645\u0646\u0635\u0629 \u0632\u0631\u0627\u0639\u064a\u0629 \u0630\u0643\u064a\u0629',
             'login.username': '\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645',
             'login.password': '\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631',
             'login.btn': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644',
