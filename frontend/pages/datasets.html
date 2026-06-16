@@ -46,6 +46,15 @@
         .level-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
         .btn-eval { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; border: 1px solid #E0E0E0; background: white; color: #1565C0; text-decoration: none; white-space: nowrap; }
         .btn-eval:hover { border-color: #1565C0; background: #E3F2FD; }
+        /* Ownership badge styles */
+        .owner-badge { display: inline-block; padding: 0.1rem 0.45rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; margin-left: 0.35rem; vertical-align: middle; }
+        .owner-badge.own { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+        .owner-badge.admin { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
+        .owner-badge.other { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+        .btn-disabled { opacity: 0.45; cursor: not-allowed !important; pointer-events: none; }
+        .permission-note { background: #FFF8E1; border-left: 3px solid #FFA000; padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.82rem; color: #5D4037; margin-bottom: 1rem; }
+        /* Augmented level tag */
+        .level-tag.augmented { background: #F3E5F5; color: #7B1FA2; border: 1px solid #CE93D8; }
     </style>
 </head>
 <body>
@@ -66,6 +75,8 @@
             <div class="dashboard-stats" id="dashboard-stats"></div>
             <div id="status-msg"></div>
 
+            <div id="permission-note" class="permission-note" style="display:none;"></div>
+
             <div class="card">
                 <div class="filter-bar">
                     <input type="text" class="search-input" id="search-input" placeholder="Search by model name..." data-i18n="datasets.search">
@@ -74,6 +85,7 @@
                         <option value="Medium">Medium</option>
                         <option value="Large">Large</option>
                         <option value="Big Data">Big Data</option>
+                        <option value="Augmented">Augmented</option>
                     </select>
                     <select id="sort-select">
                         <option value="newest" data-i18n="datasets.newest">Newest First</option>
@@ -136,10 +148,16 @@
             }
         })();
 
+        // Global user reference (set inside DOMContentLoaded)
+        var _currentUser = null;
+        var _isAdmin = false;
+
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 var user = AuthService.getCurrentUser();
                 if (!user) { window.location.href = '/pages/login.html'; return; }
+                _currentUser = user;
+                _isAdmin = (user.role === 'admin');
             } catch (e) { window.location.href = '/pages/login.html'; return; }
 
             try { App.setupSidebar();
@@ -148,39 +166,125 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
             function _t(k) { return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(k) : k; }
 
+            // Show permission note for non-admin users
+            if (!_isAdmin) {
+                var note = document.getElementById('permission-note');
+                note.style.display = 'block';
+                note.innerHTML = '<strong>&#128274; Limited Access:</strong> You can only see, export, and delete datasets that you generated yourself (including augmented datasets). Admin sees all datasets.';
+            }
+
             var currentPage = 1;
             var perPage = 10;
             var allDatasets = [];
             var filteredDatasets = [];
 
+            /**
+             * Filter datasets by ownership.
+             * Admin -> sees everything
+             * Company/Farmer -> sees ONLY datasets where g.userId === user.id
+             * Works for both generated and augmented datasets (both have userId tagged).
+             */
+            function filterByOwnership(datasets) {
+                if (_isAdmin) return datasets;
+                var uid = _currentUser ? (_currentUser.id || _currentUser.username) : null;
+                if (!uid) return [];
+                return datasets.filter(function(g) {
+                    return g.userId !== undefined && g.userId !== null && g.userId !== '' && String(g.userId) === String(uid);
+                });
+            }
+
+            /**
+             * Check if the current user can modify (export/delete) a dataset.
+             */
+            function canModify(g) {
+                if (_isAdmin) return true;
+                var uid = _currentUser ? (_currentUser.id || _currentUser.username) : null;
+                if (!uid) return false;
+                return g.userId !== undefined && g.userId !== null && String(g.userId) === String(uid);
+            }
+
+            /**
+             * Returns an ownership badge for the dataset row.
+             */
+            function ownershipBadge(g) {
+                if (_isAdmin) {
+                    if (g.userId === undefined || g.userId === null || g.userId === '') {
+                        return '<span class="owner-badge admin">Admin (legacy)</span>';
+                    }
+                    if (_currentUser && String(g.userId) === String(_currentUser.id || _currentUser.username)) {
+                        return '<span class="owner-badge own">Yours</span>';
+                    }
+                    return '<span class="owner-badge admin">Shared</span>';
+                }
+                return '<span class="owner-badge own">Yours</span>';
+            }
+
+            /**
+             * Normalize an augmentation entry so it can be displayed alongside
+             * generation entries in the same table.
+             */
+            function normalizeAugmentation(aug) {
+                var totalRows = aug.augmentedRows || (aug.preview ? aug.preview.totalRows : 0) || 0;
+                var fileName = aug.fileName || ('Augmented ' + (aug.type || 'Dataset'));
+                return {
+                    id: aug.id,
+                    userId: aug.userId,
+                    userRole: aug.userRole,
+                    userUsername: aug.userUsername,
+                    modelName: fileName,
+                    modelVersion: 'x' + (aug.multiplier || 1),
+                    level: 'Augmented',
+                    rows: totalRows,
+                    date: aug.dateStr || new Date(aug.createdAt || Date.now()).toISOString(),
+                    timestamp: aug.createdAt || (aug.dateStr ? new Date(aug.dateStr).getTime() : Date.now()),
+                    preview: aug.preview,
+                    type: aug.type,
+                    qualityScore: aug.qualityScore,
+                    _isAugmentation: true,
+                    _multiplier: aug.multiplier
+                };
+            }
+
             function loadData() {
+                var rawGens = [];
+                var rawAugs = [];
+
+                try { rawGens = DataService.getGenerations() || []; } catch (e) { rawGens = []; }
+                try {
+                    if (DataService.getAugmentations) {
+                        rawAugs = DataService.getAugmentations() || [];
+                    }
+                } catch (e) { rawAugs = []; }
+
+                var normalizedAugs = rawAugs.map(normalizeAugmentation);
+                var localRaw = rawGens.concat(normalizedAugs);
+
                 var useApi = typeof ApiService !== 'undefined' && ApiService.isAvailable();
                 if (useApi) {
                     ApiService.getDatasets().then(function(apiDatasets) {
-                        allDatasets = (DataService.getGenerations() || []).concat(
-                            apiDatasets.map(function(d) {
-                                return {
-                                    id: d.id,
-                                    modelName: 'Backend #' + d.id,
-                                    rows: d.rows_generated,
-                                    level: 'N/A',
-                                    date: d.created_at,
-                                    timestamp: new Date(d.created_at).getTime(),
-                                    _apiId: d.id,
-                                    _fromBackend: true
-                                };
-                            })
-                        );
+                        var apiMapped = (apiDatasets || []).map(function(d) {
+                            return {
+                                id: 'api_' + d.id,
+                                modelName: 'Backend #' + d.id,
+                                rows: d.rows_generated,
+                                level: 'N/A',
+                                date: d.created_at,
+                                timestamp: new Date(d.created_at).getTime(),
+                                _apiId: d.id,
+                                _fromBackend: true
+                            };
+                        });
+                        allDatasets = filterByOwnership(localRaw.concat(apiMapped));
                         renderDashboard();
                         applyFilters();
                     }).catch(function() {
-                        allDatasets = DataService.getGenerations() || [];
+                        allDatasets = filterByOwnership(localRaw);
                         renderDashboard();
                         applyFilters();
                     });
                 } else {
                     try {
-                        allDatasets = DataService.getGenerations() || [];
+                        allDatasets = filterByOwnership(localRaw);
                     } catch (e) { allDatasets = []; }
                     renderDashboard();
                     applyFilters();
@@ -191,11 +295,12 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 var totalGens = allDatasets.length;
                 var totalRows = allDatasets.reduce(function(s, g) { return s + (g.rows || 0); }, 0);
                 var fromModels = allDatasets.filter(function(g) { return g.modelName; }).length;
+                var augCount = allDatasets.filter(function(g) { return g._isAugmentation; }).length;
 
                 document.getElementById('dashboard-stats').innerHTML =
                     '<div class="stat-card"><div class="stat-val">' + totalGens + '</div><div class="stat-label">' + _t('datasets.total_generations') + '</div></div>' +
                     '<div class="stat-card"><div class="stat-val">' + totalRows.toLocaleString() + '</div><div class="stat-label">' + _t('datasets.total_rows') + '</div></div>' +
-                    '<div class="stat-card"><div class="stat-val">' + fromModels + '</div><div class="stat-label">' + _t('datasets.from_models') + '</div></div>' +
+                    '<div class="stat-card" style="border-left-color:#7B1FA2;"><div class="stat-val">' + augCount + '</div><div class="stat-label">Augmented</div></div>' +
                     '<div class="stat-card" style="border-left-color:#FF9800;"><div class="stat-val">' + (totalGens > 0 ? Math.round(totalRows / totalGens).toLocaleString() : 0) + '</div><div class="stat-label">' + _t('datasets.avg_rows') + '</div></div>';
 
                 applyFilters();
@@ -207,13 +312,13 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 var sort = document.getElementById('sort-select').value;
 
                 filteredDatasets = allDatasets.filter(function(g) {
-                    if (query && g.modelName && g.modelName.toLowerCase().indexOf(query) === -1) return false;
-                    if (query && !g.modelName) return false;
+                    if (query) {
+                        if (!g.modelName || g.modelName.toLowerCase().indexOf(query) === -1) return false;
+                    }
                     if (sizeFilter !== 'all' && g.level !== sizeFilter) return false;
                     return true;
                 });
 
-                // Sort
                 filteredDatasets.sort(function(a, b) {
                     switch (sort) {
                         case 'oldest': return (a.timestamp || 0) - (b.timestamp || 0);
@@ -235,7 +340,11 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 if (filteredDatasets.length === 0) {
                     tbody.innerHTML = '';
                     emptyEl.style.display = 'block';
-                    emptyEl.innerHTML = '<p>' + _t('datasets.no_results') + '</p>' +
+                    var msg = _t('datasets.no_results');
+                    if (!_isAdmin && allDatasets.length === 0) {
+                        msg = 'You have no datasets yet. Generate your first dataset to see it here.';
+                    }
+                    emptyEl.innerHTML = '<p>' + msg + '</p>' +
                         (allDatasets.length === 0 ? '<p style="margin-top:0.5rem;"><a href="generate_data.html">' + _t('datasets.generate_first') + '</a></p>' : '');
                     pagination.innerHTML = '';
                     return;
@@ -245,7 +354,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 var start = (currentPage - 1) * perPage;
                 var pageData = filteredDatasets.slice(start, start + perPage);
 
-                var levelClasses = { 'Medium': 'badge-free', 'Large': 'badge-warning', 'Big Data': 'badge-premium' };
+                var levelClasses = { 'Medium': 'badge-free', 'Large': 'badge-warning', 'Big Data': 'badge-premium', 'Augmented': 'augmented' };
 
                 tbody.innerHTML = pageData.map(function(g) {
                     var d = new Date(g.date || g.timestamp);
@@ -255,16 +364,38 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     var modelVer = g.modelVersion || '-';
                     var levelClass = levelClasses[g.level] || 'badge-free';
 
-                    var actions =
-                        '<div class="actions-cell">' +
-                        '<button onclick="previewGeneration(' + g.id + ')" title="' + _t('action.preview') + '">' + _t('action.preview') + '</button>' +
-                        '<a href="data_evaluation.html?id=' + g.id + '" class="btn-eval" title="' + _t('action.evaluate') + '">' + _t('action.evaluate') + '</a>' +
-                        '<button onclick="exportGeneration(' + g.id + ')" title="' + _t('action.export') + '">' + _t('action.export') + '</button>' +
-                        (g._fromBackend ? '' : '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="' + _t('action.delete') + '">' + _t('action.delete') + '</button>') +
-                        '</div>';
+                    var canEdit = canModify(g);
+
+                    var previewBtn = '<button onclick="previewGeneration(' + g.id + ')" title="' + _t('action.preview') + '">' + _t('action.preview') + '</button>';
+
+                    // Evaluate page only makes sense for generations (not augmentations)
+                    var evalBtn;
+                    if (g._isAugmentation) {
+                        evalBtn = '<button disabled class="btn-disabled" title="Evaluation not available for augmented datasets">Evaluate</button>';
+                    } else {
+                        evalBtn = '<a href="data_evaluation.html?id=' + g.id + '" class="btn-eval" title="' + _t('action.evaluate') + '">' + _t('action.evaluate') + '</a>';
+                    }
+
+                    var exportBtn;
+                    if (canEdit) {
+                        exportBtn = '<button onclick="exportGeneration(' + g.id + ')" title="' + _t('action.export') + '">' + _t('action.export') + '</button>';
+                    } else {
+                        exportBtn = '<button disabled class="btn-disabled" title="You can only export your own datasets">' + _t('action.export') + '</button>';
+                    }
+
+                    var deleteBtn;
+                    if (g._fromBackend) {
+                        deleteBtn = '';
+                    } else if (canEdit) {
+                        deleteBtn = '<button onclick="deleteGeneration(' + g.id + ')" style="color:#C62828;border-color:#FFCDD2;" title="' + _t('action.delete') + '">' + _t('action.delete') + '</button>';
+                    } else {
+                        deleteBtn = '<button disabled class="btn-disabled" style="color:#C62828;border-color:#FFCDD2;" title="You can only delete your own datasets">' + _t('action.delete') + '</button>';
+                    }
+
+                    var actions = '<div class="actions-cell">' + previewBtn + evalBtn + exportBtn + deleteBtn + '</div>';
 
                     return '<tr>' +
-                        '<td><span class="model-badge">' + modelName + '</span></td>' +
+                        '<td><span class="model-badge">' + modelName + '</span>' + ownershipBadge(g) + '</td>' +
                         '<td><span class="version-badge">v' + modelVer + '</span></td>' +
                         '<td><span class="level-tag ' + levelClass + '">' + (g.level || 'Medium') + '</span></td>' +
                         '<td><strong>' + (g.rows || 0).toLocaleString() + '</strong></td>' +
@@ -273,7 +404,6 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                         '<td>' + actions + '</td></tr>';
                 }).join('');
 
-                // Pagination
                 var totalPages = Math.ceil(filteredDatasets.length / perPage);
                 if (totalPages <= 1) {
                     pagination.innerHTML = '<span class="page-info">' + filteredDatasets.length + ' ' + _t('pagination.entries') + '</span>';
@@ -319,22 +449,68 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             return typeof I18nService !== 'undefined' && I18nService.t ? I18nService.t(key) : key;
         }
 
+        /**
+         * Look up a dataset by ID across both generations and augmentations.
+         * Returns { type: 'generation'|'augmentation', data: <entry> } or null.
+         */
+        function lookupDataset(id) {
+            // Try augmentation first
+            try {
+                if (DataService.getAugmentationById) {
+                    var aug = DataService.getAugmentationById(id);
+                    if (aug) return { type: 'augmentation', data: aug };
+                }
+            } catch (e) { /* ignore */ }
+
+            // Fall back to generation
+            try {
+                var gen = DataService.getGenerationById(id);
+                if (gen) return { type: 'generation', data: gen };
+            } catch (e) { /* ignore */ }
+
+            return null;
+        }
+
         // Global functions for button handlers
         function previewGeneration(id) {
-            var rows = DataService.getGenerationPreviewRows(id, 10);
-            var gen = DataService.getGenerationById(id);
-            if (!rows || !gen) { alert(_t('empty.no_data')); return; }
+            var lookup = lookupDataset(id);
+            if (!lookup) { alert(_t('empty.no_data')); return; }
 
-            var preview = gen.preview;
-            var headers = preview ? preview.headers : Object.keys(rows[0]);
+            var headers, previewRows, totalRows, modelName;
 
-            document.getElementById('preview-title').textContent = '(' + (gen.modelName || 'Standalone') + ' - first ' + rows.length + ' of ' + (gen.rows || 0) + ' rows)';
+            if (lookup.type === 'augmentation') {
+                var aug = lookup.data;
+                var fullData = [];
+                try {
+                    if (DataService.getAugmentationFullData) {
+                        fullData = DataService.getAugmentationFullData(id) || [];
+                    }
+                } catch (e) { fullData = []; }
+                if (fullData.length === 0 && aug.preview && Array.isArray(aug.preview.data)) {
+                    fullData = aug.preview.data;
+                }
+                previewRows = fullData.slice(0, 10);
+                if (previewRows.length === 0) { alert(_t('empty.no_data')); return; }
+                headers = aug.headers || (aug.preview ? aug.preview.headers : Object.keys(previewRows[0] || {}));
+                totalRows = aug.augmentedRows || (aug.preview ? aug.preview.totalRows : fullData.length);
+                modelName = aug.fileName || ('Augmented ' + (aug.type || 'Dataset'));
+            } else {
+                var gen = lookup.data;
+                previewRows = DataService.getGenerationPreviewRows(id, 10);
+                if (!previewRows || previewRows.length === 0) { alert(_t('empty.no_data')); return; }
+                var preview = gen.preview;
+                headers = preview ? preview.headers : Object.keys(previewRows[0]);
+                totalRows = gen.rows || 0;
+                modelName = gen.modelName || 'Standalone';
+            }
+
+            document.getElementById('preview-title').textContent = '(' + modelName + ' - first ' + previewRows.length + ' of ' + totalRows + ' rows)';
 
             var thead = document.getElementById('preview-thead');
             thead.innerHTML = '<tr>' + headers.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
 
             var tbody = document.getElementById('preview-tbody');
-            tbody.innerHTML = rows.map(function(row) {
+            tbody.innerHTML = previewRows.map(function(row) {
                 return '<tr>' + headers.map(function(h) {
                     var val = row[h];
                     if (val === undefined || val === null) val = '';
@@ -343,23 +519,71 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 }).join('') + '</tr>';
             }).join('');
 
-            document.getElementById('preview-footer').textContent = 'Showing ' + rows.length + ' preview rows. Full dataset: ' + (gen.rows || 0).toLocaleString() + ' rows.';
+            document.getElementById('preview-footer').textContent = 'Showing ' + previewRows.length + ' preview rows. Full dataset: ' + totalRows.toLocaleString() + ' rows.';
             document.getElementById('preview-modal').classList.add('active');
         }
 
         function exportGeneration(id) {
-            var ok = DataService.exportGeneration(id);
+            var user = AuthService.getCurrentUser();
+            var lookup = lookupDataset(id);
+            if (!lookup) { alert('Dataset not found.'); return; }
+            var item = lookup.data;
+            if (user.role !== 'admin') {
+                var uid = user.id || user.username;
+                if (!item.userId || String(item.userId) !== String(uid)) {
+                    alert('⛔ Permission denied: You can only export datasets that you generated yourself.');
+                    return;
+                }
+            }
+            var ok = false;
+            if (lookup.type === 'augmentation') {
+                try {
+                    if (DataService.exportAugmentation) {
+                        ok = DataService.exportAugmentation(id);
+                    } else {
+                        alert('Export not available for augmented datasets in this version.');
+                        return;
+                    }
+                } catch (e) { ok = false; }
+            } else {
+                ok = DataService.exportGeneration(id);
+            }
             if (!ok) alert(_t('datasets.export_failed'));
         }
 
         function deleteGeneration(id) {
+            var user = AuthService.getCurrentUser();
+            var lookup = lookupDataset(id);
+            if (!lookup) { alert('Dataset not found.'); return; }
+            var item = lookup.data;
+            if (user.role !== 'admin') {
+                var uid = user.id || user.username;
+                if (!item.userId || String(item.userId) !== String(uid)) {
+                    alert('⛔ Permission denied: You can only delete datasets that you generated yourself.');
+                    return;
+                }
+            }
             if (!confirm(_t('confirm.delete_dataset'))) return;
+
+            if (lookup.type === 'augmentation') {
+                try {
+                    if (DataService.deleteAugmentation) {
+                        DataService.deleteAugmentation(id);
+                    } else {
+                        // Manual fallback
+                        var augs = JSON.parse(localStorage.getItem('synthai_augmentations') || '[]');
+                        augs = augs.filter(function(a) { return String(a.id) !== String(id); });
+                        localStorage.setItem('synthai_augmentations', JSON.stringify(augs));
+                    }
+                } catch (e) { console.error('Failed to delete augmentation:', e); }
+                location.reload();
+                return;
+            }
+
             var gens = DataService.getGenerations().filter(function(g) { return g.id !== id; });
             localStorage.setItem('synthai_generations', JSON.stringify(gens));
-            // Clear cached data
             if (window.DataService && DataService.revokeCloudUrl) {
-                var gen = DataService.getGenerationById(id);
-                if (gen && gen.fileUrl) DataService.revokeCloudUrl(gen.fileUrl);
+                if (item && item.fileUrl) DataService.revokeCloudUrl(item.fileUrl);
             }
             location.reload();
         }
@@ -372,4 +596,3 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
-

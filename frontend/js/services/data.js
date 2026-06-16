@@ -463,6 +463,21 @@ const DataService = (function() {
         entry.timestamp = Date.now();
         entry.date = new Date().toISOString();
         entry.status = 'completed';
+
+        // ===== OWNERSHIP AUTO-INJECTION (critical for permission filter) =====
+        // If no userId is set, auto-attach the current logged-in user's ID.
+        // This ensures datasets can be filtered by ownership in datasets.html.
+        if ((!entry.userId || entry.userId === '') && typeof AuthService !== 'undefined' && AuthService.getCurrentUser) {
+            try {
+                var currentUser = AuthService.getCurrentUser();
+                if (currentUser) {
+                    entry.userId = currentUser.id;
+                    entry.userRole = currentUser.role;
+                    entry.userUsername = currentUser.username;
+                }
+            } catch (e) { /* ignore if AuthService not available */ }
+        }
+
         // Store full dataset in memory, only a small preview in localStorage
         if (entry.preview && Array.isArray(entry.preview.data)) {
             _fullDatasetCache[entry.id] = entry.preview.data;
@@ -1023,6 +1038,7 @@ const DataService = (function() {
         return true;
     }
 
+    
     return {
         getGenerations, addGeneration, getGenerationStats, getDatasetConfig,
         getDatasetTypes, getAvailableLevels, generatePreview, generateStatistics,

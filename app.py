@@ -1,8 +1,8 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
+import streamlit as st 
+import pandas as pd  
+import numpy as np   
+import plotly.express as px  
+import plotly.graph_objects as go  
 from pathlib import Path
 import sys
 from datetime import datetime
@@ -10,6 +10,9 @@ import json
 import os
 
 sys.path.insert(0, str(Path(__file__).parent))
+APP_ROOT = Path(__file__).resolve().parent
+DATA_PATH = APP_ROOT / "data" / "Crop_recommendation.csv"
+MODELS_DIR = APP_ROOT / "models"
 
 from synthai.data.database import Database
 from synthai.data.repositories.user_repository import UserRepository
