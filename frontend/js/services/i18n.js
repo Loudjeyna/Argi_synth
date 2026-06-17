@@ -17,7 +17,7 @@ const I18nService = (function() {
             'sidebar.data_augmentation': 'Data Augmentation',
             'sidebar.model_comparison': 'Model Comparison',
             'sidebar.crop_prediction': 'Crop Prediction',
-            'sidebar.crop_requirements': 'Crop â†’ Conditions',
+            'sidebar.crop_requirements': 'Crop → Conditions',
             'sidebar.subscriptions': 'Subscriptions',
             'sidebar.users': 'Users',
             'sidebar.history': 'History',
