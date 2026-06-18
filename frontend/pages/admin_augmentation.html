@@ -43,6 +43,19 @@
 .step.completed { background: #E8F5E9; color: #2E7D32; }
 .step-line { width: 40px; height: 2px; background: #E0E0E0; }
 .step-line.active { background: #2E7D32; }
+/* NEW: Debug panel + Refresh button */
+.debug-panel { background: #FAFAFA; border: 1px dashed #BDBDBD; border-radius: 6px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.78rem; color: #555; font-family: 'Courier New', monospace; display: none; }
+.debug-panel.visible { display: block; }
+.debug-panel .debug-row { display: flex; justify-content: space-between; padding: 0.15rem 0; border-bottom: 1px dotted #E0E0E0; }
+.debug-panel .debug-row:last-child { border-bottom: none; }
+.btn-refresh { background: #1565C0; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+.btn-refresh:hover { background: #0D47A1; }
+.btn-debug { background: #757575; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+.btn-debug:hover { background: #424242; }
+.owner-tag { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.72rem; font-weight: 600; margin-left: 0.25rem; }
+.owner-tag.own { background: #E8F5E9; color: #2E7D32; }
+.owner-tag.other { background: #E3F2FD; color: #1565C0; }
+.owner-tag.legacy { background: #FFF3E0; color: #E65100; }
 </style>
 </head>
 <body>
@@ -56,8 +69,20 @@
 <main class="main-content">
 <div class="page-header"><h2 data-i18n="augment.title">Data Augmentation & Analytics</h2><p data-i18n="augment.stats">Manage, monitor and perform data augmentation across the platform</p></div>
 
-<div class="actions-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+<div class="actions-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
 <button id="show-create-btn" class="btn btn-primary" data-i18n="augment.title">+ New Augmentation</button>
+<button id="refresh-btn" class="btn-refresh" title="Reload augmentation list from localStorage">↻ Refresh List</button>
+<button id="debug-btn" class="btn-debug" title="Toggle debug info panel">🔍 Debug</button>
+</div>
+
+<div id="debug-panel" class="debug-panel">
+<div class="debug-row"><span>Current user:</span><span id="dbg-user">-</span></div>
+<div class="debug-row"><span>Admin role:</span><span id="dbg-admin">-</span></div>
+<div class="debug-row"><span>Raw localStorage length:</span><span id="dbg-ls-len">-</span></div>
+<div class="debug-row"><span>DataService.getAugmentations() count:</span><span id="dbg-count">-</span></div>
+<div class="debug-row"><span>First entry id:</span><span id="dbg-first-id">-</span></div>
+<div class="debug-row"><span>First entry userId:</span><span id="dbg-first-uid">-</span></div>
+<div class="debug-row"><span>First entry fileName:</span><span id="dbg-first-name">-</span></div>
 </div>
 
 <div id="create-section" style="display:none;" class="card" style="margin-bottom:1.5rem;">
@@ -156,21 +181,98 @@
 <script src="../js/app.js"></script>
 <script>
 (function() {
-var user = AuthService.getCurrentUser();
-if (!user || user.role !== 'admin') { window.location.href = '/pages/login.html'; return; }
-AuthService.syncSessionFromStorage();
-App.setupSidebar();
-try { App.setupLanguageSwitcher(); } catch (e) {}
-App.setupUserPanel();
-App.setupLogout();
+// ===== Defensive auth bootstrap =====
+var user = null;
+try {
+    user = AuthService.getCurrentUser();
+} catch (e) {
+    console.error('[admin_augment] AuthService.getCurrentUser failed:', e);
+    window.location.href = '/pages/login.html';
+    return;
+}
+if (!user || user.role !== 'admin') {
+    console.warn('[admin_augment] Access denied - not admin:', user);
+    window.location.href = '/pages/login.html';
+    return;
+}
+
+// syncSessionFromStorage is optional - wrap in try/catch so a missing method
+// doesn't halt the rest of the page setup.
+try {
+    if (typeof AuthService.syncSessionFromStorage === 'function') {
+        AuthService.syncSessionFromStorage();
+    }
+} catch (e) {
+    console.warn('[admin_augment] syncSessionFromStorage failed (non-fatal):', e);
+}
+
+try { App.setupSidebar(); } catch (e) { console.error('[admin_augment] setupSidebar failed:', e); }
+try { App.setupLanguageSwitcher(); } catch (e) { console.warn('[admin_augment] setupLanguageSwitcher failed:', e); }
+try { App.setupUserPanel(); } catch (e) { console.warn('[admin_augment] setupUserPanel failed:', e); }
+try { App.setupLogout(); } catch (e) { console.warn('[admin_augment] setupLogout failed:', e); }
+
 var currentUser = AuthService.getCurrentUser();
+console.log('[admin_augment] Boot complete. Current user:', currentUser);
+
 var basePreview = null;
 var selectedMultiplier = null;
 var augResult = null;
 
+// ===== Debug panel renderer =====
+function updateDebugPanel() {
+    var dbgUser = document.getElementById('dbg-user');
+    var dbgAdmin = document.getElementById('dbg-admin');
+    var dbgLsLen = document.getElementById('dbg-ls-len');
+    var dbgCount = document.getElementById('dbg-count');
+    var dbgFirstId = document.getElementById('dbg-first-id');
+    var dbgFirstUid = document.getElementById('dbg-first-uid');
+    var dbgFirstName = document.getElementById('dbg-first-name');
+
+    if (!dbgUser) return;
+
+    dbgUser.textContent = currentUser ? (currentUser.username + ' (id=' + currentUser.id + ')') : 'null';
+    dbgAdmin.textContent = currentUser ? (currentUser.role === 'admin' ? 'YES' : 'NO') : '-';
+
+    var rawLs = '-';
+    var augs = [];
+    try {
+        rawLs = (localStorage.getItem('synthai_augmentations') || '').length + ' chars';
+    } catch (e) { rawLs = 'error: ' + e.message; }
+    try {
+        augs = DataService.getAugmentations() || [];
+    } catch (e) { augs = []; }
+
+    dbgLsLen.textContent = rawLs;
+    dbgCount.textContent = augs.length;
+    if (augs.length > 0) {
+        dbgFirstId.textContent = augs[0].id;
+        dbgFirstUid.textContent = augs[0].userId !== undefined ? augs[0].userId : '(undefined)';
+        dbgFirstName.textContent = augs[0].fileName || '(no fileName)';
+    } else {
+        dbgFirstId.textContent = '-';
+        dbgFirstUid.textContent = '-';
+        dbgFirstName.textContent = '-';
+    }
+}
+
+document.getElementById('debug-btn').addEventListener('click', function() {
+    var panel = document.getElementById('debug-panel');
+    panel.classList.toggle('visible');
+    if (panel.classList.contains('visible')) updateDebugPanel();
+});
+
+document.getElementById('refresh-btn').addEventListener('click', function() {
+    console.log('[admin_augment] Manual refresh triggered');
+    renderSystemStats();
+    renderLogs();
+    if (document.getElementById('debug-panel').classList.contains('visible')) {
+        updateDebugPanel();
+    }
+});
+
 function renderSystemStats() {
 var stats = { total: 0, totalOriginal: 0, totalAugmented: 0, avgQuality: 0 };
-try { stats = DataService.getAugmentationStats(); } catch(e) {}
+try { stats = DataService.getAugmentationStats() || stats; } catch(e) { console.error('[admin_augment] getAugmentationStats failed:', e); }
 document.getElementById('system-stats').innerHTML =
 '<div class="kpi-card"><div class="kpi-value">' + stats.total + '</div><div class="kpi-label">Total Augmentations</div></div>' +
 '<div class="kpi-card"><div class="kpi-value">' + (stats.totalOriginal || 0).toLocaleString() + '</div><div class="kpi-label">Original Rows</div></div>' +
@@ -185,26 +287,56 @@ if (score >= 50) return 'quality-fair';
 return 'quality-poor';
 }
 
+/**
+ * Returns an ownership tag for an augmentation entry.
+ * Shows "Yours" if entry.userId matches admin's id,
+ * "Legacy" if userId is missing,
+ * "Other user" otherwise.
+ */
+function ownerTag(a) {
+    if (a.userId === undefined || a.userId === null || a.userId === '') {
+        return '<span class="owner-tag legacy">Legacy</span>';
+    }
+    if (currentUser && String(a.userId) === String(currentUser.id)) {
+        return '<span class="owner-tag own">Yours</span>';
+    }
+    return '<span class="owner-tag other">User #' + a.userId + '</span>';
+}
+
 function renderLogs() {
 var augs = [];
-try { augs = DataService.getAugmentations() || []; } catch(e) {}
+try { augs = DataService.getAugmentations() || []; } catch(e) { console.error('[admin_augment] getAugmentations failed:', e); }
+
+console.log('[admin_augment] renderLogs: ' + augs.length + ' augmentation(s) found');
+
 var container = document.getElementById('aug-logs-container');
 var noLogs = document.getElementById('no-logs');
-if (augs.length === 0) { container.innerHTML = ''; noLogs.style.display = 'block'; return; }
+if (augs.length === 0) {
+    container.innerHTML = '';
+    noLogs.style.display = 'block';
+    return;
+}
 noLogs.style.display = 'none';
 container.innerHTML = augs.map(function(a) {
+// Defensive: skip malformed entries visually but still render basic info
 var dateStr = 'N/A';
 try { dateStr = new Date(a.createdAt).toLocaleDateString(); } catch(e) {}
 var qScore = a.qualityScore || 0;
 var qLabel = a.qualityLabel || 'N/A';
+var mult = a.multiplier || '?';
+var aType = (a.type || 'generic').toUpperCase();
+var fileName = a.fileName || 'Dataset';
+var originalRows = a.originalRows || 0;
+var augmentedRows = a.augmentedRows || 0;
+var userIdStr = (a.userId !== undefined && a.userId !== null && a.userId !== '') ? a.userId : 'N/A';
 return '<div class="aug-log-card">' +
 '<div class="aug-log-info">' +
-'<span><strong>' + (a.type || 'generic').toUpperCase() + '</strong></span>' +
-'<span><span class="label">User:</span> ' + (a.userId || 'N/A') + '</span>' +
-'<span><span class="label">File:</span> ' + (a.fileName || 'Dataset') + '</span>' +
-'<span><span class="label">Original:</span> ' + (a.originalRows || 0).toLocaleString() + '</span>' +
-'<span><span class="label">Generated:</span> ' + (a.augmentedRows || 0).toLocaleString() + '</span>' +
-'<span><span class="label">Multiplier:</span> x' + a.multiplier + '</span>' +
+'<span><strong>' + aType + '</strong>' + ownerTag(a) + '</span>' +
+'<span><span class="label">User:</span> ' + userIdStr + '</span>' +
+'<span><span class="label">File:</span> ' + fileName + '</span>' +
+'<span><span class="label">Original:</span> ' + originalRows.toLocaleString() + '</span>' +
+'<span><span class="label">Generated:</span> ' + augmentedRows.toLocaleString() + '</span>' +
+'<span><span class="label">Multiplier:</span> x' + mult + '</span>' +
 '<span class="status-badge ' + qualityClass(qScore) + '">' + qScore + '% - ' + qLabel + '</span>' +
 '<span style="color:#999;font-size:0.8rem;">' + dateStr + '</span>' +
 '</div>' +
@@ -219,25 +351,40 @@ container.querySelectorAll('.view-detail-btn').forEach(function(btn) {
 btn.addEventListener('click', function() { showDetail(parseInt(this.dataset.id)); });
 });
 container.querySelectorAll('.dl-btn').forEach(function(btn) {
-btn.addEventListener('click', function() { DataService.exportAugmentation(parseInt(this.dataset.id)); });
+btn.addEventListener('click', function() {
+    try {
+        DataService.exportAugmentation(parseInt(this.dataset.id));
+    } catch (e) {
+        console.error('[admin_augment] exportAugmentation failed:', e);
+        alert('Export failed: ' + e.message);
+    }
+});
 });
 container.querySelectorAll('.delete-aug-btn').forEach(function(btn) {
 btn.addEventListener('click', function() {
 var id = Number(this.dataset.id);
 if (!confirm('Delete this augmentation record and associated data?')) return;
-if (!DataService.deleteAugmentation(id)) {
-alert('Failed to delete augmentation.');
-return;
+var ok = false;
+try {
+    ok = DataService.deleteAugmentation(id);
+} catch (e) {
+    console.error('[admin_augment] deleteAugmentation failed:', e);
+}
+if (!ok) {
+    alert('Failed to delete augmentation.');
+    return;
 }
 augResult = augResult && Number(augResult.id) === id ? null : augResult;
 renderSystemStats();
 renderLogs();
+if (document.getElementById('debug-panel').classList.contains('visible')) updateDebugPanel();
 });
 });
 }
 
 function showDetail(id) {
-var aug = DataService.getAugmentationById(id);
+var aug = null;
+try { aug = DataService.getAugmentationById(id); } catch (e) { console.error(e); }
 if (!aug) { alert('Augmentation not found'); return; }
 var content = document.getElementById('detail-content');
 var html = '';
@@ -420,9 +567,45 @@ setTimeout(function() {
 clearInterval(interval);
 progressBar.style.width = '100%';
 setTimeout(function() {
-var result = DataService.augmentDataset(basePreview, selectedMultiplier, currentUser.id);
-if (!result.success) { alert(result.message); btn.disabled = false; btn.textContent = 'Generate Augmented Data'; document.getElementById('aug-progress').style.display = 'none'; return; }
-augResult = result.result;
+    // ===== CRITICAL AUGMENTATION CALL =====
+    var result = null;
+    var augmentUserId = currentUser ? currentUser.id : null;
+    console.log('[admin_augment] Calling augmentDataset with userId=' + augmentUserId + ', multiplier=' + selectedMultiplier);
+    try {
+        result = DataService.augmentDataset(basePreview, selectedMultiplier, augmentUserId);
+    } catch (e) {
+        console.error('[admin_augment] augmentDataset threw exception:', e);
+        alert('Augmentation failed with error: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Generate Augmented Data';
+        document.getElementById('aug-progress').style.display = 'none';
+        return;
+    }
+    console.log('[admin_augment] augmentDataset result:', result);
+
+    if (!result || !result.success) {
+        console.error('[admin_augment] Augmentation failed:', result);
+        alert(result && result.message ? result.message : 'Augmentation failed for unknown reason.');
+        btn.disabled = false;
+        btn.textContent = 'Generate Augmented Data';
+        document.getElementById('aug-progress').style.display = 'none';
+        return;
+    }
+    augResult = result.result;
+    console.log('[admin_augment] Augmentation succeeded. Entry id=' + augResult.id + ', userId=' + augResult.userId);
+
+    // Verify the entry was actually saved to localStorage
+    try {
+        var verifyAugs = DataService.getAugmentations() || [];
+        var verifyFound = verifyAugs.some(function(a) { return Number(a.id) === Number(augResult.id); });
+        console.log('[admin_augment] Post-save verification: ' + verifyAugs.length + ' entries, found new entry: ' + verifyFound);
+        if (!verifyFound) {
+            console.warn('[admin_augment] WARNING: Augmentation reported success but entry not found in getAugmentations()! Likely localStorage quota issue.');
+        }
+    } catch (e) {
+        console.error('[admin_augment] Post-save verification failed:', e);
+    }
+
 document.getElementById('aug-result').style.display = 'block';
 document.getElementById('result-stats').innerHTML =
 '<div class="kpi-card" style="border-left-color: #2E7D32;"><div class="kpi-value">' + augResult.originalRows.toLocaleString() + '</div><div class="kpi-label">Original Rows</div></div>' +
@@ -442,13 +625,24 @@ btn.textContent = 'Generate Augmented Data';
 document.getElementById('aug-progress').style.display = 'none';
 renderSystemStats();
 renderLogs();
+if (document.getElementById('debug-panel').classList.contains('visible')) updateDebugPanel();
 }, 500);
 }, 2000);
 });
 
-document.getElementById('download-aug-btn').addEventListener('click', function() { if (augResult) DataService.exportAugmentation(augResult.id); });
+document.getElementById('download-aug-btn').addEventListener('click', function() {
+    if (!augResult) return;
+    try {
+        DataService.exportAugmentation(augResult.id);
+    } catch (e) {
+        console.error('[admin_augment] download-aug-btn failed:', e);
+        alert('Download failed: ' + e.message);
+    }
+});
 document.getElementById('reset-create-btn').addEventListener('click', resetCreate);
 
+// ===== Initial render =====
+console.log('[admin_augment] Initial render starting');
 renderSystemStats();
 renderLogs();
 })();
@@ -456,4 +650,3 @@ renderLogs();
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
-

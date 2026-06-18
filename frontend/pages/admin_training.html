@@ -211,6 +211,7 @@
                     <div class="form-group">
                         <label for="model-name" data-i18n="training.model_name">Version number</label>
                         <input type="text" id="model-name" class="form-control" placeholder="e.g.,  CTGAN v1" data-i18n-placeholder="training.placeholder_name">
+                        <div id="model-name-error" style="display:none;font-size:0.8rem;color:#C62828;margin-top:0.3rem;"></div>
                     </div>
                     <div class="training-params">
                         <div class="form-group">
@@ -689,7 +690,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                 headers.forEach(function(h) {
                     if (perCol[h] > 0) {
                         var colPct = ((perCol[h] / rows.length) * 100).toFixed(1);
-                        detailsHtml += '<div class="step-detail-row"><span class="warning">N:</span> ' + h + ' â€” ' + perCol[h] + ' missing (' + colPct + '%)</div>';
+                        detailsHtml += '<div class="step-detail-row"><span class="warning">N:</span> ' + h + ' — ' + perCol[h] + ' missing (' + colPct + '%)</div>';
                     }
                 });
             }
@@ -829,7 +830,7 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     var b = bounds[col];
                     var stratLabel = autoStrategy[col] === 'cap' ? 'Capped' : (autoStrategy[col] === 'remove' ? 'Removed' : 'Kept');
                     detailsHtml += '<div class="step-detail-row"><span class="' + (autoStrategy[col] === 'keep' ? 'success' : 'warning') + '">' +
-                        col + ': ' + (outliers[col] || 0) + ' outliers (IQR=' + b.iqr.toFixed(1) + ') â€” Strategy: ' + stratLabel + '</span></div>';
+                        col + ': ' + (outliers[col] || 0) + ' outliers (IQR=' + b.iqr.toFixed(1) + ') — Strategy: ' + stratLabel + '</span></div>';
                 }
             });
             if (totalOutliers === 0) {
@@ -1041,9 +1042,48 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
         // ================================================================
 
         function initAddTraining() {
+            // Real-time duplicate name check as user types
+            var nameInput = document.getElementById('model-name');
+            var nameError = document.getElementById('model-name-error');
+            if (nameInput && nameError) {
+                nameInput.addEventListener('input', function() {
+                    var val = this.value.trim();
+                    if (!val) {
+                        nameError.style.display = 'none';
+                        this.style.borderColor = '';
+                        return;
+                    }
+                    var existingModels = ModelService.getModels();
+                    var isDuplicate = existingModels.some(function(m) { return m.name.toLowerCase() === val.toLowerCase(); });
+                    if (isDuplicate) {
+                        nameError.textContent = 'A model with the name "' + val + '" already exists.';
+                        nameError.style.display = 'block';
+                        this.style.borderColor = '#F44336';
+                    } else {
+                        nameError.style.display = 'none';
+                        this.style.borderColor = '#4CAF50';
+                    }
+                });
+            }
+
             document.getElementById('add-training-btn').addEventListener('click', function() {
                 var modelName = document.getElementById('model-name').value.trim();
+                var nameError = document.getElementById('model-name-error');
+                var nameInput = document.getElementById('model-name');
+                if (nameError) { nameError.style.display = 'none'; }
+                if (nameInput) { nameInput.style.borderColor = ''; }
+
                 if (!modelName) { alert('Please enter a model name.'); return; }
+
+                // Check for duplicate model name
+                var existingModels = ModelService.getModels();
+                var duplicate = existingModels.find(function(m) { return m.name.toLowerCase() === modelName.toLowerCase(); });
+                if (duplicate) {
+                    if (nameError) { nameError.textContent = 'A model with the name "' + modelName + '" already exists. Please choose a different name.'; nameError.style.display = 'block'; }
+                    if (nameInput) { nameInput.style.borderColor = '#F44336'; nameInput.focus(); }
+                    return;
+                }
+
                 if (!_cleanedData) { alert('Please run data cleaning first.'); return; }
 
                 var epochs = parseInt(document.getElementById('train-epochs').value) || 10;

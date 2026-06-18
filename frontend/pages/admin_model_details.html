@@ -78,7 +78,7 @@
             <div id="model-not-found" style="display:none;">
                 <div class="card" style="text-align:center;padding:2rem;">
                     <p style="font-size:1.1rem;color:#666;" data-i18n="common.no_data">Model not found.</p>
-<a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;" data-i18n="models.title">Back to Models</a>
+                    <a href="admin_models.html" class="btn btn-primary" style="margin-top:1rem;text-decoration:none;" data-i18n="models.title">Back to Models</a>
                 </div>
             </div>
 
@@ -108,15 +108,16 @@
                 <div class="section-card">
                     <h3 data-i18n="model.training_evaluation">Training Evaluation</h3>
                     <div id="training-evaluation-content">
-<div class="empty-gen" data-i18n="common.no_data">No evaluation data available. Train the model first.</div>
+                        <div class="empty-gen" data-i18n="common.no_data">No evaluation data available. Train the model first.</div>
                     </div>
                 </div>
 
                 <!-- Version History -->
                 <div class="section-card">
-                    <h3 data-i18n="sidebar.models">Version History <span id="version-history-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <!-- FIX: data-i18n moved to inner span so version-history-count is not destroyed -->
+                    <h3><span data-i18n="sidebar.models">Version History</span> <span id="version-history-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
                     <div id="version-history-content">
-<div class="empty-gen" data-i18n="common.no_data">No versions available.</div>
+                        <div class="empty-gen" data-i18n="common.no_data">No versions available.</div>
                     </div>
                 </div>
 
@@ -170,9 +171,10 @@
 
                 <!-- Training History -->
                 <div class="section-card">
-                    <h3 data-i18n="sidebar.history">Training History <span id="version-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
+                    <!-- FIX: data-i18n moved to inner span so version-count is not destroyed -->
+                    <h3><span data-i18n="sidebar.history">Training History</span> <span id="version-count" style="font-size:0.8rem;color:#999;font-weight:400;"></span></h3>
                     <div id="training-history-content">
-<div class="empty-gen" data-i18n="common.no_data">No training history available.</div>
+                        <div class="empty-gen" data-i18n="common.no_data">No training history available.</div>
                     </div>
                 </div>
 
@@ -233,13 +235,15 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
         function showNotFound() {
             document.getElementById('model-content').style.display = 'none';
             document.getElementById('model-not-found').style.display = 'block';
-            document.getElementById('model-subtitle').textContent = _t('empty.no_data');
+            var sub = document.getElementById('model-subtitle');
+            if (sub) sub.textContent = _t('empty.no_data');
         }
 
         function renderModel(model) {
-            document.getElementById('model-name-display').textContent = model.name;
-            var date = new Date(model.createdAt);
-            document.getElementById('model-subtitle').textContent = _t('model.created') + ' ' + date.toLocaleString();
+            var nameEl = document.getElementById('model-name-display');
+            var subEl = document.getElementById('model-subtitle');
+            if (nameEl) nameEl.textContent = model.name || '';
+            if (subEl) subEl.textContent = _t('model.created') + ' ' + new Date(model.createdAt).toLocaleString();
 
             var statusLabels = { trained: _t('status.trained'), in_progress: _t('status.in_progress'), failed: _t('status.failed') };
             var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
@@ -247,51 +251,65 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             var versions = model.versions || [];
             var retrainCount = versions.filter(function(v) { return v.type === 'retrain'; }).length;
 
-            document.getElementById('model-meta-grid').innerHTML =
-                '<div class="detail-card"><div class="detail-label">' + _t('model.status') + '</div><div class="detail-value" style="color:' + (statusColors[model.status] || '#666') + ';">' + (statusLabels[model.status] || model.status) + '</div></div>' +
-                '<div class="detail-card"><div class="detail-label">' + _t('model.created') + '</div><div class="detail-value" style="font-size:0.9rem;">' + date.toLocaleString() + '</div></div>' +
-                '<div class="detail-card"><div class="detail-label">' + _t('model.versions') + '</div><div class="detail-value">' + versions.length + '</div></div>' +
-                '<div class="detail-card" style="border-left-color:#FF9800;"><div class="detail-label">' + _t('model.retrains') + '</div><div class="detail-value">' + retrainCount + '</div></div>';
+            var metaGrid = document.getElementById('model-meta-grid');
+            if (metaGrid) {
+                metaGrid.innerHTML =
+                    '<div class="detail-card"><div class="detail-label">' + _t('model.status') + '</div><div class="detail-value" style="color:' + (statusColors[model.status] || '#666') + ';">' + (statusLabels[model.status] || model.status) + '</div></div>' +
+                    '<div class="detail-card"><div class="detail-label">' + _t('model.created') + '</div><div class="detail-value" style="font-size:0.9rem;">' + new Date(model.createdAt).toLocaleString() + '</div></div>' +
+                    '<div class="detail-card"><div class="detail-label">' + _t('model.versions') + '</div><div class="detail-value">' + versions.length + '</div></div>' +
+                    '<div class="detail-card" style="border-left-color:#FF9800;"><div class="detail-label">' + _t('model.retrains') + '</div><div class="detail-value">' + retrainCount + '</div></div>';
+            }
 
             var di = model.datasetInfo || {};
-            document.getElementById('dataset-info-content').innerHTML =
-                '<div class="info-row"><span class="info-label">' + _t('model.file') + '</span><span class="info-value">' + (di.fileName || _t('common.no_data')) + '</span></div>' +
-                '<div class="info-row"><span class="info-label">' + _t('model.original_rows') + '</span><span class="info-value">' + (di.originalRows || 0) + '</span></div>' +
-                '<div class="info-row"><span class="info-label">' + _t('model.original_columns') + '</span><span class="info-value">' + (di.originalCols || 0) + '</span></div>' +
-                '<div class="info-row"><span class="info-label">' + _t('model.headers') + '</span><span class="info-value">' + (di.headers ? di.headers.join(', ') : _t('common.no_data')) + '</span></div>';
+            var datasetEl = document.getElementById('dataset-info-content');
+            if (datasetEl) {
+                datasetEl.innerHTML =
+                    '<div class="info-row"><span class="info-label">' + _t('model.file') + '</span><span class="info-value">' + (di.fileName || _t('common.no_data')) + '</span></div>' +
+                    '<div class="info-row"><span class="info-label">' + _t('model.original_rows') + '</span><span class="info-value">' + (di.originalRows || 0) + '</span></div>' +
+                    '<div class="info-row"><span class="info-label">' + _t('model.original_columns') + '</span><span class="info-value">' + (di.originalCols || 0) + '</span></div>' +
+                    '<div class="info-row"><span class="info-label">' + _t('model.headers') + '</span><span class="info-value">' + (di.headers ? di.headers.join(', ') : _t('common.no_data')) + '</span></div>';
+            }
 
             var cr = model.cleaningReport;
-            if (cr) {
-                var crHtml = '';
-                if (cr.missing) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.missing') + '</span><span class="info-value">' + (cr.missing.fillCount || 0) + ' ' + _t('model.filled') + '</span></div>';
-                if (cr.duplicates) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.duplicates') + '</span><span class="info-value">' + (cr.duplicates.removed || 0) + ' ' + _t('model.removed') + '</span></div>';
-                if (cr.constants && cr.constants.removed && cr.constants.removed.length > 0) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.constants') + '</span><span class="info-value">' + cr.constants.removed.join(', ') + ' ' + _t('model.removed') + '</span></div>';
-                if (cr.outliers) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.outliers') + '</span><span class="info-value">' + (cr.outliers.total || 0) + ' ' + _t('model.handled') + '</span></div>';
-                if (cr.types) {
-                    var typesList = Object.keys(cr.types).map(function(k) { return k + ': ' + cr.types[k]; }).join(', ');
-                    crHtml += '<div class="info-row"><span class="info-label">' + _t('training.types') + '</span><span class="info-value">' + typesList + '</span></div>';
+            var cleaningEl = document.getElementById('cleaning-report-content');
+            if (cleaningEl) {
+                if (cr) {
+                    var crHtml = '';
+                    if (cr.missing) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.missing') + '</span><span class="info-value">' + (cr.missing.fillCount || 0) + ' ' + _t('model.filled') + '</span></div>';
+                    if (cr.duplicates) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.duplicates') + '</span><span class="info-value">' + (cr.duplicates.removed || 0) + ' ' + _t('model.removed') + '</span></div>';
+                    if (cr.constants && cr.constants.removed && cr.constants.removed.length > 0) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.constants') + '</span><span class="info-value">' + cr.constants.removed.join(', ') + ' ' + _t('model.removed') + '</span></div>';
+                    if (cr.outliers) crHtml += '<div class="info-row"><span class="info-label">' + _t('training.outliers') + '</span><span class="info-value">' + (cr.outliers.total || 0) + ' ' + _t('model.handled') + '</span></div>';
+                    if (cr.types) {
+                        var typesList = Object.keys(cr.types).map(function(k) { return k + ': ' + cr.types[k]; }).join(', ');
+                        crHtml += '<div class="info-row"><span class="info-label">' + _t('training.types') + '</span><span class="info-value">' + typesList + '</span></div>';
+                    }
+                    cleaningEl.innerHTML = crHtml || '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
+                } else {
+                    cleaningEl.innerHTML = '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
                 }
-                document.getElementById('cleaning-report-content').innerHTML = crHtml || '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
-            } else {
-                document.getElementById('cleaning-report-content').innerHTML = '<p style="color:#999;font-size:0.9rem;">' + _t('empty.no_cleaning') + '</p>';
             }
 
             var cfg = model.config || {};
-            document.getElementById('training-config-content').innerHTML =
-                '<div class="config-grid">' +
-                '<div class="config-item"><div class="config-val">' + (cfg.epochs || '-') + '</div><div class="config-label">' + _t('model.epochs') + '</div></div>' +
-                '<div class="config-item"><div class="config-val">' + (cfg.batchSize || '-') + '</div><div class="config-label">' + _t('model.batch_size') + '</div></div>' +
-                '<div class="config-item"><div class="config-val">' + (cfg.learningRate || '-') + '</div><div class="config-label">' + _t('model.learning_rate') + '</div></div>' +
-                '</div>';
+            var configEl = document.getElementById('training-config-content');
+            if (configEl) {
+                configEl.innerHTML =
+                    '<div class="config-grid">' +
+                    '<div class="config-item"><div class="config-val">' + (cfg.epochs || '-') + '</div><div class="config-label">' + _t('model.epochs') + '</div></div>' +
+                    '<div class="config-item"><div class="config-val">' + (cfg.batchSize || '-') + '</div><div class="config-label">' + _t('model.batch_size') + '</div></div>' +
+                    '<div class="config-item"><div class="config-val">' + (cfg.learningRate || '-') + '</div><div class="config-label">' + _t('model.learning_rate') + '</div></div>' +
+                    '</div>';
+            }
 
             renderTrainingEvaluation(model);
             renderTrainingHistory(model);
             renderVersionHistory(model);
-            document.getElementById('model-content').style.display = 'block';
+            var contentEl = document.getElementById('model-content');
+            if (contentEl) contentEl.style.display = 'block';
         }
 
         function renderTrainingEvaluation(model) {
             var container = document.getElementById('training-evaluation-content');
+            if (!container) return;
             var versions = model.versions || [];
             var latest = versions[versions.length - 1];
             if (!latest || !latest.evaluation) {
@@ -306,7 +324,8 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
             var statusColors = { trained: '#2E7D32', in_progress: '#FF9800', failed: '#F44336' };
             var qualityLabels = { good: _t('status.good'), acceptable: _t('status.acceptable'), needs_improvement: _t('status.needs_improvement') };
             var qualityClass = 'quality-' + (ev.trainingQuality || 'needs_improvement');
-            var imbalance = ModelService.trainingImbalanceWarning(ev.generatorLoss, ev.discriminatorLoss);
+            var imbalance = false;
+            try { imbalance = ModelService.trainingImbalanceWarning(ev.generatorLoss, ev.discriminatorLoss); } catch(e) {}
 
             container.innerHTML =
                 '<div class="eval-grid" style="margin-bottom:0.75rem;">' +
@@ -328,8 +347,10 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
         function renderVersionHistory(model) {
             var container = document.getElementById('version-history-content');
+            var countEl = document.getElementById('version-history-count');
             var versions = model.versions || [];
-            document.getElementById('version-history-count').textContent = '(' + versions.length + ' total)';
+            if (countEl) countEl.textContent = '(' + versions.length + ' total)';
+            if (!container) return;
             if (versions.length === 0) {
                 container.innerHTML = '<div class="empty-gen">No versions available.</div>';
                 return;
@@ -370,8 +391,10 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 
         function renderTrainingHistory(model) {
             var container = document.getElementById('training-history-content');
+            var countEl = document.getElementById('version-count');
             var versions = model.versions || [];
-            document.getElementById('version-count').textContent = '(' + versions.length + ' total)';
+            if (countEl) countEl.textContent = '(' + versions.length + ' total)';
+            if (!container) return;
             if (versions.length === 0) {
                 container.innerHTML = '<div class="empty-gen">No training history available.</div>';
                 return;
@@ -414,9 +437,9 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
                     '<div style="font-size:0.78rem;color:#999;margin-top:0.15rem;">' + dateStr + (duration ? ' &middot; ' + duration : '') + (v.datasetInfo && v.datasetInfo.originalRows ? ' &middot; ' + v.datasetInfo.originalRows + ' rows' : '') + '</div>' +
                     (genLoss !== null ? '<div style="font-size:0.78rem;color:#999;margin-top:0.1rem;"><span style="color:#1565C0;">G:</span> ' + genLoss + ' &nbsp; <span style="color:#E65100;">D:</span> ' + discLoss + '</div>' : '') +
                     '<div style="display:flex;gap:0.4rem;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">' + cfg.epochs + ' ep</span>' +
-                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">bs ' + cfg.batchSize + '</span>' +
-                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">lr ' + cfg.learningRate + '</span>' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">' + (cfg.epochs || '-') + ' ep</span>' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">bs ' + (cfg.batchSize || '-') + '</span>' +
+                    '<span style="font-size:0.72rem;background:#F5F7F5;color:#555;padding:0.15rem 0.5rem;border-radius:4px;border:1px solid #E5E7EB;">lr ' + (cfg.learningRate || '-') + '</span>' +
                     '</div>' +
                     '</div>' +
                     '</div>';
@@ -547,4 +570,3 @@ try { App.setupLanguageSwitcher(); } catch (e) {} } catch (e) {}
 <script>if (typeof I18nService !== 'undefined') I18nService.translatePage();</script>
 </body>
 </html>
-
