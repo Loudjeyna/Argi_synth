@@ -14,7 +14,7 @@ class RedirectHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == '/' or parsed.path == '':
             self.send_response(302)
-            self.send_header('Location', '/pages/first.html')
+            self.send_header('Location', '/pages/index.html')
             self.end_headers()
             return
         return super().do_GET()
